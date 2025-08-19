@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import contextlib
+import importlib
 import math
+import sys
 import typing
 from pathlib import Path
 
@@ -535,6 +537,12 @@ class OpenSettingsAction(QAction):
 
 def import_wntr(_: QgsTask):
     """Pre-import wntr to speed up loading"""
+
+    if "wntr" in sys.modules:
+        import wntr
+
+        importlib.reload(wntr)
+
     import wntr  # type: ignore
 
     if not Path(wntr.__file__).exists():

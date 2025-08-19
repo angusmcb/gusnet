@@ -4,7 +4,7 @@ import os
 import platform
 import subprocess
 import sys
-from importlib import invalidate_caches
+from importlib import invalidate_caches, reload
 from importlib.util import find_spec
 from pathlib import Path
 from typing import Any
@@ -86,6 +86,9 @@ class WntrInstaller:
 
         try:
             import wntr  # type: ignore
+
+            reload(wntr)
+
         except ImportError as e:
             raise WntrInstallError(e) from e
 
