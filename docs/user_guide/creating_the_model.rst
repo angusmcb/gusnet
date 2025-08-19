@@ -73,24 +73,24 @@ Patterns will also accept a field of type list, where each item in the list is a
 
 
 .. csv-table:: Possible Junction Attributes
-    :file: autogen-includes/junctions.csv
+    :file: ../_build/autogen-includes/junctions.csv
     :header-rows: 1
 
 .. csv-table:: Possible Reservoir Attributes
-    :file: autogen-includes/reservoirs.csv
+    :file: ../_build/autogen-includes/reservoirs.csv
     :header-rows: 1
 
 .. csv-table:: Possible Tank Attributes
-    :file: autogen-includes/tanks.csv
+    :file: ../_build/autogen-includes/tanks.csv
     :header-rows: 1
 
 .. csv-table:: Possible Pipes Attributes
-    :file: autogen-includes/pipes.csv
+    :file: ../_build/autogen-includes/pipes.csv
     :header-rows: 1
 
 
 .. csv-table:: Possible Pumps Attributes
-    :file: autogen-includes/pumps.csv
+    :file: ../_build/autogen-includes/pumps.csv
     :header-rows: 1
 
 Pumps can be of two types: 'POWER' or 'HEAD'. The type of pump is determined by the `pump_type` attribute. If this attribute is not set, the pump will be treated as a 'POWER' pump.
@@ -101,7 +101,7 @@ Head pumps must have a `pump_curve` attribute, which is a string representing th
 
 
 .. csv-table:: Possible Valve Attributes
-    :file: autogen-includes/valves.csv
+    :file: ../_build/autogen-includes/valves.csv
     :header-rows: 1
 
 All valves must have a `valve_type` attribute. The options are:

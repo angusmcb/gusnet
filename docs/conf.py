@@ -121,7 +121,7 @@ googleanalytics_id = "G-EXG3JYMMHK"
 def generate_attributes_table(_):
     from gusnet.elements import FieldGroup, ModelLayer
 
-    output_dir = Path(__file__).parent / "user_guide" / "autogen-includes"
+    output_dir = Path(__file__).parent / "_build" / "autogen-includes"
     output_dir.mkdir(parents=True, exist_ok=True)
     for layer in ModelLayer:
         table = pd.DataFrame(
