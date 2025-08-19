@@ -10,5 +10,16 @@ WNTR itself has some python dependencies. A warning will appear if any are missi
 * On *Windows* all dependencies are already included within QGIS.
 * For *Linux / Mac* you will need to ensure that the following python packages are installed: Numpy, Scipy, Pandas, NetworkX and Matploblib. Exactly how to do this depends on your system and how you have installed QGIS.
 
+## Visual Install Guide
 
-![](../_static/install.gif)
+1. Open *Manage and Install Plugins...* from within QGIS
+
+![](../_static/install/1pluginsmenu.png)
+
+2. Search for 'gusnet'
+
+![](../_static/install/2plugindialog.png)
+
+3. Wait for the install to complete
+
+![](../_static/install/3installsuccess.png)
