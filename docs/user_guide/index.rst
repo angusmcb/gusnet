@@ -7,6 +7,7 @@ User Guide
     :caption: Getting Started
 
     installation
+    load-example
     principles
     units
     limitations
