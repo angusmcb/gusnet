@@ -5,7 +5,7 @@ The model can consist of up to six layers which represent physical parts of the 
 
 These layers are regular QGIS layers, and can be from any data source supported by QGIS, such as shapefiles, geopackages, a PostGIS database or memory layers.
 
-There are three possible node layers:
+There are three possible node layers (represented by point layers in QGIS):
 
 * **Junctions**, which are points in the network where links join together and where water enters or leaves the network.
 
@@ -13,7 +13,7 @@ There are three possible node layers:
 
 * **Tanks**, which are nodes that represent a finite storage of water in the network. They are used to model water storage tanks, elevated tanks, and other types of water storage facilities.
 
-There are also three possible link layers:
+There are also three possible link layers (represented by line layers in QGIS):
 
 * **Pipes**, are links that convey water from one point in the network to another. EPANET assumes that all pipes are full at all times. Flow direction is from the end at higher hydraulic head (internal energy per weight of water) to that at lower head.
 
@@ -95,7 +95,7 @@ Patterns will also accept a field of type list, where each item in the list is a
     :file: ../_build/autogen-includes/pumps.csv
     :header-rows: 1
 
-Pumps can be of two types: 'POWER' or 'HEAD'. The type of pump is determined by the `pump_type` attribute. If this attribute is not set, the pump will be treated as a 'POWER' pump.
+Pumps can be of two types: 'POWER' or 'HEAD'. The type of pump is determined by the `pump_type` attribute. These are not physically different types of pump, but rather different ways of representing the pump in the model.
 
 Power pumps must have a `power` attribute, which is a float representing the power of the pump.
 
@@ -108,9 +108,9 @@ Head pumps must have a `pump_curve` attribute, which is a string representing th
 
 All valves must have a `valve_type` attribute. The options are:
 
-* `PRV` - Pressure Reducing Valves limit the pressure at a point in the pipe network. They must have an `initial_setting` attribute which represents that pressure.
-* `PSV` - Pressure Sustaining Valves maintain a set pressure at a specific point in the pipe network. They must have an `initial_setting` attribute which represents that pressure.
-* `PBV` - Pressure Breaker Valves force a specified pressure loss to occur across the valve. They must have an `initial_setting` attribute which represents that pressure loss.
-* `FCV` - Flow Control Valves limit the flow to a specified amount. They must have a `initial_setting` attribute, which is a float representing the flow setpoint of the valve.
-* `TCV` - Throttle Control Valves simulate a partially closed valve by adjusting the minor head loss coefficient of the valve. They must have a `initial_setting` attribute, which represents the minor head loss coefficient of the valve.
+* `PRV` - Pressure Reducing Valves limit the pressure at a point in the pipe network. They must have an `pressure_setting` attribute which represents that pressure.
+* `PSV` - Pressure Sustaining Valves maintain a set pressure at a specific point in the pipe network. They must have an `pressure_setting` attribute which represents that pressure.
+* `PBV` - Pressure Breaker Valves force a specified pressure loss to occur across the valve. They must have an `pressure_setting` attribute which represents that pressure loss.
+* `FCV` - Flow Control Valves limit the flow to a specified amount. They must have a `flow_setting` attribute, which is a float representing the flow setpoint of the valve.
+* `TCV` - Throttle Control Valves simulate a partially closed valve by adjusting the minor head loss coefficient of the valve. They must have a `throttle_setting` attribute, which represents the minor head loss coefficient of the valve.
 * `GPV` - General Purpose Valves are used to represent a link where the user supplies a special flow - head loss relationship instead of following one of the standard hydraulic formulas. They can be used to model turbines, well draw-down or reduced-flow backflow prevention valves. They must have a `headloss_curve` attribute, which is a string representing the headloss curve of the valve in the form of a list of points, e.g. ``(0, 10), (2, 5), (3.3, 7)``.
