@@ -3,6 +3,8 @@ Creating and Editing the Model
 
 The model can consist of up to six layers which represent physical parts of the network.
 
+These layers are regular QGIS layers, and can be from any data source supported by QGIS, such as shapefiles, geopackages, a PostGIS database or memory layers.
+
 There are three possible node layers:
 
 * **Junctions**, which are points in the network where links join together and where water enters or leaves the network.
