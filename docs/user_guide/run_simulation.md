@@ -24,17 +24,12 @@ To access these options, open the simulation settings dialog (usually accessible
 
 ## Running the Simulation
 
-1. Review your network and simulation settings.
-2. Click the lightning bolt icon to start the simulation.
-3. Gusnet will display progress and notify you when the simulation is complete.
+Click the lightning bolt icon to start the simulation. The simulation should run almost instantly.
 
 
 
 ## Troubleshooting
 
-If the simulation fails, check for:
-- Missing or invalid input data
-- Network connectivity issues (e.g., unconnected nodes)
-- Incompatible or unsupported settings
+If the simulation fails, you will get an explanatory error message.
 
-Consult the log output for specific error messages and guidance.
+If it isn't clear, please raise an issue on the github repository explaining the problem.
