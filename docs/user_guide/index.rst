@@ -14,14 +14,10 @@ User Guide
 
 .. toctree::
     :maxdepth: 2
-    :caption: In Depth
+    :caption: Reference
 
-    creating_the_model
+    model_layers_attributes
+    model_editing
+    run_simulation
     analysing_results
-
-
-.. toctree::
-    :maxdepth: 2
-    :caption: API
-
     api

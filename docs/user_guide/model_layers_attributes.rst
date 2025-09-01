@@ -1,5 +1,8 @@
-Creating and Editing the Model
+Model Layers and Attributes
 ==============================
+
+Model Layers
+------------
 
 The model can consist of up to six layers which represent physical parts of the network.
 
@@ -28,11 +31,18 @@ There are also three possible link layers (represented by line layers in QGIS):
 
 
 Creating Layers
----------------
+...............
 
 Each of the six types of physical object is represented by a normal layer in QGIS.
 This can be any filetype: shapefile, geopackage, memory layer, etc.
 Not all layers need to be present if they are not used.
+
+.. warning::
+    Shapefiles have some inherent limitations - their attribute names can only be up to 10 characters, and text values can only be up to 254 characters.
+
+    Gusnet works around the limitation on attribute name length, but the text length limitation can be problematic for e.g. long patterns.
+
+    It is recommended to use geopackages or other formats that do not have these limitations.
 
 You can use the 'new' button on the toolbar to create a set of layers with default properties.
 
