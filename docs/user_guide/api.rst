@@ -1,5 +1,5 @@
 =================
-PyQgis API
+PyQGIS API
 =================
 
 This is the fledgling documentation for the work-in-progress API. The API is likely to change at every release.
