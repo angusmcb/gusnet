@@ -56,6 +56,7 @@ html_favicon = html_logo
 
 html_theme_options = {
     "logo": {"text": "Gusnet"},
+    "secondary_sidebar_items": [],
     "icon_links": [
         {
             # Label for this link
