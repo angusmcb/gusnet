@@ -166,5 +166,5 @@ Translated, easy to learn, flexible, fully documented.
 ```{toctree}
 :maxdepth: 2
 
-user_guide/index
+user-guide/index
 ```
