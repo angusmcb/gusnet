@@ -119,14 +119,10 @@ Uses WNTR and EPANET for reliable, accurate results and interoperability.
 :class: sd-align-minor-center
 
 ```{image} _static/code.svg
-:class: sd-mr-4 only-light
+:class: sd-mr-4 dark-light
 :width: 150px
 ```
 
-```{image} _static/code-white.png
-:class: sd-mr-4 only-dark
-:width: 150px
-```
 
 :::{div}
 **Free and Open Source**<br/>
@@ -140,12 +136,7 @@ No cost, no licensing problems, no limit on the number of pipes.
 :class: sd-align-minor-center
 
 ```{image} _static/noun-987.svg
-:class: sd-mr-4 only-light
-:width: 150px
-```
-
-```{image} _static/noun-987-white.png
-:class: sd-mr-4 only-dark
+:class: sd-mr-4 dark-light
 :width: 150px
 ```
 
