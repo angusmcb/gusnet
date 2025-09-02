@@ -16,8 +16,8 @@ User Guide
     :maxdepth: 2
     :caption: Reference
 
-    model_layers_attributes
-    model_editing
-    run_simulation
-    analysing_results
+    model-layers-attributes
+    model-editing
+    run-simulation
+    analysing-results
     api
