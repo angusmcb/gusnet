@@ -48,4 +48,4 @@ For an extended period simulation all result attributes will be 'list' types. Ea
 
 These can easily be viewed using the QGIS's 'temporal manager'.
 
-The QGIS temporal manager uses real dates and times, whereas WNTR and EPANET provide a list of results with values at each timestep. In order to make these usable the output is configured by default to use the custom ``wntr_result_at_current_time( parameter )`` expression.
+The QGIS temporal manager uses real dates and times, whereas WNTR and EPANET provide a list of results with values at each timestep. In order to make these usable the output is configured by default to use the custom ``gusnet_result_at_current_time( parameter )`` expression.

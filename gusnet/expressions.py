@@ -11,12 +11,12 @@ from gusnet.i18n import tr
 if TYPE_CHECKING:  # pragma: no cover
     from qgis.PyQt.QtCore import QDateTime
 
-GROUP = "Water Network Tools for Resilience"
+GROUP = "Gusnet"
 
 
 # qgis 3.28 errors if 'feature' and 'parent' are not included
 @qgsfunction(group=GROUP, referenced_columns=[])
-def wntr_result_at_current_time(
+def gusnet_result_at_current_time(
     field_value: Any,
     feature: QgsFeature,  # noqa: ARG001
     parent: QgsExpression,
@@ -35,8 +35,8 @@ def wntr_result_at_current_time(
 
     <h2>Example usage:</h2>
     <ul>
-      <li>wntr_result_at_current_time( pressure ) -> 13</li>
-      <li>wntr_result_at_current_time( "head" ) -> 6.2</li>
+      <li>gusnet_result_at_current_time( pressure ) -> 13</li>
+      <li>gusnet_result_at_current_time( "head" ) -> 6.2</li>
     </ul>
     """
 
@@ -78,7 +78,7 @@ def wntr_result_at_current_time(
 
 
 @qgsfunction(group=GROUP, referenced_columns=[])
-def wntr_check_pattern(pattern, feature, parent, context):  # noqa ARG001
+def gusnet_check_pattern(pattern, feature, parent, context):  # noqa ARG001
     """
     Checks if the input is a valid pattern string.
     A valid pattern string is a space-separated list of numbers, e.g. "1 2 3 4".
@@ -88,8 +88,8 @@ def wntr_check_pattern(pattern, feature, parent, context):  # noqa ARG001
 
     <h2>Example usage:</h2>
     <ul>
-      <li>wntr_check_pattern('1 2 3 4') -> true</li>
-      <li>wntr_check_pattern('x y z') -> false</li>
+      <li>gusnet_check_pattern('1 2 3 4') -> true</li>
+      <li>gusnet_check_pattern('x y z') -> false</li>
     </ul>
     """
 
@@ -105,7 +105,7 @@ def wntr_check_pattern(pattern, feature, parent, context):  # noqa ARG001
 
 
 @qgsfunction(group=GROUP, referenced_columns=[])
-def wntr_check_curve(curve):
+def gusnet_check_curve(curve):
     """
     Checks if the input is a valid curve string.
     A valid curve string is a list of tuples, e.g. "[(1,2), (3,4)]".
@@ -114,10 +114,10 @@ def wntr_check_curve(curve):
 
     <h2>Example usage:</h2>
     <ul>
-      <li>wntr_check_curve('[(1,2), (3,4)]') -> true</li>
-      <li>wntr_check_curve('(1,2), (3,4)') -> true</li>
-      <li>wntr_check_curve('(1,2)') -> true</li>
-      <li>wntr_check_curve('(x,y)') -> false</li>
+      <li>gusnet_check_curve('[(1,2), (3,4)]') -> true</li>
+      <li>gusnet_check_curve('(1,2), (3,4)') -> true</li>
+      <li>gusnet_check_curve('(1,2)') -> true</li>
+      <li>gusnet_check_curve('(x,y)') -> false</li>
     </ul>
     """
     try:

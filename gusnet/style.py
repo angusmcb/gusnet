@@ -171,7 +171,7 @@ class _FieldStyler:
 
         if self.field.type is SimpleFieldType.PATTERN:
             return (
-                f"wntr_check_pattern({self.field.value}) IS NOT false",
+                f"gusnet_check_pattern({self.field.value}) IS NOT false",
                 tr("Patterns must be a string of numbers separated by spaces"),
             )
 
@@ -179,7 +179,7 @@ class _FieldStyler:
 
         if self.field is Field.PUMP_CURVE:
             return (
-                "if( upper(pump_type) is 'HEAD', wntr_check_curve(pump_curve) IS true, true) ",
+                "if( upper(pump_type) is 'HEAD', gusnet_check_curve(pump_curve) IS true, true) ",
                 tr("Head pumps must have a pump curve. {curve_description}").format(
                     curve_description=curve_message,
                 ),
@@ -187,14 +187,14 @@ class _FieldStyler:
 
         if self.field is Field.HEADLOSS_CURVE:
             return (
-                "if( upper(valve_type) is 'GPV', wntr_check_curve(headloss_curve) IS true, true) ",
+                "if( upper(valve_type) is 'GPV', gusnet_check_curve(headloss_curve) IS true, true) ",
                 tr("General Purpose Valves must have a headloss curve. {curve_description}").format(
                     curve_description=curve_message,
                 ),
             )
 
         if self.field.type is SimpleFieldType.CURVE:
-            return (f"wntr_check_curve({self.field.value}) IS NOT false", curve_message)
+            return (f"gusnet_check_curve({self.field.value}) IS NOT false", curve_message)
 
         return None, None
 
@@ -235,7 +235,7 @@ class _LayerStyler:
 
         field_name = field.name
         attribute_expression = (
-            f'wntr_result_at_current_time("{field_name}")' if self.theme == "extended" else field_name
+            f'gusnet_result_at_current_time("{field_name}")' if self.theme == "extended" else field_name
         )
         unit_name = ""
         if isinstance(field.type, Parameter):
@@ -296,7 +296,7 @@ class _LayerStyler:
             line = QgsSimpleLineSymbolLayer.create(THICK_LINE)
             arrow = QgsMarkerSymbol.createSimple(ARROW | THICK_STROKE)
 
-            flowrate_field = "wntr_result_at_current_time( flowrate )" if self.theme == "extended" else "flowrate"
+            flowrate_field = "gusnet_result_at_current_time( flowrate )" if self.theme == "extended" else "flowrate"
 
             exp = QgsProperty.fromExpression(f"if( {flowrate_field} <0,180,0)")
             arrow.setDataDefinedAngle(exp)
