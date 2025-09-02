@@ -130,7 +130,7 @@ Uses WNTR and EPANET for reliable, accurate results and interoperability.
 
 :::{div}
 **Free and Open Source**<br/>
-No cost, no licensing problems.
+No cost, no licensing problems, no limit on the number of pipes.
 :::
 
 :::::
