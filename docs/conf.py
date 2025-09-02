@@ -51,7 +51,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
-html_logo = "../gusnet/resources/icons/logo.svg"
+html_logo = "../gusnet/resources/icons/logo.png"
 html_favicon = html_logo
 
 html_theme_options = {
@@ -106,7 +106,7 @@ myst_url_schemes = [
     "https",
 ]
 
-myst_enable_extensions = ["colon_fence"]
+myst_enable_extensions = ["colon_fence", "attrs_block", "attrs_inline"]
 
 numfig = True
 numfig_format = {"figure": "Figure %s", "table": "Table %s", "code-block": "Listing %s"}
