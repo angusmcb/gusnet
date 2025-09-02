@@ -19,9 +19,13 @@
         "cSpell.words": [
             "dropna",
             "EPANET",
-            "WNTR",
-            "gusnet"
-        ]
+            "gusnet",
+            "Gusnet",
+            "WNTR"
+        ],
+        "markdown.copyFiles.destination": {
+            "/docs/**/*": "/docs/_static/${documentBaseName}/"
+        }
     },
     "extensions": {
         "recommendations": [
