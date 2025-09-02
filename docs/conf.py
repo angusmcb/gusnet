@@ -51,7 +51,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
-html_logo = "../gusnet/resources/icons/logo.png"
+html_logo = "../gusnet/resources/icons/logo.svg"
 html_favicon = html_logo
 
 html_theme_options = {
