@@ -8,6 +8,7 @@ User Guide
 
     installation
     load-example
+    create-new-model
     principles
     units
     limitations
