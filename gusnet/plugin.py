@@ -54,7 +54,7 @@ MESSAGE_CATEGORY = "Gusnet"
 
 VERSION_SETTING = "gusnet/version"
 
-LOGO_ICON = QIcon("gusnet:logo.png")
+LOGO_ICON = QIcon("gusnet:logo.svg")
 
 iface = typing.cast(QgisInterface, iface)
 
