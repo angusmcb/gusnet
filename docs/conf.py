@@ -74,9 +74,9 @@ html_theme_options = {
             # URL where the link will redirect
             "url": "https://plugins.qgis.org/plugins/gusnet/",  # required
             # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
-            "icon": "_static/QGIS_logo_minimal.svg",
+            "icon": "fa-custom fa-qgis",
             # The type of image to be used (see below for details)
-            "type": "local",
+            "type": "fontawesome",
         },
         {
             # Label for this link
@@ -84,13 +84,16 @@ html_theme_options = {
             # URL where the link will redirect
             "url": "https://usepa.github.io/WNTR/",  # required
             # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
-            "icon": "_static/wntr-circle.svg",
+            "icon": "fa-custom fa-wntr",
             # The type of image to be used (see below for details)
-            "type": "local",
+            "type": "fontawesome",
         },
     ],
 }
 
+html_js_files = [
+    ("custom-icons.js", {"defer": "defer"}),
+]
 
 intersphinx_mapping = {
     "qgis": ("https://qgis.org/pyqgis/master/", None),
