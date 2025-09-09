@@ -102,7 +102,7 @@ Build models that exist in real places, combining with other GIS data sources.
 :child-direction: row
 :class: sd-align-minor-center
 
-```{image} _static/wntr-logo.png
+```{image} _static/wntr-logo.svg
 :class: sd-mr-4 dark-light
 :width: 150px
 ```

@@ -1,226 +1,24 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   id="Layer_2"
-   data-name="Layer 2"
-   viewBox="0 0 185.11001 185.11"
-   version="1.1"
-   sodipodi:docname="wntr-logo.svg"
-   width="185.11"
-   height="185.11"
-   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
-   inkscape:export-filename="wntr-logo.png"
-   inkscape:export-xdpi="103.72211"
-   inkscape:export-ydpi="103.72211"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview22"
-     pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="true"
-     inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="3.1521798"
-     inkscape:cx="98.661885"
-     inkscape:cy="121.02736"
-     inkscape:window-width="2560"
-     inkscape:window-height="1369"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="Layer_2" />
-  <defs
-     id="defs1">
-    <inkscape:path-effect
-       effect="powermask"
-       id="path-effect25"
-       is_visible="true"
-       lpeversion="1"
-       uri="#mask-powermask-path-effect25"
-       invert="false"
-       hide_mask="false"
-       background="true"
-       background_color="#ffffffff" />
-    <style
-       id="style1">
-      .cls-1 {
-        fill: #fff;
-      }
-
-      .cls-2 {
-        fill: #5b9bd5;
-      }
-    </style>
-    <filter
-       id="mask-powermask-path-effect26_inverse"
-       inkscape:label="filtermask-powermask-path-effect26"
-       style="color-interpolation-filters:sRGB"
-       height="100"
-       width="100"
-       x="-50"
-       y="-50">
-      <feColorMatrix
-         id="mask-powermask-path-effect26_primitive1"
-         values="1"
-         type="saturate"
-         result="fbSourceGraphic" />
-      <feColorMatrix
-         id="mask-powermask-path-effect26_primitive2"
-         values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0 "
-         in="fbSourceGraphic" />
-    </filter>
-    <mask
-       maskUnits="userSpaceOnUse"
-       id="mask26">
-      <path
-         class="cls-2"
-         d="m 111.98,103.4 c 0,0 0,-0.03 -0.05,-0.1 C 110.28,99.58 64.84,25.7 58.48,0 52.1,25.84 12.32,90.34 7.69,98.69 c -4.63,8.35 -7.27,17.95 -7.27,28.17 0,32.17 26.08,58.25 58.25,58.25 32.17,0 58.25,-26.08 58.25,-58.25 0,-8.35 -1.77,-16.28 -4.93,-23.46"
-         id="path26"
-         style="fill:#ffffff;fill-opacity:1" />
-    </mask>
-  </defs>
-  <g
-     id="Layer_1-2"
-     data-name="Layer 1"
-     transform="translate(31.10028)"
-     mask="url(#mask26)">
-    <g
-       id="g22">
-      <path
-         class="cls-2"
-         d="m 111.98,103.4 c 0,0 0,-0.03 -0.05,-0.1 C 110.28,99.58 64.84,25.7 58.48,0 52.1,25.84 12.32,90.34 7.69,98.69 c -4.63,8.35 -7.27,17.95 -7.27,28.17 0,32.17 26.08,58.25 58.25,58.25 32.17,0 58.25,-26.08 58.25,-58.25 0,-8.35 -1.77,-16.28 -4.93,-23.46"
-         id="path1" />
-      <path
-         class="cls-1"
-         x="49.540001"
-         y="43.830002"
-         width="3.4200001"
-         height="72.629997"
-         transform="rotate(-40.28,51.242176,80.136025)"
-         id="rect1"
-         sodipodi:type="rect" />
-      <path
-         class="cls-1"
-         x="49.66"
-         y="98.440002"
-         width="67.650002"
-         height="3.4200001"
-         transform="rotate(-42.2,83.490815,100.14645)"
-         id="rect2"
-         sodipodi:type="rect" />
-      <path
-         class="cls-1"
-         x="51.790001"
-         y="99.449997"
-         width="3.4200001"
-         height="108.51"
-         transform="rotate(-78.45,53.493329,153.70521)"
-         id="rect3"
-         sodipodi:type="rect" />
-      <path
-         class="cls-1"
-         x="21.66"
-         y="84.559998"
-         width="3.4200001"
-         height="66.510002"
-         transform="rotate(-17.28,23.37223,117.81151)"
-         id="rect4"
-         sodipodi:type="rect" />
-      <path
-         class="cls-1"
-         x="61.57"
-         y="139.73"
-         width="38.119999"
-         height="3.4200001"
-         transform="rotate(-54.73,80.620174,141.44045)"
-         id="rect5"
-         sodipodi:type="rect" />
-      <path
-         class="cls-1"
-         x="103.44"
-         y="114.2"
-         width="3.4200001"
-         height="31.99"
-         transform="rotate(-74.33,105.15381,130.2013)"
-         id="rect6"
-         sodipodi:type="rect" />
-      <path
-         class="cls-1"
-         x="34.25"
-         y="79.379997"
-         width="3.4200001"
-         height="53.93"
-         transform="rotate(-52.19,35.970706,106.34676)"
-         id="rect7"
-         sodipodi:type="rect" />
-      <path
-         class="cls-1"
-         d="m 80.58,107.33 c 0,3.61 -2.92,6.53 -6.53,6.53 -3.61,0 -6.53,-2.92 -6.53,-6.53 0,-3.61 2.92,-6.53 6.53,-6.53 3.61,0 6.53,2.92 6.53,6.53"
-         id="path7" />
-      <path
-         class="cls-1"
-         d="m 74.05,115.36 c -4.43,0 -8.03,-3.6 -8.03,-8.03 0,-4.43 3.6,-8.03 8.03,-8.03 4.43,0 8.03,3.6 8.03,8.03 0,4.43 -3.6,8.03 -8.03,8.03 m 0,-13.06 c -2.77,0 -5.03,2.26 -5.03,5.03 0,2.77 2.26,5.03 5.03,5.03 2.77,0 5.03,-2.26 5.03,-5.03 0,-2.77 -2.26,-5.03 -5.03,-5.03"
-         id="path8" />
-      <path
-         class="cls-1"
-         d="m 63.8,122.87 c 0,3.61 -2.93,6.53 -6.53,6.53 -3.6,0 -6.53,-2.92 -6.53,-6.53 0,-3.61 2.92,-6.53 6.53,-6.53 3.61,0 6.53,2.92 6.53,6.53"
-         id="path9" />
-      <path
-         class="cls-1"
-         d="m 57.27,130.91 c -4.43,0 -8.03,-3.6 -8.03,-8.03 0,-4.43 3.6,-8.03 8.03,-8.03 4.43,0 8.03,3.6 8.03,8.03 0,4.43 -3.6,8.03 -8.03,8.03 m 0,-13.06 c -2.77,0 -5.03,2.26 -5.03,5.03 0,2.77 2.26,5.03 5.03,5.03 2.77,0 5.03,-2.26 5.03,-5.03 0,-2.77 -2.26,-5.03 -5.03,-5.03"
-         id="path10" />
-      <path
-         class="cls-1"
-         d="m 21.19,89.82 c 0,3.61 -2.93,6.53 -6.53,6.53 -3.6,0 -6.53,-2.92 -6.53,-6.53 0,-3.61 2.92,-6.53 6.53,-6.53 3.61,0 6.53,2.92 6.53,6.53"
-         id="path11" />
-      <path
-         class="cls-1"
-         d="m 14.66,97.85 c -4.43,0 -8.03,-3.6 -8.03,-8.03 0,-4.43 3.6,-8.03 8.03,-8.03 4.43,0 8.03,3.6 8.03,8.03 0,4.43 -3.6,8.03 -8.03,8.03 m 0,-13.06 c -2.77,0 -5.03,2.26 -5.03,5.03 0,2.77 2.26,5.03 5.03,5.03 2.77,0 5.03,-2.26 5.03,-5.03 0,-2.77 -2.26,-5.03 -5.03,-5.03"
-         id="path12" />
-      <path
-         class="cls-1"
-         d="m 105.54,86.06 c 0,3.61 -2.93,6.53 -6.53,6.53 -3.6,0 -6.53,-2.92 -6.53,-6.53 0,-3.61 2.92,-6.53 6.53,-6.53 3.61,0 6.53,2.92 6.53,6.53"
-         id="path13" />
-      <path
-         class="cls-1"
-         d="m 99.01,94.09 c -4.43,0 -8.03,-3.6 -8.03,-8.04 0,-4.44 3.6,-8.03 8.03,-8.03 4.43,0 8.03,3.6 8.03,8.03 0,4.43 -3.6,8.04 -8.03,8.04 m 0,-13.06 c -2.77,0 -5.03,2.26 -5.03,5.03 0,2.77 2.26,5.03 5.03,5.03 2.77,0 5.03,-2.26 5.03,-5.03 0,-2.77 -2.26,-5.03 -5.03,-5.03"
-         id="path14" />
-      <path
-         class="cls-1"
-         d="m 39.78,149.57 c 0,3.61 -2.92,6.53 -6.53,6.53 -3.61,0 -6.53,-2.92 -6.53,-6.53 0,-3.61 2.92,-6.53 6.53,-6.53 3.61,0 6.53,2.92 6.53,6.53"
-         id="path15" />
-      <path
-         class="cls-1"
-         d="m 33.24,157.6 c -4.43,0 -8.03,-3.6 -8.03,-8.03 0,-4.43 3.6,-8.03 8.03,-8.03 4.43,0 8.03,3.6 8.03,8.03 0,4.43 -3.6,8.03 -8.03,8.03 m 0,-13.06 c -2.77,0 -5.03,2.26 -5.03,5.03 0,2.77 2.26,5.03 5.03,5.03 2.77,0 5.03,-2.26 5.03,-5.03 0,-2.77 -2.26,-5.03 -5.03,-5.03"
-         id="path16" />
-      <path
-         class="cls-1"
-         d="m 76.15,157 c 0,3.61 -2.93,6.53 -6.53,6.53 -3.6,0 -6.53,-2.92 -6.53,-6.53 0,-3.61 2.92,-6.53 6.53,-6.53 3.61,0 6.53,2.92 6.53,6.53"
-         id="path17" />
-      <path
-         class="cls-1"
-         d="m 69.62,165.04 c -4.43,0 -8.04,-3.6 -8.04,-8.04 0,-4.44 3.6,-8.03 8.04,-8.03 4.44,0 8.03,3.6 8.03,8.03 0,4.43 -3.6,8.04 -8.03,8.04 m 0,-13.06 c -2.77,0 -5.03,2.26 -5.03,5.03 0,2.77 2.26,5.03 5.03,5.03 2.77,0 5.03,-2.26 5.03,-5.03 0,-2.77 -2.26,-5.03 -5.03,-5.03"
-         id="path18" />
-      <path
-         class="cls-1"
-         d="m 97.85,126.32 c 0,3.61 -2.92,6.53 -6.53,6.53 -3.61,0 -6.53,-2.92 -6.53,-6.53 0,-3.61 2.92,-6.53 6.53,-6.53 3.61,0 6.53,2.92 6.53,6.53"
-         id="path19" />
-      <path
-         class="cls-1"
-         d="m 91.32,134.35 c -4.43,0 -8.03,-3.6 -8.03,-8.04 0,-4.44 3.6,-8.03 8.03,-8.03 4.43,0 8.03,3.6 8.03,8.03 0,4.43 -3.6,8.04 -8.03,8.04 m 0,-13.06 c -2.77,0 -5.03,2.26 -5.03,5.03 0,2.77 2.26,5.03 5.03,5.03 2.77,0 5.03,-2.26 5.03,-5.03 0,-2.77 -2.26,-5.03 -5.03,-5.03"
-         id="path20" />
-      <path
-         class="cls-1"
-         d="m 38.56,57.47 c 0,3.61 -2.92,6.53 -6.53,6.53 -3.61,0 -6.53,-2.92 -6.53,-6.53 0,-3.61 2.92,-6.53 6.53,-6.53 3.61,0 6.53,2.92 6.53,6.53"
-         id="path21" />
-      <path
-         class="cls-1"
-         d="M 32.03,65.5 C 27.6,65.5 24,61.9 24,57.47 c 0,-4.43 3.6,-8.03 8.03,-8.03 4.43,0 8.03,3.6 8.03,8.03 0,4.43 -3.6,8.03 -8.03,8.03 m 0,-13.06 c -2.77,0 -5.03,2.26 -5.03,5.03 0,2.77 2.26,5.03 5.03,5.03 2.77,0 5.03,-2.26 5.03,-5.03 0,-2.77 -2.26,-5.03 -5.03,-5.03"
-         id="path22" />
-    </g>
+<svg viewBox="0 0 185 185" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <clipPath id="cp1">
+   <path d="m143 103s0-0.03-0.05-0.1c-1.65-3.72-47.1-77.6-53.4-103-6.38 25.8-46.2 90.3-50.8 98.7s-7.27 18-7.27 28.2c0 32.2 26.1 58.2 58.2 58.2s58.2-26.1 58.2-58.2c0-8.35-1.77-16.3-4.93-23.5"/>
+  </clipPath>
+ </defs>
+ <g clip-path="url(#cp1)" >
+  <rect width="185" height="185" fill="#5b9bd5"/>
+  <circle id="p1" cx="105" cy="107" r="8" fill="#fff"/>
+  <use transform="translate(-16.8 15.5)" xlink:href="#p1"/>
+  <use transform="translate(25 -21.3)" xlink:href="#p1"/>
+  <use transform="translate(-42.1 -49.9)" xlink:href="#p1"/>
+  <use transform="translate(-59.5 -15.5)" xlink:href="#p1"/>
+  <use transform="translate(-40.9 42.2)" xlink:href="#p1"/>
+  <use transform="translate(-4.46 49.7)" xlink:href="#p1"/>
+  <use transform="translate(17.3 19)" xlink:href="#p1"/>
+  <g fill="none" stroke="#fff" stroke-width="3.4">
+   <path d="m62.8 57.3 43.1 50.6"/>
+   <path d="m132 84.8-42.8 38.1-43.8-33.1 18.6 59.7"/>
+   <path d="m31.4 143 106 21.7"/>
+   <path d="m101 157 22-31.1 28.9 8.65"/>
   </g>
+ </g>
 </svg>
