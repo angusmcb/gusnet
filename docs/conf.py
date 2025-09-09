@@ -84,7 +84,7 @@ html_theme_options = {
             # URL where the link will redirect
             "url": "https://usepa.github.io/WNTR/",  # required
             # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
-            "icon": "_static/water_circle.png",
+            "icon": "_static/wntr-circle.svg",
             # The type of image to be used (see below for details)
             "type": "local",
         },
