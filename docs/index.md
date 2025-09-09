@@ -19,9 +19,6 @@ h2 {
 .bd-main .bd-content .bd-article-container {
   max-width: 100%;  /* default is 60em */
 }
-.key-features img {
-  max-width: 20vw
-}
 
 .bd-container::before {
   content: "";
@@ -32,6 +29,16 @@ h2 {
   opacity: 0.3;
   pointer-events: none;
   z-index: -1
+}
+
+.full-width {
+  width: 100%;
+  height: fit-content;
+  max-height:8rem;
+}
+
+.no-p-margin p {
+  margin-bottom: 0
 }
 
 </style>
@@ -76,75 +83,67 @@ h2 {
 ## Key Features
 
 
-::::::{grid} 1 1 2 2
-:gutter: 5
+::::::{grid} 1 1 5 4
+:gutter: 2 5 5 5
 :margin: 5 5 0 0
-:class-container: key-features sd-fs-5
-
+:class-container: sd-fs-5 no-p-margin
+:class-row: sd-align-major-center
 
 :::::{grid-item}
-:child-direction: row
-:class: sd-align-minor-center
-
+:columns: 4 4 4 2
+:margin: 5 0 0 0
 ```{image} _static/QGIS_logo_minimal.svg
-:class: sd-mr-4 dark-light
-:width: 150px
+:class: dark-light no-scaled-link full-width
 ```
+:::::
 
-:::{div}
-**Fully Integrated with QGIS**<br/>
+:::::{grid-item}
+:columns: 12 8 8 4
+**Fully Integrated with QGIS**
+
 Build models that exist in real places, combining with other GIS data sources.
-:::
-
 :::::
 
 :::::{grid-item}
-:child-direction: row
-:class: sd-align-minor-center
-
+:columns: 4 4 4 2
+:margin: 5 0 0 0
 ```{image} _static/wntr-logo.svg
-:class: sd-mr-4 dark-light
-:width: 150px
+:class: dark-light no-scaled-link full-width
 ```
+:::::
 
-:::{div}
-**EPANET Modelling**<br/>
+:::::{grid-item}
+:columns: 12 8 8 4
+**EPANET Modelling**
+
 Uses WNTR and EPANET for reliable, accurate results and interoperability.
-:::
-
 :::::
 
 :::::{grid-item}
-:child-direction: row
-:class: sd-align-minor-center
+:columns: 4 4 4 2
+:margin: 5 0 0 0
+<i class="fa-solid fa-code full-width"></i>
+:::::
 
-```{image} _static/code.svg
-:class: sd-mr-4 dark-light
-:width: 150px
-```
+:::::{grid-item}
+:columns: 12 8 8 4
+**Free and Open Source**
 
-
-:::{div}
-**Free and Open Source**<br/>
 No cost, no licensing problems, no limit on the number of pipes.
-:::
-
 :::::
 
 :::::{grid-item}
-:child-direction: row
-:class: sd-align-minor-center
+:columns: 4 4 4 2
+:margin: 5 0 0 0
+<i class="fa-solid fa-smile full-width"></i>
+:::::
 
-```{image} _static/noun-987.svg
-:class: sd-mr-4 dark-light
-:width: 150px
-```
+:::::{grid-item}
+:columns: 12 8 8 4
 
-:::{div}
-**User Friendly**<br/>
+**User Friendly**
+
 Translated, easy to learn, flexible, fully documented.
-:::
-
 :::::
 
 ::::::
