@@ -72,7 +72,7 @@ html_theme_options = {
             # Label for this link
             "name": "QGIS Plugin Page",
             # URL where the link will redirect
-            "url": "https://plugins.qgis.org/plugins/wntrqgis/",  # required
+            "url": "https://plugins.qgis.org/plugins/gusnet/",  # required
             # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
             "icon": "_static/QGIS_logo_minimal.svg",
             # The type of image to be used (see below for details)
