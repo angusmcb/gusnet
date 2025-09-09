@@ -135,7 +135,7 @@ No cost, no licensing problems, no limit on the number of pipes.
 :::::{grid-item}
 :columns: 4 4 4 2
 :margin: 5 0 0 0
-<i class="fa-solid fa-smile full-width"></i>
+<i class="fa-regular fa-smile full-width"></i>
 :::::
 
 :::::{grid-item}
