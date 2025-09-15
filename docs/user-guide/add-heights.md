@@ -1,6 +1,6 @@
 # Adding height data
 
-1. We will use the same backdrop as in the previous tutorial. This time we are going to draw a bigger network, so I recommend creating geopackage layers, so they are easy to save. Draw out a network as below. Before drawing the pipes, you may want to change the default pipe diameter so you don't have to do it each time. Leave everything else as their default values for now.
+1. We will use the same backdrop as in the previous tutorial. This time we are going to draw a bigger network, so I recommend creating geopackage layers, so they are easy to save. Draw out a network as below. Before drawing the pipes, you may want to change the default pipe diameter - in this case we will use 75mm inner diameter pipe. Leave everything else as their default values for now.
 
 ![alt text](../_static/add-heights/network-drawn.png)
 
@@ -33,9 +33,9 @@
 
 ![alt text](../_static/add-heights/low-pressure-warning.png)
 
-8. Once run succesfully, your network will be displayed. You can add labels to show the head at each junction using the following label value `round(head, 1) || 'm'`
+8. Once run succesfully, your network will be displayed. You can add labels to show the head at each junction using the following label value `round(pressure, 1) || 'm'`
 
-![alt text](../_static/add-heights/head-labels.png)
+![alt text](../_static/add-heights/output-with-labels.png)
 
 Zoom in and you will notice that pipes have been snapped to their nearest node as part of the analysis.
 
