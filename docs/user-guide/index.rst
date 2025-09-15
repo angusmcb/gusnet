@@ -9,6 +9,7 @@ User Guide
     installation
     load-example
     create-new-model
+    add-heights
     principles
     units
     limitations
