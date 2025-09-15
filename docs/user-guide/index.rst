@@ -12,7 +12,6 @@ User Guide
     add-heights
     principles
     units
-    limitations
 
 .. toctree::
     :maxdepth: 2
