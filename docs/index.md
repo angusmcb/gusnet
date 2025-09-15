@@ -9,8 +9,9 @@ sd_hide_title: true
 <style>
 h2 {
   text-align: center;
-  margin-top: 2.5rem;
+  margin-top: 5rem;
   margin-bottom: 2rem;
+  font-size: 3rem;
 }
 
 .big-section {
@@ -56,7 +57,7 @@ h2 {
 :child-direction: row
 :child-align: center
 
-```{image} _static/screenshot.jpg
+```{image} _static/nice-output2.jpg
 :width: 500px
 :class: sd-rounded-3 sd-shadow-sm
 ```
@@ -157,4 +158,5 @@ Translated, easy to learn, flexible, fully documented.
 :maxdepth: 2
 
 user-guide/index
+about
 ```
