@@ -1,6 +1,6 @@
 # Key Principles
 
-Gusnet is a QGIS Plugin.It  will feel familiar to anyone who has used Epanet or any other water network modelling software.
+Gusnet is a QGIS Plugin. It  will feel familiar to anyone who has used Epanet or any other water network modelling software.
 
 It accessed in different ways within QGIS:
 1. Through the toolbar buttons or within the 'Plugins' menu.
