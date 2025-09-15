@@ -6,19 +6,19 @@ User Guide
     :maxdepth: 2
     :caption: Getting Started
 
+    principles
     installation
     load-example
     create-new-model
     add-heights
-    principles
-    units
+
 
 .. toctree::
     :maxdepth: 2
     :caption: Reference
 
+    units
     model-layers-attributes
-    model-editing
     run-simulation
     analysing-results
     api
