@@ -29,6 +29,10 @@
 
 ![alt text](../_static/add-heights/setting-demand.png)
 
+
+Your model is now complete. A copy of the geopackage made during this tutorial [is here](../_static/heights-network.gpkg).
+
+
 7. Run the model. If you forgot to set the elevation on the reservoir you will get a low pressure warning. You can fix this by setting the reservoir elevation manually. You could also follow the same process as for junctions, but typically reservoir elevation is known precisely, and there are much fewer of them so it is not time consuming to do manually.
 
 ![alt text](../_static/add-heights/low-pressure-warning.png)
