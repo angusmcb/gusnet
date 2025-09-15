@@ -56,7 +56,7 @@ Any layer with the appropriate geometry type (points for nodes and linestrings f
 
 Attributes
 -----------
-Attributes are based on the attributes within WNTR. Details of what they represent can be found in the WNTR and / or EPANET documentation.
+Attributes describe the properties of each item in a layer.
 
 Some attributes are required - these are marked with an asterisk (*). Others use default values from WNTR if not defined.
 
@@ -107,9 +107,9 @@ Patterns will also accept a field of type list, where each item in the list is a
 
 Pumps can be of two types: 'POWER' or 'HEAD'. The type of pump is determined by the `pump_type` attribute. These are not physically different types of pump, but rather different ways of representing the pump in the model.
 
-Power pumps must have a `power` attribute, which is a float representing the power of the pump.
+Power pumps must have a `power` attribute, represents the power of the pump.
 
-Head pumps must have a `pump_curve` attribute, which is a string representing the head curve of the pump in the form of a list of points, e.g. ``(0, 10), (2, 5), (3.3, 7)``.
+Head pumps must have a `pump_curve` attribute, which represents the pump curve in the form of a list of points, e.g. ``(0, 10), (2, 5), (3.3, 7)``.
 
 
 .. csv-table:: Possible Valve Attributes
