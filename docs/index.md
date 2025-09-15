@@ -57,7 +57,7 @@ h2 {
 :child-direction: row
 :child-align: center
 
-```{image} _static/nice-output2.jpg
+```{image} _static/nice-output5.jpg
 :width: 500px
 :class: sd-rounded-3 sd-shadow-sm
 ```
