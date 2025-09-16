@@ -158,5 +158,5 @@ Translated, easy to learn, flexible, fully documented.
 :maxdepth: 2
 
 user-guide/index
-about
+
 ```
