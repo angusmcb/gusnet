@@ -102,7 +102,7 @@ intersphinx_mapping = {
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "qgisdocs": ("https://docs.qgis.org/latest/en/", None),
-    "epanet": ("https://epanet22.readthedocs.io/en/latest/", None),
+    # "epanet": ("https://epanet22.readthedocs.io/en/latest/", None),
 }
 myst_url_schemes = [
     "http",
