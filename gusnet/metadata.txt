@@ -25,9 +25,80 @@ description[es]=Diseñe, edite, simule y visualice redes de distribución de agu
 description[it]=Progetta, modifica, simula e visualizza reti di distribuzione idrica utilizzando la potenza di EPANET, direttamente in QGIS.
 description[nl]=Ontwerp, bewerk, simuleer en visualiseer waterdistributienetwerken met de kracht van EPANET, direct in QGIS.
 description[ar]=صمّم، حرّر، حاكي، وعاين شبكات توزيع المياه باستخدام قوة EPANET مباشرةً في QGIS.
-about=<p>This plugin enables you to build water network models, run hydraulic simulations, and analyse results all within the QGIS environment. It is fully compatible with EPANET for import and export, and uses the EPANET solver by default.</p><p>Key features:</p><ul><li>User-friendly: Intuitive for QGIS users, with clear functionality, good defaults, and thorough documentation.</li><li>Seamless integration: Leverages QGIS and WNTR capabilities, complementing existing QGIS tools, algorithms, and plugins.</li><li>Robust: Focused on reliable, well-tested features.</li><li>Flexible: Adaptable to different workflows and preferences.</li><li>Automatable: Tools can be used in QGIS Model Builder or scripted with PyQGIS.</li></ul><p>If WNTR is not already installed, the plugin will automatically download it from PyPI and install it in the plugin directory. For full installation and usage instructions, see the homepage link.</p>
-about[fr]=<p>Ce plugin vous permet de créer des modèles, d'exécuter des simulations et d'analyser les résultats directement dans l'environnement QGIS. Il est entièrement compatible avec EPANET pour l'import et l'export, et utilise le solveur EPANET par défaut.</p><p>Fonctionnalités clés :</p><ul><li>Convivial : Intuitif pour les utilisateurs de QGIS, avec des fonctionnalités claires, de bons paramètres par défaut et une documentation complète.</li><li>Intégration transparente : Exploite les capacités de QGIS et WNTR, en complétant les outils, algorithmes et plugins QGIS existants.</li><li>Robuste : Axé sur des fonctionnalités fiables et bien testées.</li><li>Flexible : S'adapte à différents flux de travail et préférences.</li><li>Automatisable : Les outils peuvent être utilisés dans le Model Builder de QGIS ou via PyQGIS.</li></ul><p>Si WNTR n'est pas déjà installé, le plugin le téléchargera automatiquement depuis PyPI et l'installera dans le répertoire du plugin. Pour des instructions complètes d'installation et d'utilisation, consultez le lien de la page d'accueil.</p>
-about[es]=<p>Este complemento le permite crear modelos, ejecutar simulaciones y analizar resultados directamente en el entorno de QGIS. Es totalmente compatible con EPANET para importar y exportar, y utiliza el solucionador EPANET por defecto.</p><p>Características clave:</p><ul><li>Fácil de usar: Intuitivo para usuarios de QGIS, con funcionalidad clara, buenos valores predeterminados y documentación completa.</li><li>Integración perfecta: Aprovecha las capacidades de QGIS y WNTR, complementando las herramientas, algoritmos y complementos existentes de QGIS.</li><li>Robusto: Enfocado en funciones fiables y bien probadas.</li><li>Flexible: Adaptable a diferentes flujos de trabajo y preferencias.</li><li>Automatizable: Las herramientas pueden usarse en el Model Builder de QGIS o mediante PyQGIS.</li></ul><p>Si WNTR no está ya instalado, el complemento lo descargará automáticamente desde PyPI y lo instalará en el directorio del complemento. Para instrucciones completas de instalación y uso, consulte el enlace de la página principal.</p>
-about[it]=<p>Questo plugin consente di creare modelli, eseguire simulazioni e analizzare i risultati direttamente nell'ambiente QGIS. È completamente compatibile con EPANET per importazione ed esportazione e utilizza il risolutore EPANET di default.</p><p>Caratteristiche principali:</p><ul><li>Facile da usare: Intuitivo per gli utenti QGIS, con funzionalità chiare, buone impostazioni predefinite e documentazione completa.</li><li>Integrazione perfetta: Sfrutta le capacità di QGIS e WNTR, integrando strumenti, algoritmi e plugin QGIS esistenti.</li><li>Robusto: Concentrato su funzionalità affidabili e ben testate.</li><li>Flessibile: Adattabile a diversi flussi di lavoro e preferenze.</li><li>Automatizzabile: Gli strumenti possono essere utilizzati nel Model Builder di QGIS o tramite PyQGIS.</li></ul><p>Se WNTR non è già installato, il plugin lo scaricherà automaticamente da PyPI e lo installerà nella directory del plugin. Per istruzioni complete su installazione e utilizzo, vedere il link della homepage.</p>
-about[nl]=<p>Met deze plugin kunt u modellen bouwen, simulaties uitvoeren en resultaten analyseren, allemaal binnen de QGIS-omgeving. Volledig compatibel met EPANET voor import en export, en gebruikt standaard de EPANET-oplosser.</p><p>Belangrijkste kenmerken:</p><ul><li>Gebruiksvriendelijk: Intuïtief voor QGIS-gebruikers, met duidelijke functionaliteit, goede standaardinstellingen en uitgebreide documentatie.</li><li>Naadloze integratie: Benut de mogelijkheden van QGIS en WNTR en vult bestaande QGIS-tools, algoritmen en plugins aan.</li><li>Robuust: Gericht op betrouwbare, goed geteste functies.</li><li>Flexibel: Aanpasbaar aan verschillende workflows en voorkeuren.</li><li>Automatiseerbaar: Tools kunnen worden gebruikt in QGIS Model Builder of gescript met PyQGIS.</li></ul><p>Als WNTR nog niet is geïnstalleerd, downloadt de plugin deze automatisch van PyPI en installeert deze in de plugindirectory. Zie de homepage-link voor volledige installatie- en gebruiksinstructies.</p>
-about[ar]=<p>تتيح لك هذه الإضافة إنشاء النماذج، وتشغيل المحاكاة، وتحليل النتائج مباشرةً داخل بيئة QGIS. وهي متوافقة تمامًا مع EPANET للاستيراد والتصدير، وتستخدم محلل EPANET افتراضيًا.</p><p>الميزات الرئيسية:</p><ul><li>سهلة الاستخدام: بديهية لمستخدمي QGIS، مع وظائف واضحة، وإعدادات افتراضية جيدة، وتوثيق شامل.</li><li>تكامل سلس: تستفيد من إمكانيات QGIS وWNTR، وتكمل أدوات QGIS والخوارزميات والإضافات الموجودة.</li><li>متينة: تركز على ميزات موثوقة ومجربة جيدًا.</li><li>مرنة: قابلة للتكيف مع تدفقات العمل والتفضيلات المختلفة.</li><li>قابلة للأتمتة: يمكن استخدام الأدوات في QGIS Model Builder أو برمجتها باستخدام PyQGIS.</li></ul><p>إذا لم يكن WNTR مثبتًا بالفعل، فستقوم الإضافة بتنزيله تلقائيًا من PyPI وتثبيته في دليل الإضافة. لمزيد من تعليمات التثبيت والاستخدام، راجع رابط الصفحة الرئيسية.</p>
+
+
+about=Gusnet enables you to build water network models, run hydraulic simulations, and analyse results all without leaving QGIS.
+
+    Key Features:
+
+    User-friendly: Intuitive for QGIS users, with clear functionality, good defaults, and thorough documentation.
+
+    Seamless integration: Leverages QGIS and WNTR capabilities, complementing existing QGIS tools, algorithms, and plugins.
+
+    Robust: Focused on reliable, well-tested features.
+
+    Flexible: Adaptable to different workflows and preferences.
+
+    Automatable: Tools can be used in QGIS Model Builder or scripted with PyQGIS.
+
+    If WNTR is not already installed, the plugin will automatically download it from PyPI and install it in the plugin directory. For full installation and usage instructions, see the homepage link.
+
+about[fr]=Ce plugin vous permet de créer des modèles, d'exécuter des simulations et d'analyser les résultats directement dans l'environnement QGIS.
+
+    Fonctionnalités clés :
+
+    Convivial : Intuitif pour les utilisateurs de QGIS, avec des fonctionnalités claires, de bons paramètres par défaut et une documentation complète.
+
+    Intégration transparente : Exploite les capacités de QGIS et WNTR, en complétant les outils, algorithmes et plugins QGIS existants.
+
+    Robuste : Axé sur des fonctionnalités fiables et bien testées.
+
+    Flexible : S'adapte à différents flux de travail et préférences.
+
+    Automatisable : Les outils peuvent être utilisés dans le Model Builder de QGIS ou via PyQGIS.
+
+    Si WNTR n'est pas déjà installé, le plugin le téléchargera automatiquement depuis PyPI et l'installera dans le répertoire du plugin. Pour des instructions complètes d'installation et d'utilisation, consultez le lien de la page d'accueil.
+
+about[es]=Este complemento le permite crear modelos, ejecutar simulaciones y analizar resultados directamente en el entorno de QGIS.
+
+    Características clave:
+    - Fácil de usar: Intuitivo para usuarios de QGIS, con funcionalidad clara, buenos valores predeterminados y documentación completa.
+    - Integración perfecta: Aprovecha las capacidades de QGIS y WNTR, complementando las herramientas, algoritmos y complementos existentes de QGIS.
+    - Robusto: Enfocado en funciones fiables y bien probadas.
+    - Flexible: Adaptable a diferentes flujos de trabajo y preferencias.
+    - Automatizable: Las herramientas pueden usarse en el Model Builder de QGIS o mediante PyQGIS.
+
+    Si WNTR no está ya instalado, el complemento lo descargará automáticamente desde PyPI y lo instalará en el directorio del complemento. Para instrucciones completas de instalación y uso, consulte el enlace de la página principal.
+
+about[it]=Questo plugin consente di creare modelli, eseguire simulazioni e analizzare i risultati direttamente nell'ambiente QGIS.
+
+    Caratteristiche principali:
+    - Facile da usare: Intuitivo per gli utenti QGIS, con funzionalità chiare, buone impostazioni predefinite e documentazione completa.
+    - Integrazione perfetta: Sfrutta le capacità di QGIS e WNTR, integrando strumenti, algoritmi e plugin QGIS esistenti.
+    - Robusto: Concentrato su funzionalità affidabili e ben testate.
+    - Flessibile: Adattabile a diversi flussi di lavoro e preferenze.
+    - Automatizzabile: Gli strumenti possono essere utilizzati nel Model Builder di QGIS o tramite PyQGIS.
+
+    Se WNTR non è già installato, il plugin lo scaricherà automaticamente da PyPI e lo installerà nella directory del plugin. Per istruzioni complete su installazione e utilizzo, vedere il link della homepage.
+
+about[nl]=Met deze plugin kunt u modellen bouwen, simulaties uitvoeren en resultaten analyseren, allemaal binnen de QGIS-omgeving.
+
+    Belangrijkste kenmerken:
+    - Gebruiksvriendelijk: Intuïtief voor QGIS-gebruikers, met duidelijke functionaliteit, goede standaardinstellingen en uitgebreide documentatie.
+    - Naadloze integratie: Benut de mogelijkheden van QGIS en WNTR en vult bestaande QGIS-tools, algoritmen en plugins aan.
+    - Robuust: Gericht op betrouwbare, goed geteste functies.
+    - Flexibel: Aanpasbaar aan verschillende workflows en voorkeuren.
+    - Automatiseerbaar: Tools kunnen worden gebruikt in QGIS Model Builder of gescript met PyQGIS.
+
+    Als WNTR nog niet is geïnstalleerd, downloadt de plugin deze automatisch van PyPI en installeert deze in de plugindirectory. Zie de homepage-link voor volledige installatie- en gebruiksinstructies.
+
+about[ar]=تتيح لك هذه الإضافة إنشاء النماذج، وتشغيل المحاكاة، وتحليل النتائج مباشرةً داخل بيئة QGIS.
+
+    الميزات الرئيسية:
+    - سهلة الاستخدام: بديهية لمستخدمي QGIS، مع وظائف واضحة، وإعدادات افتراضية جيدة، وتوثيق شامل.
+    - تكامل سلس: تستفيد من إمكانيات QGIS وWNTR، وتكمل أدوات QGIS والخوارزميات والإضافات الموجودة.
+    - متينة: تركز على ميزات موثوقة ومجربة جيدًا.
+    - مرنة: قابلة للتكيف مع تدفقات العمل والتفضيلات المختلفة.
+    - قابلة للأتمتة: يمكن استخدام الأدوات في QGIS Model Builder أو برمجتها باستخدام PyQGIS.
+
+    إذا لم يكن WNTR مثبتًا بالفعل، فستقوم الإضافة بتنزيله تلقائيًا من PyPI وتثبيته في دليل الإضافة. لمزيد من تعليمات التثبيت والاستخدام، راجع رابط الصفحة الرئيسية.
