@@ -575,10 +575,12 @@ class _Curves:
         self._converter = converter
 
     class Type(enum.Enum):
-        HEAD = "HEAD"
-        EFFICIENCY = "EFFICIENCY"
-        VOLUME = "VOLUME"
-        HEADLOSS = "HEADLOSS"
+        # Curve type with values name, x parameter, y parameter
+
+        HEAD = "HEAD", Parameter.LENGTH, Parameter.VOLUME
+        EFFICIENCY = "EFFICIENCY", Parameter.FLOW, Parameter.HYDRAULIC_HEAD
+        VOLUME = "VOLUME", Parameter.FLOW, Parameter.UNITLESS  # flow vs percentage
+        HEADLOSS = "HEADLOSS", Parameter.FLOW, Parameter.HYDRAULIC_HEAD
 
     def _add_one(self, curve_string: Any, curve_type: _Curves.Type) -> str | None:
         try:
@@ -592,7 +594,7 @@ class _Curves:
         curve_points = self._convert_points(curve_points, curve_type, self._converter.to_si)
 
         name = next(self._name_iterator)
-        self._wn.add_curve(name=name, curve_type=curve_type.value, xy_tuples_list=curve_points)
+        self._wn.add_curve(name=name, curve_type=curve_type.value[0], xy_tuples_list=curve_points)
         return name
 
     def _add_all(self, curve_series: pd.Series, curve_type: _Curves.Type) -> pd.Series | None:
@@ -607,34 +609,17 @@ class _Curves:
     def get(self, curve_name: str) -> str | None:
         curve: wntr.network.elements.Curve = self._wn.get_curve(curve_name)
 
-        converted_points = self._convert_points(curve.points, _Curves.Type(curve.curve_type), self._converter.from_si)
+        converted_points = self._convert_points(curve.points, _Curves.Type[curve.curve_type], self._converter.from_si)
         return repr(converted_points)
 
     def _convert_points(self, points: list, curve_type: _Curves.Type, conversion_function) -> list[tuple[float, float]]:
         converted_points: list[tuple[float, float]] = []
 
-        if curve_type is _Curves.Type.VOLUME:
-            for point in points:
-                x = conversion_function(point[0], Parameter.LENGTH)
-                y = conversion_function(point[1], Parameter.VOLUME)
-                converted_points.append((x, y))
-        elif curve_type is _Curves.Type.HEAD:
-            for point in points:
-                x = conversion_function(point[0], Parameter.FLOW)
-                y = conversion_function(point[1], Parameter.HYDRAULIC_HEAD)
-                converted_points.append((x, y))
-        elif curve_type is _Curves.Type.EFFICIENCY:
-            for point in points:
-                x = conversion_function(point[0], Parameter.FLOW)
-                y = point[1]
-                converted_points.append((x, y))
-        elif curve_type is _Curves.Type.HEADLOSS:
-            for point in points:
-                x = conversion_function(point[0], Parameter.FLOW)
-                y = conversion_function(point[1], Parameter.HYDRAULIC_HEAD)
-                converted_points.append((x, y))
-        else:
-            raise KeyError("Curve type not specified")  # noqa: EM101, TRY003 # pragma: no cover
+        for point in points:
+            x = conversion_function(point[0], curve_type.value[1])
+            y = conversion_function(point[1], curve_type.value[2])
+            converted_points.append((x, y))
+
         return converted_points
 
     @staticmethod
