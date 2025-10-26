@@ -406,8 +406,9 @@ class Writer:
             if "energy_pattern" in df:
                 df["energy_pattern"] = df["energy_pattern"].apply(patterns.get)
 
-            if "efficiency" in df:
-                df["efficiency"] = df["efficiency"].apply(lambda x: curves.get(x["name"]))
+            if "efficiency_curve_name" in df:
+                df["efficiency_curve"] = df["efficiency_curve_name"].apply(curves.get)
+                df = df.drop(columns="efficiency_curve_name")
 
         elif layer is ModelLayer.VALVES:
             pressure_valves = df["valve_type"].isin(["PRV", "PSV", "PBV"])
@@ -612,6 +613,7 @@ class _Curves:
         curve: wntr.network.elements.Curve = self._wn.get_curve(curve_name)
 
         converted_points = self._convert_points(curve.points, _Curves.Type[curve.curve_type], self._converter.from_si)
+
         return repr(converted_points)
 
     def _convert_points(self, points: list, curve_type: _Curves.Type, conversion_function) -> list[tuple[float, float]]:
@@ -1194,8 +1196,11 @@ class _FromGis:
                 df.get("energy_pattern"), ModelLayer.PUMPS, Field.ENERGY_PATTERN
             )
 
+        if "efficiency_curve" in df:
+            df["efficiency_curve_name"] = self.curves.add_efficiency(df["efficiency_curve"])
+
         return df.drop(
-            columns=["headloss_curve", "pump_curve", "speed_pattern"],
+            columns=["headloss_curve", "pump_curve", "speed_pattern", "efficiency_curve"],
             errors="ignore",
         )
 
