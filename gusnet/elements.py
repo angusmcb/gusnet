@@ -388,7 +388,7 @@ class ModelLayer(_AbstractLayer):
                 Field.BASE_SPEED,
                 Field.SPEED_PATTERN,
                 Field.INITIAL_STATUS,
-                Field.EFFICIENCY,
+                Field.EFFICIENCY_CURVE,
                 Field.ENERGY_PRICE,
                 Field.ENERGY_PATTERN,
             ],
@@ -506,7 +506,7 @@ class Field(Enum):
     REQUIRED_PRESSURE = "required_pressure", Parameter.PRESSURE, FieldGroup.PRESSURE_DEPENDENT_DEMAND
     PRESSURE_EXPONENT = "pressure_exponent", Parameter.UNITLESS, FieldGroup.PRESSURE_DEPENDENT_DEMAND
 
-    EFFICIENCY = "efficiency", SimpleFieldType.CURVE, FieldGroup.ENERGY
+    EFFICIENCY_CURVE = "efficiency_curve", SimpleFieldType.CURVE, FieldGroup.ENERGY
     ENERGY_PRICE = "energy_price", Parameter.CURRENCY, FieldGroup.ENERGY
     ENERGY_PATTERN = "energy_pattern", SimpleFieldType.PATTERN, FieldGroup.ENERGY
 
@@ -607,7 +607,7 @@ class Field(Enum):
             return tr("Required Pressure")
         if self is Field.PRESSURE_EXPONENT:
             return tr("Pressure Exponent")
-        if self is Field.EFFICIENCY:
+        if self is Field.EFFICIENCY_CURVE:
             return tr("Efficiency Curve")
         if self is Field.ENERGY_PATTERN:
             return tr("Energy Pattern")
@@ -714,7 +714,7 @@ class Field(Enum):
             return tr("Required pressure for full demand delivery in pressure-dependent demand")
         if self is Field.PRESSURE_EXPONENT:
             return tr("Pressure exponent for demand calculation in pressure-dependent demand")
-        if self is Field.EFFICIENCY:
+        if self is Field.EFFICIENCY_CURVE:
             return tr("Pump efficiency curve (flow vs efficiency) for energy use analysis")
         if self is Field.ENERGY_PATTERN:
             return tr("Time-varying pattern for energy price")
