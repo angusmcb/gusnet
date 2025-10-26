@@ -914,7 +914,7 @@ def valve_headloss_curve_layers(simple_layers, curve_string):
 @pytest.fixture
 def pump_efficiency_curve_layers(simple_layers, curve_string):
     pump_layer = layer(
-        "linestring", [("name", str), ("pump_type", str), ("power", float), ("efficiency", curve_string)]
+        "linestring", [("name", str), ("pump_type", str), ("power", float), ("efficiency_curve", curve_string)]
     )
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "POWER", 10, curve_string])
     simple_layers["PUMPS"] = pump_layer
@@ -952,11 +952,13 @@ class TestCurveNoConversion:
         assert wn.get_link("V1").headloss_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 200.5), (0.02, 50.0)]
 
-    @pytest.mark.skip("Efficiency curve bug in wntr")
     def test_pump_efficiency_curve(self, pump_efficiency_curve_layers):
         wn = gusnet.from_qgis(pump_efficiency_curve_layers, "LPS", "H-W")
 
-        assert wn.get_link("PUMP1").efficiencey.multipliers == "1"
+        if wn.get_link("PUMP1") and not hasattr(wn.get_link("PUMP1"), "efficiency_curve"):
+            pytest.skip("Efficiency curve attribute missing in WNTR Link object wntr < 1.4.0")
+
+        assert wn.curves["1"].points == [(0.0, 200.5), (0.02, 50.0)]
 
 
 class TestCurveMetricConversion:
