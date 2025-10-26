@@ -223,11 +223,18 @@ def test_energy_pattern(wn):
 def test_efficiency_curve(wn):
     wn.add_curve("C1", "EFFICIENCY", [(0, 0), (10, 0.5), (20, 1)])
     wn.add_pump("PUMP1", "J1", "J2")
-    wn.links["PUMP1"].efficiency = wn.curves["C1"]
 
-    layers = gusnet.to_qgis(wn, units="LPS")
+    try:  # wntr <= 1.3
+        wn.links["PUMP1"].efficiency = wn.curves["C1"]
 
-    check_values(layers["PUMPS"], "efficiency", ["[(0.0, 0), (10000.0, 0.5), (20000.0, 1)]"])
+        layers = gusnet.to_qgis(wn, units="LPS")  # check efficiency doesn't crash the export
+
+    except AttributeError:
+        wn.links["PUMP1"].efficiency_curve_name = "C1"
+
+        layers = gusnet.to_qgis(wn, units="LPS")
+
+        check_values(layers["PUMPS"], "efficiency_curve", ["[(0.0, 0), (10000.0, 0.5), (20000.0, 1)]"])
 
 
 def test_valve_active(wn):
