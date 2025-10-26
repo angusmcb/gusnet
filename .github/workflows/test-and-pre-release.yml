@@ -85,7 +85,7 @@ jobs:
     strategy:
       matrix:
         # does not work with 3.28.0 due to missing geopandas
-        qgis_version: ['3.34.0','3.40.0']
+        qgis_version: ['3.34.0','3.40.0','3.44.0']
       fail-fast: false
     env:
       QGIS_PLUGIN_IN_CI: 1
