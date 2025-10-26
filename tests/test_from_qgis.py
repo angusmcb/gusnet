@@ -896,7 +896,7 @@ def tank_vol_curve_layers(simple_layers, curve_string):
             ("vol_curve", curve_string),
         ],
     )
-    add_point(tank_layer, (4, 5), ["T1", 1, 20, 1, 1, 1, curve_string])
+    add_point(tank_layer, (4, 5), ["T1", 1, 20, 20, 1, 1, curve_string])
     simple_layers["TANKS"] = tank_layer
     return simple_layers
 
