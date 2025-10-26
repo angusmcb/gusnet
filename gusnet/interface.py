@@ -575,11 +575,11 @@ class _Curves:
         self._converter = converter
 
     class Type(enum.Enum):
-        # Curve type with values name, x parameter, y parameter
+        # Curve type with values (name, x parameter, y parameter)
 
-        HEAD = "HEAD", Parameter.LENGTH, Parameter.VOLUME
-        EFFICIENCY = "EFFICIENCY", Parameter.FLOW, Parameter.HYDRAULIC_HEAD
-        VOLUME = "VOLUME", Parameter.FLOW, Parameter.UNITLESS  # flow vs percentage
+        HEAD = "HEAD", Parameter.FLOW, Parameter.HYDRAULIC_HEAD
+        EFFICIENCY = "EFFICIENCY", Parameter.FLOW, Parameter.UNITLESS  # flow vs percentage
+        VOLUME = "VOLUME", Parameter.LENGTH, Parameter.VOLUME
         HEADLOSS = "HEADLOSS", Parameter.FLOW, Parameter.HYDRAULIC_HEAD
 
     def _add_one(self, curve_string: Any, curve_type: _Curves.Type) -> str | None:
@@ -594,7 +594,9 @@ class _Curves:
         curve_points = self._convert_points(curve_points, curve_type, self._converter.to_si)
 
         name = next(self._name_iterator)
+
         self._wn.add_curve(name=name, curve_type=curve_type.value[0], xy_tuples_list=curve_points)
+
         return name
 
     def _add_all(self, curve_series: pd.Series, curve_type: _Curves.Type) -> pd.Series | None:
