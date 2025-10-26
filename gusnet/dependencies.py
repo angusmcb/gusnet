@@ -62,7 +62,7 @@ class WntrInstaller:
                     "--target=" + cls.package_directory(),
                     "--no-deps",
                     # "--find-links=" + cls.wheels_directory(),
-                    "wntr==1.3.2",
+                    "wntr<=1.4",
                 ],
                 check=False,
                 text=True,
