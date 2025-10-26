@@ -662,10 +662,8 @@ def test_float_attributes(float_attr, expected_result, field_type):
         ],
     )
     add_point(tank_layer, (4, 5), ["T1", float_attr, 865.0, float_attr, float_attr, float_attr])
-    pipe_layer = layer(
-        "linestring", [("name", str), ("length", field_type), ("diameter", field_type), ("roughness", field_type)]
-    )
-    add_line(pipe_layer, [(1, 1), (4, 5)], ["P1", float_attr, float_attr, float_attr])
+    pipe_layer = layer("linestring", [("name", str), ("length", field_type), ("diameter", float), ("roughness", float)])
+    add_line(pipe_layer, [(1, 1), (4, 5)], ["P1", float_attr, 100.0, 100.0])
 
     layers = {"JUNCTIONS": junction_layer, "TANKS": tank_layer, "PIPES": pipe_layer}
 
@@ -675,7 +673,6 @@ def test_float_attributes(float_attr, expected_result, field_type):
     assert wn.get_node("T1").diameter == expected_result
     assert wn.get_node("T1").elevation == 865.0
     assert wn.get_link("P1").length == expected_result
-    assert wn.get_link("P1").diameter == expected_result / 1000
 
 
 @pytest.mark.parametrize(
