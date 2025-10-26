@@ -234,7 +234,7 @@ def test_efficiency_curve(wn):
 
         layers = gusnet.to_qgis(wn, units="LPS")
 
-        check_values(layers["PUMPS"], "efficiency_curve", ["[(0.0, 0), (10000.0, 0.5), (20000.0, 1)]"])
+        check_values(layers["PUMPS"], "efficiency_curve", ["[(0.0, 0.0), (10000.0, 0.5), (20000.0, 1.0)]"])
 
 
 def test_valve_active(wn):
