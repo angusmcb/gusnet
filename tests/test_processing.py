@@ -425,7 +425,7 @@ def test_alg_template_layers_energy(processing, template_alg, template_alg_param
 
     result = processing.run(template_alg, template_alg_params)
 
-    assert "efficiency" in result["PUMPS"].fields().names()
+    assert "efficiency_curve" in result["PUMPS"].fields().names()
     assert "energy_pattern" in result["PUMPS"].fields().names()
     assert "energy_price" in result["PUMPS"].fields().names()
 
