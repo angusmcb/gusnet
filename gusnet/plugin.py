@@ -532,7 +532,7 @@ class OpenSettingsAction(QAction):
     def open_settings(self):
         import processing
 
-        processing.execAlgorithmDialog("wntr:run")  # type: ignore
+        processing.execAlgorithmDialog(RunSimulation())  # type: ignore
 
 
 def import_wntr(_: QgsTask):
