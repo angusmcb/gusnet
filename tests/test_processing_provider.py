@@ -1,10 +1,14 @@
-from typing import Callable
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Callable
 
 import pytest
-from PyQt5.QtGui import QIcon
 from qgis.core import QgsProcessingProvider, QgsProcessingRegistry
 
 from gusnet.gusnet_processing.provider import Provider
+
+if TYPE_CHECKING:
+    from qgis.PyQt.QtGui import QIcon
 
 
 @pytest.fixture(scope="module")

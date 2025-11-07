@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 import logging
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from qgis.core import (
     QgsApplication,
@@ -16,7 +16,7 @@ from qgis.core import (
 )
 from qgis.PyQt.QtCore import QCoreApplication, QThread
 
-from gusnet.elements import ModelLayer, ResultLayer
+from gusnet.elements import ModelLayer, ModelOptions, ResultLayer
 from gusnet.i18n import tr
 from gusnet.settings import ProjectSettings, SettingKey
 from gusnet.style import style
@@ -31,15 +31,22 @@ SHOW_TIMING = False
 
 class CommonProcessingBase(QgsProcessingAlgorithm):
     post_processors: ClassVar[dict[str, QgsProcessingLayerPostProcessorInterface]] = {}
+    _options_to_save: ModelOptions | None = None
+    _settings: dict[SettingKey, Any] | None = None
 
     def helpUrl(self) -> str:  # noqa: N802
         return "https://www.gusnet.org"
 
     def postProcessAlgorithm(self, context, feedback):  # noqa: N802
-        if QThread.currentThread() == QCoreApplication.instance().thread() and hasattr(self, "_settings"):
+        if QThread.currentThread() == QCoreApplication.instance().thread():
             project_settings = ProjectSettings()
-            for setting_key, setting_value in self._settings.items():
-                project_settings.set(setting_key, setting_value)
+
+            if self._options_to_save:
+                project_settings.save_options(self._options_to_save)
+
+            if self._settings:
+                for setting_key, setting_value in self._settings.items():
+                    project_settings.set(setting_key, setting_value)
 
         return super().postProcessAlgorithm(context, feedback)
 

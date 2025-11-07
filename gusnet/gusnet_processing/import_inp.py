@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -26,14 +27,10 @@ from qgis.core import (
 )
 from qgis.PyQt.QtGui import QIcon
 
-from gusnet.elements import (
-    FlowUnit,
-    HeadlossFormula,
-    ModelLayer,
-)
+from gusnet.elements import FlowUnit, ModelLayer, ModelOptions
 from gusnet.gusnet_processing.common import CommonProcessingBase, profile
 from gusnet.i18n import tr
-from gusnet.interface import Writer
+from gusnet.interface import Writer, options_from_wn, options_to_wn
 from gusnet.settings import SettingKey
 from gusnet.units import SpecificUnitNames, UnitNames
 
@@ -114,22 +111,21 @@ class ImportInp(CommonProcessingBase):
             input_file = self.parameterAsFile(parameters, self.INPUT, context)
             wn = self._load_inp(input_file)
 
+        options = options_from_wn(wn)
+
+        options = self._set_flow_unit(parameters, context, options)
+
+        options_to_wn(options, wn)
+
         self._describe_model(wn, feedback)
 
-        flow_unit = self._get_flow_unit(parameters, context, wn)
-
         feedback.pushInfo(
-            tr("Will output with the following units: {flow_unit}").format(flow_unit=flow_unit.friendly_name)
+            tr("Will output with the following units: {flow_unit}").format(flow_unit=options.flow_unit.friendly_name)
         )
 
-        headloss_formula = HeadlossFormula(wn.options.hydraulic.headloss)
+        self._options_to_save = options
 
-        self._settings = {
-            SettingKey.FLOW_UNITS: flow_unit,
-            SettingKey.HEADLOSS_FORMULA: headloss_formula,
-            SettingKey.SIMULATION_DURATION: wn.options.time.duration / 3600,
-            SettingKey.MODEL_LAYERS: {},
-        }
+        self._settings = {SettingKey.MODEL_LAYERS: {}}
 
         with profile(tr("Creating Outputs"), 80, feedback):
             network_writer = Writer(wn)
@@ -143,7 +139,7 @@ class ImportInp(CommonProcessingBase):
             # if len(extra_analysis_type_names):
             #     feedback.pushInfo("Will include columns for analysis types: " + ", ".join(extra_analysis_type_names))
             group_name = tr("Model Layers ({filename})").format(filename=Path(input_file).stem)
-            units = SpecificUnitNames.from_wn(wn)
+            units = SpecificUnitNames.from_options(options)
             outputs = self._write_to_sinks(parameters, context, network_writer, group_name, units)
 
         return outputs
@@ -162,17 +158,15 @@ class ImportInp(CommonProcessingBase):
 
         return wn
 
-    def _get_flow_unit(
-        self, parameters: dict[str, Any], context: QgsProcessingContext, wn: wntr.network.WaterNetworkModel
-    ) -> FlowUnit:
+    def _set_flow_unit(
+        self, parameters: dict[str, Any], context: QgsProcessingContext, options: ModelOptions
+    ) -> ModelOptions:
         if parameters.get(self.UNITS) is not None:
             unit_enum_int = self.parameterAsEnum(parameters, self.UNITS, context)
             flow_unit = list(FlowUnit)[unit_enum_int]
-            wn.options.hydraulic.inpfile_units = flow_unit.name
-        else:
-            flow_unit = FlowUnit[wn.options.hydraulic.inpfile_units]
+            options = dataclasses.replace(options, flow_unit=flow_unit)
 
-        return flow_unit
+        return options
 
     def _write_to_sinks(
         self,

@@ -7,6 +7,7 @@ from qgis.core import QgsExpression, QgsExpressionContext, QgsFeature, qgsfuncti
 
 import gusnet.interface
 from gusnet.i18n import tr
+from gusnet.pattern_curve import Pattern
 
 if TYPE_CHECKING:  # pragma: no cover
     from qgis.PyQt.QtCore import QDateTime
@@ -94,11 +95,11 @@ def gusnet_check_pattern(pattern, feature, parent, context):  # noqa ARG001
     """
 
     try:
-        pattern = gusnet.interface._Patterns.read_pattern(pattern)  # noqa: SLF001
+        pattern = Pattern(pattern)
     except ValueError:
         return False
 
-    if pattern is None:
+    if not pattern:
         return None
     else:
         return True

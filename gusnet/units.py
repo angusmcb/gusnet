@@ -1,50 +1,13 @@
 from __future__ import annotations
 
-import enum
 from typing import TYPE_CHECKING
 
-from gusnet.elements import FlowUnit, HeadlossFormula, Parameter
+from gusnet.elements import FlowUnit, HeadlossFormula, MassUnit, ModelOptions, Parameter, WallReactionOrder
 from gusnet.i18n import tr
 
 if TYPE_CHECKING:
     import numpy as np
     import pandas as pd
-    import wntr
-
-
-class MassUnits(enum.Enum):
-    r"""Mass units used by EPANET, plus SI conversion factor.
-
-    Mass units are defined in the EPANET INP file when the QUALITY option is
-    set to a chemical. This is parsed to obtain the mass part of the concentration units,
-    and is used to set this enumerated type.
-
-    .. rubric:: Enum Members
-
-    ============  ============================================
-    :attr:`~mg`   miligrams; EPANET as "mg/L" or "mg/min"
-    :attr:`~ug`   micrograms; EPANET as "ug/L" or "ug/min"
-    :attr:`~g`    grams
-    :attr:`~kg`   kilograms; WNTR standard
-    ============  ============================================
-
-    .. rubric:: Enum Member Attributes
-
-    .. autosummary::
-        factor
-
-    """
-
-    mg = (1, 0.000001)
-    ug = (2, 0.000000001)
-    g = (3, 0.001)
-    kg = (4, 1.0)
-
-    @property
-    def factor(self):
-        """float : The scaling factor to convert to kg."""
-        value = super().value
-        return value[1]
 
 
 class Converter:
@@ -55,22 +18,23 @@ class Converter:
         headloss_formula: Used to determine how to handle conversion of the roughness coefficient
     """
 
+    _TRADITIONAL_FLOW_UNITS = {FlowUnit.CFS, FlowUnit.GPM, FlowUnit.MGD, FlowUnit.IMGD, FlowUnit.AFD}  # noqa: RUF012
+
     def __init__(
         self,
         flow_units: FlowUnit,
         headloss_formula: HeadlossFormula,
+        mass_unit: MassUnit | None = MassUnit.MG,
+        wall_reaction_order: WallReactionOrder | None = WallReactionOrder.ONE,
     ):
         self.flow_units = flow_units
         self.headloss_formula = headloss_formula
-        self.mass_units = MassUnits.mg
-        self.wall_reaction_order = 1
+        self.mass_unit = mass_unit
+        self.wall_reaction_order = wall_reaction_order
 
     @classmethod
-    def from_wn(cls, wn: wntr.network.WaterNetworkModel):
-        flow_units = FlowUnit[wn.options.hydraulic.inpfile_units.upper()]
-        headloss_formula = HeadlossFormula(wn.options.hydraulic.headloss)
-        converter = cls(flow_units, headloss_formula)
-        return converter
+    def from_options(cls, options: ModelOptions):
+        return cls(options.flow_unit, options.headloss_formula, options.mass_unit, options.wall_reaction_order)
 
     def to_si(
         self,
@@ -154,24 +118,24 @@ class Converter:
                 return 1.0
 
         elif parameter is Parameter.CONCENTRATION:
-            return self.mass_units.factor / 0.001  # MASS /L to kg/m3
+            return self._mass_unit_factor() / 0.001  # MASS /L to kg/m3
 
         elif parameter is Parameter.REACTION_RATE:
-            return (self.mass_units.factor / 0.001) / (24 * 3600)  # 1/day to 1/s
+            return (self._mass_unit_factor() / 0.001) / (24 * 3600)  # 1/day to 1/s
 
         elif parameter is Parameter.SOURCE_MASS_INJECTION:
-            return self.mass_units.factor / 60.0  # MASS /min to kg/s
+            return self._mass_unit_factor() / 60.0  # MASS /min to kg/s
 
         elif parameter is Parameter.BULK_REACTION_COEFFICIENT:
             return 1 / 86400.0  # per day to per second
 
-        elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order == 0:
+        elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order is WallReactionOrder.ZERO:
             if self.traditional:
-                return self.mass_units.factor * 0.092903 / 86400.0  # M/ft2/d to SI
+                return self._mass_unit_factor() * 0.092903 / 86400.0  # M/ft2/d to SI
             else:
-                return self.mass_units.factor / 86400.0  # M/m2/day to M/m2/s
+                return self._mass_unit_factor() / 86400.0  # M/m2/day to M/m2/s
 
-        elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order == 1:
+        elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order is WallReactionOrder.ONE:
             if self.traditional:
                 return 0.3048 / 86400.0  # ft/d to m/s
             else:
@@ -212,9 +176,20 @@ class Converter:
 
         return factor
 
+    def _mass_unit_factor(self) -> float:
+        mass_units = self.mass_unit
+        if mass_units is MassUnit.MG:
+            factor = 1e-6
+        elif mass_units is MassUnit.UG:
+            factor = 1e-9
+        else:
+            raise ValueError(mass_units)  # pragma: no cover
+
+        return factor
+
     @property
     def traditional(self):
-        return self.flow_units in [FlowUnit.CFS, FlowUnit.GPM, FlowUnit.MGD, FlowUnit.IMGD, FlowUnit.AFD]
+        return self.flow_units in self._TRADITIONAL_FLOW_UNITS
 
 
 class UnitNames:
@@ -300,15 +275,11 @@ class SpecificUnitNames(Converter, UnitNames):
         raise ValueError
 
     def mass_unit_name(self):
-        mass_unit = self.mass_units
-        if mass_unit is MassUnits.mg:
+        mass_unit = self.mass_unit
+        if mass_unit is MassUnit.MG:
             return tr("mg")
-        if mass_unit is MassUnits.ug:
+        if mass_unit is MassUnit.UG:
             return tr("ug")
-        if mass_unit is MassUnits.g:
-            return tr("g")
-        if mass_unit is MassUnits.kg:
-            return tr("kg")
         raise ValueError(mass_unit)  # pragma: no cover
 
     def get(
@@ -393,13 +364,13 @@ class SpecificUnitNames(Converter, UnitNames):
         elif parameter is Parameter.BULK_REACTION_COEFFICIENT:
             return "  "
 
-        elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order == 0:
+        elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order == WallReactionOrder.ZERO:
             if self.traditional:
                 return tr("{mass_unit}/ft²/day").format(mass_unit=mass)  # M/ft2/d to SI
             else:
                 return tr("{mass_unit}/m²/day").format(mass_unit=mass)  # M/m2/day to M/m2/s
 
-        elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order == 1:
+        elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order == WallReactionOrder.ONE:
             if self.traditional:
                 return tr("ft/day")  # ft/d to m/s
             else:

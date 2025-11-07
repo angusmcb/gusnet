@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from gusnet.elements import FlowUnit, HeadlossFormula, Parameter
+from gusnet.elements import DefaultOptions, FlowUnit, HeadlossFormula, Parameter
 from gusnet.units import Converter, SpecificUnitNames, UnitNames
 
 
@@ -11,12 +11,10 @@ def converter():
     return Converter(FlowUnit.LPS, HeadlossFormula.HAZEN_WILLIAMS)
 
 
-def test_factory():
-    import wntr
+def test_factory_creation():
+    options = DefaultOptions()
 
-    wn = wntr.network.WaterNetworkModel()
-
-    c = Converter.from_wn(wn)
+    c = Converter.from_options(options)
 
     assert isinstance(c, Converter)
 

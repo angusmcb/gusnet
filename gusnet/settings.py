@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 import ast
+import dataclasses
+import typing
 from enum import Enum
 from typing import Any
 
 from qgis.core import QgsExpressionContextUtils, QgsProject
 
-from gusnet.elements import DemandType, FlowUnit, HeadlossFormula
+from gusnet.elements import DefaultOptions, DemandType, FlowUnit, HeadlossFormula, ModelOptions
+from gusnet.pattern_curve import Pattern
 
 
 class SettingKey(str, Enum):
     """Enum of values that can be stored in project settings"""
 
-    FLOW_UNITS = "flow_units", FlowUnit
+    FLOW_UNITS = "flow_unit", FlowUnit
     MODEL_LAYERS = "model_layers", dict
     HEADLOSS_FORMULA = "headloss_formula", HeadlossFormula
     SIMULATION_DURATION = "simulation_duration", float
@@ -105,3 +108,36 @@ class ProjectSettings:
             value = str(value)
 
         QgsExpressionContextUtils.setProjectVariable(self._project, setting_name, value)
+
+    def load_options(self) -> ModelOptions:
+        """Get saved water network options"""
+
+        data = {}
+
+        option_types = typing.get_type_hints(ModelOptions)
+
+        for field in dataclasses.fields(ModelOptions):
+            value = QgsExpressionContextUtils.projectScope(self._project).variable(self.SETTING_PREFIX + field.name)
+
+            if value is None:
+                continue
+
+            required_type = option_types[field.name]
+
+            data[field.name] = required_type(value)
+
+        return dataclasses.replace(DefaultOptions(), **data)
+
+    def save_options(self, options: ModelOptions) -> None:
+        """Save water network model options"""
+
+        for field in dataclasses.fields(ModelOptions):
+            value = getattr(options, field.name)
+
+            if isinstance(value, Enum):
+                value = value.value
+
+            if isinstance(value, Pattern):
+                value = str(value)
+
+            QgsExpressionContextUtils.setProjectVariable(self._project, self.SETTING_PREFIX + field.name, value)

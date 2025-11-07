@@ -42,7 +42,7 @@ from qgis.utils import iface
 import gusnet
 import gusnet.expressions
 from gusnet.dependencies import WntrInstaller
-from gusnet.elements import DemandType, FlowUnit, HeadlossFormula, ModelLayer, ResultLayer
+from gusnet.elements import FlowUnit, HeadlossFormula, ModelLayer, ResultLayer
 from gusnet.gusnet_processing.empty_model import TemplateLayers
 from gusnet.gusnet_processing.import_inp import ImportInp
 from gusnet.gusnet_processing.provider import Provider
@@ -350,14 +350,10 @@ class RunAction(ProcessingRunnerAction):
         self.setToolTip(tr("Run the simulation with the current settings."))
 
     def get_parameters(self) -> dict:
-        project_settings = ProjectSettings()
+        saved_options = ProjectSettings().load_options()
+        saved_params = RunSimulation().options_to_param_values(saved_options)
 
-        saved_layers = project_settings.get(SettingKey.MODEL_LAYERS, {})
-        input_layers = {
-            layer_type.name: saved_layers.get(layer_type.name)
-            for layer_type in ModelLayer
-            if QgsProject.instance().mapLayer(saved_layers.get(layer_type.name))
-        }
+        input_layers = RunSimulation().get_default_input_layers()
 
         if not len(input_layers):
             self.display_error("Set the layers that will be part of the model before running it.")
@@ -365,24 +361,10 @@ class RunAction(ProcessingRunnerAction):
 
         result_layers = {layer.results_name: TemporaryOutputLayerDefinition() for layer in ResultLayer}
 
-        flow_units = project_settings.get(SettingKey.FLOW_UNITS, FlowUnit.LPS)
-        flow_unit_id = list(FlowUnit).index(flow_units)
-
-        headloss_formula = project_settings.get(SettingKey.HEADLOSS_FORMULA, HeadlossFormula.HAZEN_WILLIAMS)
-        headloss_formula_id = list(HeadlossFormula).index(headloss_formula)
-
-        demand_type = project_settings.get(SettingKey.DEMAND_TYPE, DemandType.FIXED)
-        demand_type_id = list(DemandType).index(demand_type)
-
-        duration = project_settings.get(SettingKey.SIMULATION_DURATION, 0)
-
-        self.set_success_message(flow_units, headloss_formula)
+        self.set_success_message(saved_options.flow_unit, saved_options.headloss_formula)
 
         return {
-            RunSimulation.UNITS: flow_unit_id,
-            RunSimulation.HEADLOSS_FORMULA: headloss_formula_id,
-            RunSimulation.DURATION: duration,
-            RunSimulation.DEMAND_TYPE: demand_type_id,
+            **saved_params,
             **result_layers,
             **input_layers,
         }

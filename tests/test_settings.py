@@ -16,7 +16,7 @@ def read(var):
 def test_read():
     QgsProject.instance().clear()
     ProjectSettings().set(SettingKey.FLOW_UNITS, FlowUnit.LPS)
-    written_value = read("flow_units")
+    written_value = read("flow_unit")
     assert written_value == "LPS"
 
 
@@ -39,7 +39,7 @@ def test_get_default_value():
 def test_set_value():
     project_settings = ProjectSettings(project=QgsProject.instance())
     project_settings.set(SettingKey.FLOW_UNITS, FlowUnit.LPS)
-    result = read("flow_units")
+    result = read("flow_unit")
     assert result == "LPS"
 
 

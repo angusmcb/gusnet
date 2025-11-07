@@ -5,6 +5,7 @@ This module contains the interfaces for for converting between WNTR and QGIS, bo
 from __future__ import annotations
 
 import ast
+import dataclasses
 import enum
 import functools
 import importlib
@@ -36,20 +37,27 @@ from qgis.PyQt.QtCore import QMetaType, QVariant
 
 import gusnet.style
 from gusnet.elements import (
+    DefaultOptions,
+    DemandType,
     Field,
     FieldGroup,
     FlowUnit,
     HeadlossFormula,
     MapFieldType,
+    MassUnit,
     ModelLayer,
+    ModelOptions,
     Parameter,
     PumpTypes,
+    QualityParameter,
     ResultLayer,
     SimpleFieldType,
     ValveType,
+    WallReactionOrder,
     _AbstractLayer,
 )
 from gusnet.i18n import tr
+from gusnet.pattern_curve import Pattern
 from gusnet.spatial_index import SnapError, SpatialIndex
 from gusnet.units import Converter, SpecificUnitNames
 
@@ -57,6 +65,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import wntr  # noqa
     import pandas as pd
     import numpy as np
+    from collections.abc import Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -112,19 +121,22 @@ def to_qgis(
     if isinstance(wn, (str, pathlib.Path)):
         wn = wntr.network.WaterNetworkModel(str(wn))
 
+    options = options_from_wn(wn)
+
     if units:
         try:
             flow_unit = FlowUnit[units.upper()]
         except KeyError as e:
             raise FlowUnitError(e) from e
-        wn.options.hydraulic.inpfile_units = flow_unit.name
+
+        options = dataclasses.replace(options, flow_unit=flow_unit)
+
+        options_to_wn(options, wn)
 
     else:
-        flow_unit = FlowUnit[wn.options.hydraulic.inpfile_units.upper()]
-
         logger.warning(
             tr("No units specified. Will use the value from wn: {units_friendly_name}").format(
-                units_friendly_name=flow_unit.friendly_name
+                units_friendly_name=options.flow_unit.friendly_name
             )
         )
     writer = Writer(wn, results)
@@ -138,7 +150,7 @@ def to_qgis(
     else:
         crs_object = QgsCoordinateReferenceSystem()
 
-    unit_names = SpecificUnitNames.from_wn(wn)
+    unit_names = SpecificUnitNames.from_options(options)
 
     model_layers: list[ModelLayer | ResultLayer] = list(ResultLayer if results else ModelLayer)
     for model_layer in model_layers:
@@ -155,7 +167,7 @@ def to_qgis(
         layer.updateFields()
         layer.updateExtents()
         gusnet.style.style(
-            layer, model_layer, theme="extended" if results and wn.options.time.duration else None, units=unit_names
+            layer, model_layer, theme="extended" if results and options.simulation_duration else None, units=unit_names
         )
         QgsProject.instance().addMapLayer(layer)
         map_layers[model_layer.name] = layer
@@ -175,15 +187,20 @@ class Writer:
 
     """
 
+    _EXTENDED_PERIOD = object()
+
     def __init__(
         self,
         wn: wntr.network.WaterNetworkModel,
         results: wntr.sim.SimulationResults | None = None,
     ) -> None:
-        self._converter = Converter.from_wn(wn)
+        options = options_from_wn(wn)
 
-        self._timestep = None
-        if not wn.options.time.duration:
+        self._converter = Converter.from_options(options)
+
+        if options.simulation_duration:
+            self._timestep = self._EXTENDED_PERIOD
+        else:
             self._timestep = 0
 
         self._dfs: dict[_AbstractLayer, pd.DataFrame] = {}
@@ -195,7 +212,7 @@ class Writer:
         self._node_geometries = self._get_node_geometries(wn)
         self._link_geometries = self._get_link_geometries(wn)
 
-        field_group = FieldGroup.BASE | _get_field_groups(wn)
+        field_group = FieldGroup.BASE | _get_field_groups(options)
 
         self.fields = [field for field in Field if field.field_group & field_group]
         """A list of field names to be written
@@ -274,7 +291,7 @@ class Writer:
                 dtype = dtypes[f]
                 comment = ""
 
-            if is_list_field and self._timestep is None:
+            if is_list_field and self._timestep is self._EXTENDED_PERIOD:
                 qgs_field = QgsField(
                     f.lower(),
                     self._get_qgs_field_type(list),
@@ -379,11 +396,11 @@ class Writer:
             # 'demand_pattern' didn't exist on node prior to wntr 1.3.0 so we have to go searching:
             df["demand_pattern"] = wn.query_node_attribute(
                 "demand_timeseries_list", node_type=wntr.network.model.Junction
-            ).apply(lambda dtl: patterns.get(dtl.pattern_list()[0]))
+            ).apply(lambda dtl: patterns.get_str_or_none(dtl.pattern_list()[0]))
 
         elif layer is ModelLayer.RESERVOIRS:
             if "head_pattern_name" in df:
-                df["head_pattern"] = df["head_pattern_name"].apply(patterns.get)
+                df["head_pattern"] = df["head_pattern_name"].apply(patterns.get_str_or_none)
                 df = df.drop(columns="head_pattern_name")
 
         elif layer is ModelLayer.TANKS:
@@ -400,11 +417,11 @@ class Writer:
                 df = df.drop(columns="pump_curve_name")
 
             if "speed_pattern_name" in df:
-                df["speed_pattern"] = df["speed_pattern_name"].apply(patterns.get)
+                df["speed_pattern"] = df["speed_pattern_name"].apply(patterns.get_str_or_none)
                 df = df.drop(columns="speed_pattern_name")
             # 'energy pattern' is not called energy pattern name!
             if "energy_pattern" in df:
-                df["energy_pattern"] = df["energy_pattern"].apply(patterns.get)
+                df["energy_pattern"] = df["energy_pattern"].apply(patterns.get_str_or_none)
 
             if "efficiency_curve_name" in df:
                 df["efficiency_curve"] = df["efficiency_curve_name"].apply(curves.get)
@@ -465,7 +482,7 @@ class Writer:
             if isinstance(field.type, Parameter):
                 df = self._converter.from_si(df, field.type)
 
-            if self._timestep is not None:
+            if self._timestep is not self._EXTENDED_PERIOD:
                 output_attributes[field.value] = df.iloc[self._timestep]
             else:
                 lists = df.transpose().to_numpy().tolist()
@@ -516,24 +533,29 @@ class Writer:
 
 class _Patterns:
     def __init__(self, wn: wntr.network.model.WaterNetworkModel) -> None:
-        self._name_iterator = map(str, itertools.count(2))
-        self._existing_patterns: dict[tuple, str] = {}
+        self._next_name = functools.partial(
+            next, filter(lambda n: n not in wn.pattern_name_list, map(str, itertools.count(2)))
+        )
+        self._existing_patterns: dict[Pattern, str] = {}
         self._wn = wn
 
-    def add(self, pattern) -> str | None:
-        pattern_list = self.read_pattern(pattern)
+    def add(self, pattern: Pattern | Iterable[float] | str | None) -> str | None:
+        """Takes a Pattern object, or a string or iterable describing the pattern.
+        Adds it to the wntr wn, and returns the new pattern name.
+        Returns None if the pattern is empty."""
 
-        if not pattern_list:
+        if not isinstance(pattern, Pattern):
+            pattern = Pattern(pattern)
+
+        if not pattern:
             return None
 
-        pattern_tuple = tuple(pattern_list)
-
-        if existing_pattern_name := self._existing_patterns.get(pattern_tuple):
+        if existing_pattern_name := self._existing_patterns.get(pattern):
             return existing_pattern_name
 
-        name = next(self._name_iterator)
-        self._wn.add_pattern(name=name, pattern=pattern_list)
-        self._existing_patterns[pattern_tuple] = name
+        name = self._next_name()
+        self._wn.add_pattern(name=name, pattern=list(pattern))
+        self._existing_patterns[pattern] = name
         return name
 
     def add_all(self, pattern_series: pd.Series, layer: ModelLayer, pattern_type: Field) -> pd.Series:
@@ -542,31 +564,34 @@ class _Patterns:
         except ValueError as e:
             raise PatternError(e, layer, pattern_type) from None
 
-    def get(self, pattern: wntr.network.Pattern | str | None) -> str | None:
-        if not pattern:
-            return None
-        if isinstance(pattern, str):
-            pattern_obj: wntr.network.Pattern = self._wn.get_pattern(pattern)
+    def get(self, pattern_name: wntr.network.Pattern | str | None) -> Pattern:
+        if not pattern_name:
+            return Pattern()
+        elif isinstance(pattern_name, str):
+            pattern = self._wn.get_pattern(pattern_name)
         else:
-            pattern_obj = pattern
+            pattern = pattern_name
 
-        return " ".join(map(str, pattern_obj.multipliers))
+        return Pattern(pattern.multipliers)
 
-    @staticmethod
-    def read_pattern(pattern: Any) -> list[float] | None:
-        pattern_in = pattern
-        if isinstance(pattern, str):
-            pattern = pattern.strip().split()
+    def get_str_or_none(self, pattern_name: wntr.network.Pattern | str | None) -> str | None:
+        return str(self.get(pattern_name)) or None
 
-        try:
-            pattern_list = [float(item) for item in pattern]
-        except (ValueError, TypeError):
-            raise ValueError(pattern_in) from None
+    # @staticmethod
+    # def read_pattern(pattern: Any) -> tuple[float]:
+    #     pattern_in = pattern
+    #     if isinstance(pattern, str):
+    #         pattern = pattern.strip().split()
 
-        if len(pattern_list) == 0:
-            return None
+    #     try:
+    #         pattern_tuple = tuple(float(item) for item in pattern)
+    #     except (ValueError, TypeError) as e:
+    #         raise ValueError(pattern_in) from e
 
-        return pattern_list
+    #     # if len(pattern_tuple) == 0:
+    #     #     return None
+
+    #     return pattern_tuple
 
 
 class _Curves:
@@ -721,40 +746,35 @@ def from_qgis(
                 "Cannot set headloss when wn is set. Set the headloss in the wn.options.hydraulic.headloss instead"
             )
             raise ValueError(msg)
-        HeadlossFormula(wn.options.hydraulic.headloss)
+
+        options = options_from_wn(wn)
+
     else:
         wn = wntr.network.WaterNetworkModel()
 
         if not headloss:
             msg = tr("headloss must be set if wn is not set: possible values are: H-W, D-W, C-M")
             raise ValueError(msg)
-        HeadlossFormula(headloss)
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=UserWarning,
-                message="Changing the headloss formula from H-W to D-W will not change",
-            )
-            wn.options.hydraulic.headloss = headloss
 
-    # try:
-    #     flow_units = wntr.epanet.FlowUnits[str(units).upper()]
-    # except KeyError as e:
-    #     msg = f"Units {e} is not a known set of units. Possible units are: " + ", ".join(FlowUnit._member_names_)
-    #     raise ValueError(msg) from None
+        headloss_formula = HeadlossFormula(headloss)
+
+        options = dataclasses.replace(DefaultOptions(), headloss_formula=headloss_formula)
 
     try:
         unit = FlowUnit[units.upper()]
     except KeyError as e:
         raise FlowUnitError(e) from e
 
-    wn.options.hydraulic.inpfile_units = unit.name
+    options = dataclasses.replace(options, flow_unit=unit)
 
-    unit_conversion = Converter.from_wn(wn)
+    options_to_wn(options, wn)
 
-    reader = _FromGis(unit_conversion, project)
+    unit_conversion = Converter.from_options(options)
+
     if crs:
-        reader.crs = QgsCoordinateReferenceSystem(crs)
+        crs = QgsCoordinateReferenceSystem(crs)
+
+    reader = _FromGis(unit_conversion, project, crs=crs)
 
     try:
         model_layers = {}
@@ -769,6 +789,20 @@ def from_qgis(
     return wn
 
 
+def to_wntr(
+    model_layers: dict[ModelLayer, QgsFeatureSource],
+    options: ModelOptions,
+    project: QgsProject,
+    crs: QgsCoordinateReferenceSystem | None,
+) -> wntr.network.WaterNetworkModel:
+    wn = wntr.network.WaterNetworkModel()
+    options_to_wn(options, wn)
+    converter = Converter.from_options(options)
+    reader = _FromGis(converter, project, crs=crs)
+    reader.add_features_to_network_model(model_layers, wn)
+    return wn
+
+
 @needs_wntr_pandas
 class _FromGis:
     """Read from QGIS feature sources / layers to a WNTR model"""
@@ -777,6 +811,7 @@ class _FromGis:
         self,
         converter: Converter,
         project: QgsProject | None = None,
+        crs: QgsCoordinateReferenceSystem | None = None,
         # transform_context: QgsCoordinateTransformContext | None = None,
         # ellipsoid: str | None = "EPSG:7030",
     ):
@@ -790,7 +825,7 @@ class _FromGis:
         self._transform_context = project.transformContext()
         self._ellipsoid = project.ellipsoid()
         self._converter = converter
-        self.crs = None
+        self.crs = crs
 
     @property
     def crs(self) -> QgsCoordinateReferenceSystem | None:
@@ -1343,8 +1378,9 @@ def describe_network(wn: wntr.network.WaterNetworkModel) -> tuple[str, str]:
 
 @needs_wntr_pandas
 def describe_pipes(wn: wntr.network.WaterNetworkModel) -> tuple[str, str]:
-    converter = Converter.from_wn(wn)
-    unit_names = SpecificUnitNames.from_wn(wn)
+    options = options_from_wn(wn)
+    converter = Converter.from_options(options)
+    unit_names = SpecificUnitNames.from_options(options)
 
     pipe_df = pd.DataFrame(
         ((pipe.length, pipe.diameter, pipe.roughness) for _, pipe in wn.pipes()),
@@ -1400,19 +1436,105 @@ def describe_pipes(wn: wntr.network.WaterNetworkModel) -> tuple[str, str]:
 
 
 @needs_wntr_pandas
-def _get_field_groups(wn: wntr.network.WaterNetworkModel):
+def _get_field_groups(options: ModelOptions) -> FieldGroup:
     """Utility function for guessing what types of analysis a specific wn will undertake,
     and therefore which field types should be included."""
 
     field_groups = FieldGroup(0)
-    if wn.options.quality.parameter.upper() != "NONE":  # intentional string 'none'
+
+    if options.quality_parameter is not QualityParameter.NONE:
         field_groups = field_groups | FieldGroup.WATER_QUALITY_ANALYSIS
-    if wn.options.report.energy != "NO":
+
+    if options.energy_report:
         field_groups = field_groups | FieldGroup.ENERGY
-    if wn.options.hydraulic.demand_model == "PDA":
+
+    if options.demand_type is DemandType.PRESSURE_DEPENDENT:
         field_groups = field_groups | FieldGroup.PRESSURE_DEPENDENT_DEMAND
 
     return field_groups
+
+
+@needs_wntr_pandas
+def options_from_wn(wn: wntr.network.WaterNetworkModel) -> ModelOptions:
+    o: wntr.network.Options = wn.options
+
+    patterns = _Patterns(wn)
+
+    flow_unit = FlowUnit(o.hydraulic.inpfile_units)
+    headloss_formula = HeadlossFormula(o.hydraulic.headloss)
+    mass_unit = MassUnit(o.quality.inpfile_units)
+
+    converter = Converter(flow_unit, headloss_formula, mass_unit)
+
+    return ModelOptions(
+        flow_unit=flow_unit,
+        headloss_formula=headloss_formula,
+        simulation_duration=o.time.duration / 3600,
+        demand_multiplier=o.hydraulic.demand_multiplier,
+        emitter_exponent=o.hydraulic.emitter_exponent,
+        demand_type=DemandType(o.hydraulic.demand_model),
+        minimum_pressure=converter.from_si(o.hydraulic.minimum_pressure, Parameter.HYDRAULIC_HEAD),
+        required_pressure=converter.from_si(o.hydraulic.required_pressure, Parameter.HYDRAULIC_HEAD),
+        pressure_exponent=o.hydraulic.pressure_exponent,
+        energy_report=str(o.report.energy).upper() == "YES",
+        energy_price=float(o.energy.global_price),
+        energy_pattern=patterns.get(o.energy.global_pattern),
+        energy_pump_efficiency=float(o.energy.global_efficiency or 75),  # hacky fix
+        energy_demand_charge=float(o.energy.demand_charge or 0.0),
+        quality_parameter=QualityParameter(o.quality.parameter),
+        mass_unit=mass_unit,
+        relative_diffusivity=o.quality.diffusivity,
+        trace_node=(o.quality.trace_node or ""),
+        quality_tolerance=o.quality.tolerance,
+        bulk_reaction_order=o.reaction.bulk_order,
+        wall_reaction_order=WallReactionOrder(o.reaction.wall_order),
+        global_bulk_coefficient=o.reaction.bulk_coeff,
+        global_wall_coefficient=o.reaction.wall_coeff,
+        limiting_concentration=float(o.reaction.limiting_potential or 0),
+        wall_coefficient_correlation=float(o.reaction.roughness_correl or 0),
+    )
+
+
+@needs_wntr_pandas
+def options_to_wn(options: ModelOptions, wn: wntr.network.WaterNetworkModel) -> None:
+    o: wntr.network.Options = wn.options
+
+    patterns = _Patterns(wn)
+
+    converter = Converter.from_options(options)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=UserWarning,
+            message="Changing the headloss formula from H-W to D-W will not change",
+        )
+        o.hydraulic.headloss = options.headloss_formula.value
+
+    o.hydraulic.inpfile_units = options.flow_unit.value
+    o.time.duration = int(options.simulation_duration * 3600)
+    o.hydraulic.demand_multiplier = options.demand_multiplier
+    o.hydraulic.emitter_exponent = options.emitter_exponent
+    o.hydraulic.demand_model = options.demand_type.value
+    o.hydraulic.minimum_pressure = converter.to_si(options.minimum_pressure, Parameter.HYDRAULIC_HEAD)
+    o.hydraulic.required_pressure = converter.to_si(options.required_pressure, Parameter.HYDRAULIC_HEAD)
+    o.hydraulic.pressure_exponent = options.pressure_exponent
+    o.report.energy = "YES" if options.energy_report else "NO"
+    o.energy.global_price = options.energy_price
+    o.energy.global_pattern = patterns.add(options.energy_pattern)
+    o.energy.global_efficiency = options.energy_pump_efficiency
+    o.energy.demand_charge = options.energy_demand_charge
+    o.quality.parameter = options.quality_parameter.value
+    o.quality.inpfile_units = options.mass_unit.value
+    o.quality.diffusivity = options.relative_diffusivity
+    o.quality.trace_node = options.trace_node or None
+    o.quality.tolerance = options.quality_tolerance
+    o.reaction.bulk_order = options.bulk_reaction_order
+    o.reaction.wall_order = options.wall_reaction_order.value
+    o.reaction.bulk_coeff = options.global_bulk_coefficient
+    o.reaction.wall_coeff = options.global_wall_coefficient
+    o.reaction.limiting_potential = options.limiting_concentration or None
+    o.reaction.roughness_correl = options.wall_coefficient_correlation or None
 
 
 class NetworkModelError(Exception):

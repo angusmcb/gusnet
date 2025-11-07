@@ -7,24 +7,26 @@ Note:
 
 from __future__ import annotations
 
+import dataclasses
 from enum import Enum, Flag, auto
 
 from qgis.core import QgsProcessing, QgsWkbTypes
 
 from gusnet.i18n import tr
+from gusnet.pattern_curve import Pattern
 
 
 class FlowUnit(Enum):
-    LPS = auto()
-    LPM = auto()
-    MLD = auto()
-    CMH = auto()
-    CMD = auto()
-    CFS = auto()
-    GPM = auto()
-    MGD = auto()
-    IMGD = auto()
-    AFD = auto()
+    LPS = "LPS"
+    LPM = "LPM"
+    MLD = "MLD"
+    CMH = "CMH"
+    CMD = "CMD"
+    CFS = "CFS"
+    GPM = "GPM"
+    MGD = "MGD"
+    IMGD = "IMGD"
+    AFD = "AFD"
 
     @property
     def friendly_name(self):
@@ -52,6 +54,20 @@ class FlowUnit(Enum):
         raise ValueError  # pragma: no cover
 
 
+class MassUnit(Enum):
+    MG = "mg/L"
+    UG = "ug/L"
+
+    @property
+    def friendly_name(self):
+        if self is MassUnit.MG:
+            return tr("mg")
+        if self is MassUnit.UG:
+            return tr("μg")
+
+        raise ValueError  # pragma: no cover
+
+
 class HeadlossFormula(Enum):
     HAZEN_WILLIAMS = "H-W"
     DARCY_WEISBACH = "D-W"
@@ -69,8 +85,8 @@ class HeadlossFormula(Enum):
 
 
 class DemandType(Enum):
-    FIXED = "DD"
-    PRESSURE_DEPENDENT = "PDD"
+    FIXED = "DDA"
+    PRESSURE_DEPENDENT = "PDA"
 
     @property
     def friendly_name(self):
@@ -79,6 +95,25 @@ class DemandType(Enum):
         if self is DemandType.PRESSURE_DEPENDENT:
             return tr("Pressure Dependent Demand")
         raise ValueError
+
+
+class QualityParameter(Enum):
+    NONE = "NONE"
+    AGE = "AGE"
+    CHEMICAL = "CHEMICAL"
+    TRACE = "TRACE"
+
+    @property
+    def friendly_name(self):
+        if self is QualityParameter.NONE:
+            return tr("None")
+        if self is QualityParameter.AGE:
+            return tr("Water Age")
+        if self is QualityParameter.CHEMICAL:
+            return tr("Chemical Concentration")
+        if self is QualityParameter.TRACE:
+            return tr("Trace Node")
+        raise ValueError  # pragma: no cover
 
 
 class _AbstractValueMap(Enum):
@@ -185,6 +220,18 @@ class ValveType(_AbstractValueMap):
         if self is ValveType.GPV:
             return Field.HEADLOSS_CURVE
         raise ValueError  # pragma: no cover
+
+
+class WallReactionOrder(_AbstractValueMap):
+    ZERO = 0
+    ONE = 1
+
+    @property
+    def friendly_name(self) -> str:
+        if self is WallReactionOrder.ZERO:
+            return tr("Zero")
+        if self is WallReactionOrder.ONE:
+            return tr("One")
 
 
 class FieldType(Enum):
@@ -740,3 +787,68 @@ class Field(Enum):
         if self is Field.REACTION_RATE:
             return tr("Rate of water quality reaction")
         raise ValueError  # pragma: no cover
+
+
+@dataclasses.dataclass(frozen=True)
+class ModelOptions:
+    flow_unit: FlowUnit
+    headloss_formula: HeadlossFormula
+
+    simulation_duration: float  # hours
+    demand_multiplier: float
+    emitter_exponent: float
+
+    demand_type: DemandType
+    minimum_pressure: float
+    required_pressure: float
+    pressure_exponent: float
+
+    energy_report: bool
+    energy_price: float
+    energy_pattern: Pattern
+    energy_pump_efficiency: float
+    energy_demand_charge: float
+
+    quality_parameter: QualityParameter
+    mass_unit: MassUnit
+    relative_diffusivity: float
+    trace_node: str
+    quality_tolerance: float
+
+    bulk_reaction_order: float
+    wall_reaction_order: WallReactionOrder
+    global_bulk_coefficient: float
+    global_wall_coefficient: float
+    limiting_concentration: float
+    wall_coefficient_correlation: float
+
+
+class DefaultOptions(ModelOptions):
+    def __new__(cls):
+        return ModelOptions(
+            flow_unit=FlowUnit.LPS,
+            headloss_formula=HeadlossFormula.HAZEN_WILLIAMS,
+            simulation_duration=0.0,
+            demand_multiplier=1.0,
+            emitter_exponent=0.5,
+            demand_type=DemandType.FIXED,
+            minimum_pressure=0.0,
+            required_pressure=0.1,
+            pressure_exponent=0.5,
+            energy_report=False,
+            energy_price=0.0,
+            energy_pattern=Pattern(),
+            energy_pump_efficiency=75.0,
+            energy_demand_charge=0.0,
+            quality_parameter=QualityParameter.NONE,
+            mass_unit=MassUnit.MG,
+            relative_diffusivity=1.0,
+            trace_node="",
+            quality_tolerance=0.01,
+            bulk_reaction_order=1.0,
+            wall_reaction_order=WallReactionOrder.ONE,
+            global_bulk_coefficient=0.0,
+            global_wall_coefficient=0.0,
+            limiting_concentration=0.0,
+            wall_coefficient_correlation=0.0,
+        )
