@@ -71,8 +71,8 @@ class ProjectSettings:
 
         if issubclass(setting.expected_type, Enum):
             try:
-                value = setting.expected_type[value]
-            except KeyError:
+                value = setting.expected_type(value)
+            except ValueError:
                 return default
 
         if setting.expected_type is dict:
@@ -102,7 +102,7 @@ class ProjectSettings:
             raise TypeError(msg)
 
         if isinstance(value, Enum):
-            value = value.name
+            value = value.value
 
         if setting.expected_type is dict:
             value = str(value)
