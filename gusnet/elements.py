@@ -254,11 +254,12 @@ class SimpleFieldType(FieldType):
 
 
 class Parameter(FieldType):
-    ELEVATION = auto()
-    HYDRAULIC_HEAD = auto()
+    LENGTH = 999
+    ELEVATION = 999
+    HYDRAULIC_HEAD = 999
+    TANK_DIAMETER = 999
     PRESSURE = auto()
     CONCENTRATION = auto()
-    LENGTH = auto()
     PIPE_DIAMETER = auto()
     FLOW = auto()
     VELOCITY = auto()
@@ -267,7 +268,6 @@ class Parameter(FieldType):
     VOLUME = auto()
     EMITTER_COEFFICIENT = auto()
     ROUGHNESS_COEFFICIENT = auto()
-    TANK_DIAMETER = auto()
     ENERGY = auto()
     REACTION_RATE = auto()
     BULK_REACTION_COEFFICIENT = auto()
