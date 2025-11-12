@@ -37,13 +37,7 @@ class SpatialIndex:
         Returns:
             list: A list of tuples containing the snapped geometry, start node name, and end node name.
         """
-        snapped_links = []
-
-        for geometry, name in zip(geometries, names):
-            snapped_geometry, start_node, end_node = self.snap_link(geometry, name)
-            snapped_links.append((snapped_geometry, start_node, end_node))
-
-        return snapped_links
+        return [self.snap_link(*data) for data in zip(geometries, names)]
 
     def snap_link(self, geometry: QgsGeometry, link_name: str = "") -> tuple[QgsGeometry, str, str]:
         """Snap the start and end points of a link to the nearest node in the spatial index.
