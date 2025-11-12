@@ -41,3 +41,9 @@ def test_to_qgis_results(example, qgis_new_project):
     assert isinstance(layers, dict)
     assert isinstance(layers["LINKS"], QgsVectorLayer)
     assert isinstance(layers["NODES"], QgsVectorLayer)
+
+
+@pytest.mark.parametrize("example", gusnet.examples.values())
+def test_to_from_qgis_roundtrip(example, qgis_new_project):
+    layers = gusnet.to_qgis(example)
+    gusnet.from_qgis(layers, units="GPM", headloss="H-W")
