@@ -1003,9 +1003,10 @@ class _FromGis:
 
         try:
             spatial_index.add_nodes(node_df["geometry"], node_df["name"])
-            link_df[["geometry", "start_node_name", "end_node_name"]] = spatial_index.snap_links(
-                link_df["geometry"], link_df["name"]
-            )
+
+            snapped_links = spatial_index.snap_links(link_df["geometry"], link_df["name"])
+
+            link_df[["geometry", "start_node_name", "end_node_name"]] = snapped_links
         except SnapError as e:
             raise NetworkModelError(e) from e
 
