@@ -493,16 +493,17 @@ class Writer:
     def _fix_headloss_df(
         self, df: pd.DataFrame, wn: wntr.network.WaterNetworkModel
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        pipe_lengths = wn.query_link_attribute("length", link_type=wntr.network.model.Pipe)
+        pipe_lengths = pd.Series({name: pipe.length for name, pipe in wn.pipes()})
 
         df = df.astype("float64")
 
         unit_headloss = df[pipe_lengths.index]
 
+        valve_total_headloss = df.drop(pipe_lengths.index, axis=1, errors="ignore")
+
         pipe_total_headloss = unit_headloss * pipe_lengths
 
-        total_headloss = df
-        total_headloss[pipe_lengths.index] = pipe_total_headloss
+        total_headloss = pd.concat([valve_total_headloss, pipe_total_headloss], axis=1)
 
         return unit_headloss, total_headloss
 
