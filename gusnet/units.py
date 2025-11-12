@@ -10,6 +10,9 @@ if TYPE_CHECKING:
     import pandas as pd
 
 
+_TRADITIONAL_FLOW_UNITS = {FlowUnit.CFS, FlowUnit.GPM, FlowUnit.MGD, FlowUnit.IMGD, FlowUnit.AFD}
+
+
 class Converter:
     """Manages conversion to and from SI units
 
@@ -17,8 +20,6 @@ class Converter:
         flow_units: The set of units which will be converted to/from
         headloss_formula: Used to determine how to handle conversion of the roughness coefficient
     """
-
-    _TRADITIONAL_FLOW_UNITS = {FlowUnit.CFS, FlowUnit.GPM, FlowUnit.MGD, FlowUnit.IMGD, FlowUnit.AFD}  # noqa: RUF012
 
     def __init__(
         self,
@@ -32,6 +33,10 @@ class Converter:
         self.mass_unit = mass_unit
         self.wall_reaction_order = wall_reaction_order
 
+        self.traditional = self.flow_units in _TRADITIONAL_FLOW_UNITS
+        self.flow_unit_factor = self._flow_unit_factor()
+        self.mass_unit_factor = self._mass_unit_factor()
+
     @classmethod
     def from_options(cls, options: ModelOptions):
         return cls(options.flow_unit, options.headloss_formula, options.mass_unit, options.wall_reaction_order)
@@ -41,29 +46,41 @@ class Converter:
         value: float | np.ndarray[float] | pd.Series[float] | pd.DataFrame,
         parameter: Parameter,
     ) -> float | np.ndarray[float] | pd.Series[float] | pd.DataFrame:
-        return value * self._factor(parameter)
+        factor = self._factor(parameter)
+        return value * factor
 
     def from_si(
         self,
         value: float | np.ndarray[float] | pd.Series[float] | pd.DataFrame,
         parameter: Parameter,
     ) -> float | np.ndarray[float] | pd.Series[float] | pd.DataFrame:
-        return value / self._factor(parameter)
+        factor = self._factor(parameter)
+        return value / factor
 
     def _factor(
         self,
         parameter: Parameter,
     ) -> float:
-        if parameter is Parameter.FLOW:
-            return self._flow_unit_factor()
+        # [Parameter.TANK_DIAMETER, Parameter.ELEVATION, Parameter.HYDRAULIC_HEAD, Parameter.LENGTH]:
+        if parameter is Parameter.LENGTH:
+            if self.traditional:
+                return 0.3048  # ft to m
+            else:
+                return 1.0
 
-        if parameter is Parameter.EMITTER_COEFFICIENT:
+        elif parameter is Parameter.FLOW:
+            return self.flow_unit_factor
+
+        elif parameter is Parameter.UNITLESS:  # [Parameter.UNITLESS, Parameter.FRACTION, Parameter.CURRENCY]
+            return 1.0
+
+        elif parameter is Parameter.EMITTER_COEFFICIENT:
             if self.traditional:
                 # flowunit/sqrt(psi) to flowunit/sqrt(m), i.e.,
                 # flowunit/sqrt(psi) * sqrt(psi/ft / m/ft ) = flowunit/sqrt(m)
-                return self._flow_unit_factor() * (0.4333 / 0.3048) ** 0.5
+                return self.flow_unit_factor * (0.4333 / 0.3048) ** 0.5
             else:
-                return self._flow_unit_factor()
+                return self.flow_unit_factor
 
         elif parameter is Parameter.PIPE_DIAMETER:
             if self.traditional:
@@ -77,12 +94,6 @@ class Converter:
                     return 0.001 * 0.3048  # 1e-3 ft to m
                 else:
                     return 0.001  # mm to m
-            else:
-                return 1.0
-
-        elif parameter in [Parameter.TANK_DIAMETER, Parameter.ELEVATION, Parameter.HYDRAULIC_HEAD, Parameter.LENGTH]:
-            if self.traditional:
-                return 0.3048  # ft to m
             else:
                 return 1.0
 
@@ -118,22 +129,22 @@ class Converter:
                 return 1.0
 
         elif parameter is Parameter.CONCENTRATION:
-            return self._mass_unit_factor() / 0.001  # MASS /L to kg/m3
+            return self.mass_unit_factor / 0.001  # MASS /L to kg/m3
 
         elif parameter is Parameter.REACTION_RATE:
-            return (self._mass_unit_factor() / 0.001) / (24 * 3600)  # 1/day to 1/s
+            return (self.mass_unit_factor / 0.001) / (24 * 3600)  # 1/day to 1/s
 
         elif parameter is Parameter.SOURCE_MASS_INJECTION:
-            return self._mass_unit_factor() / 60.0  # MASS /min to kg/s
+            return self.mass_unit_factor / 60.0  # MASS /min to kg/s
 
         elif parameter is Parameter.BULK_REACTION_COEFFICIENT:
             return 1 / 86400.0  # per day to per second
 
         elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order is WallReactionOrder.ZERO:
             if self.traditional:
-                return self._mass_unit_factor() * 0.092903 / 86400.0  # M/ft2/d to SI
+                return self.mass_unit_factor * 0.092903 / 86400.0  # M/ft2/d to SI
             else:
-                return self._mass_unit_factor() / 86400.0  # M/m2/day to M/m2/s
+                return self.mass_unit_factor / 86400.0  # M/m2/day to M/m2/s
 
         elif parameter is Parameter.WALL_REACTION_COEFFICIENT and self.wall_reaction_order is WallReactionOrder.ONE:
             if self.traditional:
@@ -144,7 +155,7 @@ class Converter:
         elif parameter is Parameter.WATER_AGE:
             return 3600.0  # hr to s
 
-        elif parameter in [Parameter.UNITLESS, Parameter.FRACTION, Parameter.CURRENCY]:
+        elif parameter in [Parameter.FRACTION, Parameter.CURRENCY]:
             return 1.0
 
         raise ValueError(parameter)  # pragma: no cover
@@ -186,10 +197,6 @@ class Converter:
             raise ValueError(mass_units)  # pragma: no cover
 
         return factor
-
-    @property
-    def traditional(self):
-        return self.flow_units in self._TRADITIONAL_FLOW_UNITS
 
 
 class UnitNames:
