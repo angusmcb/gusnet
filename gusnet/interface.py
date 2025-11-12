@@ -328,14 +328,12 @@ class Writer:
 
         ordered_df = layer_df[field_names]
 
-        attribute_series = pd.Series(
-            ordered_df.to_numpy().tolist(),
-            index=ordered_df.index,
-        )
+        attribute_list = ordered_df.to_numpy().tolist()
+        name_list = ordered_df.index.to_list()
 
         geometries = self._node_geometries if layer.is_node else self._link_geometries
 
-        for name, attributes in attribute_series.items():
+        for name, attributes in zip(name_list, attribute_list):
             f = QgsFeature()
             f.setGeometry(geometries[name])
             f.setAttributes(
