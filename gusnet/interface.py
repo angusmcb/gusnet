@@ -1011,8 +1011,7 @@ class _FromGis:
             point = geometry.constGet()
             return point.x(), point.y()
 
-        df["coordinates"] = df["geometry"].apply(get_point_coordinates)
-
+        df["coordinates"] = df["geometry"].map(get_point_coordinates)
         return df.drop(columns="geometry")
 
     def _process_link_geometry(self, link_df: pd.DataFrame) -> pd.DataFrame:
