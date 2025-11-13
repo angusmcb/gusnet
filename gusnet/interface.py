@@ -469,25 +469,28 @@ class Writer:
         return {ResultLayer.NODES: node_df, ResultLayer.LINKS: link_df}
 
     def _process_results_layer(self, layer: ResultLayer, results_dfs: dict[str, pd.DataFrame]) -> pd.DataFrame:
-        output_attributes: dict[str, pd.Series] = {}
+        output_series: list[pd.Series] = []
 
         for field in layer.wq_fields():
-            df = results_dfs.get(field.value, pd.DataFrame())
+            df = results_dfs.get(field.value)
 
-            if df.empty:
+            if df is None or df.empty:
                 continue
 
             if isinstance(field.type, Parameter):
                 df = self._converter.from_si(df, field.type)
 
             if self._timestep is not self._EXTENDED_PERIOD:
-                output_attributes[field.value] = df.iloc[self._timestep]
+                series = df.iloc[self._timestep]
+                series.name = field.value
+                output_series.append(series)
             else:
                 lists = df.transpose().to_numpy().tolist()
-                output_attributes[field.value] = pd.Series(lists, index=df.columns)
+                output_series.append(pd.Series(lists, index=df.columns, name=field.value))
 
-        combined_df = pd.DataFrame(output_attributes)
+        combined_df = pd.concat(output_series, axis=1)
         combined_df["name"] = combined_df.index.to_series()
+
         return combined_df
 
     def _fix_headloss_df(
