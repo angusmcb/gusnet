@@ -8,12 +8,18 @@ Note:
 from __future__ import annotations
 
 import dataclasses
+import sys
 from enum import Enum, Flag, auto
 
 from qgis.core import QgsProcessing, QgsWkbTypes
 
 from gusnet.i18n import tr
 from gusnet.pattern_curve import Pattern
+
+if sys.version_info >= (3, 11):
+    from enum import StrEnum
+else:
+    from gusnet.strenum import StrEnum
 
 
 class FlowUnit(Enum):
@@ -313,7 +319,7 @@ class LayerType(Flag):
         return [QgsProcessing.TypeVectorPoint] if self in LayerType.NODES else [QgsProcessing.TypeVectorLine]
 
 
-class _AbstractLayer(Enum):
+class _AbstractLayer(StrEnum):
     """Abstract enum for layer enums"""
 
     @property
@@ -455,8 +461,8 @@ class ModelLayer(_AbstractLayer):
 
 
 class ResultLayer(_AbstractLayer):
-    NODES = "OUTPUTNODES"
-    LINKS = "OUTPUTLINKS"
+    NODES = "NODES"
+    LINKS = "LINKS"
 
     @property
     def friendly_name(self):

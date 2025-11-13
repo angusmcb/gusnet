@@ -88,3 +88,10 @@ def test_check_headloss_formula_valid_in_wntr(headloss_formula: HeadlossFormula)
     wn.options.hydraulic.headloss = headloss_formula.value
 
     assert wn.options.hydraulic.headloss == headloss_formula.value
+
+
+def test_layer_str_enum():
+    assert hash(ModelLayer.JUNCTIONS) == hash("JUNCTIONS")
+    assert str(ModelLayer.JUNCTIONS) == "JUNCTIONS"
+    assert ModelLayer.JUNCTIONS == "JUNCTIONS"
+    assert isinstance(ModelLayer.JUNCTIONS, str)
