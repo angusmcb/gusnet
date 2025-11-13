@@ -980,13 +980,14 @@ class _FromGis:
         return source_df
 
     def _convert_dataframe(self, source_df: pd.DataFrame) -> pd.DataFrame:
-        for fieldname in source_df.select_dtypes(include=[np.number]):
+        for fieldname in source_df.columns:  # source_df.select_dtypes(include=[np.number]):
             try:
                 parameter = Field[str(fieldname).upper()].type
             except KeyError:
                 continue
             if not isinstance(parameter, Parameter):
                 continue
+
             source_df[fieldname] = self._converter.to_si(source_df[fieldname], parameter)
         return source_df
 
