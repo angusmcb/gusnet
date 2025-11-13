@@ -95,3 +95,10 @@ def test_layer_str_enum():
     assert str(ModelLayer.JUNCTIONS) == "JUNCTIONS"
     assert ModelLayer.JUNCTIONS == "JUNCTIONS"
     assert isinstance(ModelLayer.JUNCTIONS, str)
+
+
+def test_field_str_enum():
+    assert hash(Field.LENGTH) == hash("length")
+    assert str(Field.LENGTH) == "length"
+    assert Field.LENGTH == "length"
+    assert isinstance(Field.LENGTH, str)

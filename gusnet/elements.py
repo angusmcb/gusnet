@@ -496,11 +496,12 @@ class ResultLayer(_AbstractLayer):
         ]
 
 
-class Field(Enum):
+class Field(StrEnum):
     def __new__(cls, *args):
-        obj = object.__new__(cls)
-        obj._value_ = args[0]
-        return obj
+        value = str(args[0])
+        member = str.__new__(cls, value)
+        member._value_ = value
+        return member
 
     def __init__(self, *args):
         self._type = args[1]
