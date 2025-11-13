@@ -1270,7 +1270,6 @@ class _FromGis:
         raise NetworkModelError(msg)
 
 
-@needs_wntr_pandas
 def check_network(wn: wntr.network.WaterNetworkModel) -> None:
     """Checks for simple errors in the network that will otherwise not get good error messages from wntr/epanet
 
@@ -1428,7 +1427,6 @@ def describe_pipes(wn: wntr.network.WaterNetworkModel) -> tuple[str, str]:
     return html, text
 
 
-@needs_wntr_pandas
 def _get_field_groups(options: ModelOptions) -> FieldGroup:
     """Utility function for guessing what types of analysis a specific wn will undertake,
     and therefore which field types should be included."""
@@ -1488,7 +1486,6 @@ def options_from_wn(wn: wntr.network.WaterNetworkModel) -> ModelOptions:
     )
 
 
-@needs_wntr_pandas
 def options_to_wn(options: ModelOptions, wn: wntr.network.WaterNetworkModel) -> None:
     o: wntr.network.Options = wn.options
 
