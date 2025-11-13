@@ -876,7 +876,7 @@ class _FromGis:
 
             self._check_for_required_fields(df, model_layer)
 
-            df = self._fix_column_types(df)
+            df = self._fix_column_types(df, model_layer)
 
             df = self._convert_dataframe(df)
 
@@ -958,26 +958,39 @@ class _FromGis:
             feature_list.append(attrs)
         return pd.DataFrame(feature_list, columns=column_names)
 
-    def _fix_column_types(self, source_df: pd.DataFrame) -> pd.DataFrame:
+    def _fix_column_types(self, df: pd.DataFrame, layer: ModelLayer) -> pd.DataFrame:
         """For some file types, notably json, numbers might be imported as strings.
 
         Also, for boolean values that come in as number types (int or float), they must finish as nullable int.
           (wntr doesn't accept floats for bool)"""
-        for column_name in source_df.columns:
+
+        for column_name, dtype in zip(df.columns, df.dtypes):
             try:
-                expected_type = Field[column_name.upper()].type
+                field = Field[column_name.upper()]
             except KeyError:
                 continue
 
+            expected_type = field.type
+
             try:
-                if expected_type is float or isinstance(expected_type, Parameter):
-                    source_df[column_name] = pd.to_numeric(source_df[column_name])
-                elif expected_type is SimpleFieldType.BOOL:
-                    source_df[column_name] = pd.to_numeric(source_df[column_name]).astype("Int64").astype("object")
+                if isinstance(expected_type, Parameter) and not pd.api.types.is_numeric_dtype(dtype):
+                    df[column_name] = pd.to_numeric(df[column_name])
+
+                elif expected_type is SimpleFieldType.BOOL and not pd.api.types.is_bool_dtype(dtype):
+                    df[column_name] = pd.to_numeric(df[column_name]).astype("Int64").astype("object")
+
             except (ValueError, TypeError) as e:
                 msg = tr("Problem in column {column_name}: {exception}").format(column_name=column_name, exception=e)
                 raise NetworkModelError(msg) from None
-        return source_df
+
+            if expected_type is SimpleFieldType.PATTERN:
+                try:
+                    df[column_name] = df[column_name].map(Pattern.factory, na_action="ignore")
+
+                except ValueError as e:
+                    raise PatternError(e, layer, field) from e
+
+        return df
 
     def _convert_dataframe(self, source_df: pd.DataFrame) -> pd.DataFrame:
         for fieldname in source_df.columns:  # source_df.select_dtypes(include=[np.number]):
@@ -1136,9 +1149,7 @@ class _FromGis:
 
     def _process_reservoirs(self, df: pd.DataFrame) -> pd.DataFrame:
         if "head_pattern" in df:
-            df["head_pattern_name"] = self.patterns.add_all(
-                df.get("head_pattern"), ModelLayer.RESERVOIRS, Field.HEAD_PATTERN
-            )
+            df["head_pattern_name"] = df["head_pattern"].map(self.patterns.add, na_action="ignore")
 
             df = df.drop(columns=["head_pattern"])
 
@@ -1215,14 +1226,10 @@ class _FromGis:
                 raise PumpCurveMissingError
 
         if "speed_pattern" in df:
-            df["speed_pattern_name"] = self.patterns.add_all(
-                df.get("speed_pattern"), ModelLayer.PUMPS, Field.SPEED_PATTERN
-            )
+            df["speed_pattern_name"] = df["speed_pattern"].map(self.patterns.add, na_action="ignore")
 
         if "energy_pattern" in df:
-            df["energy_pattern"] = self.patterns.add_all(
-                df.get("energy_pattern"), ModelLayer.PUMPS, Field.ENERGY_PATTERN
-            )
+            df["energy_pattern"] = df["energy_pattern"].map(self.patterns.add, na_action="ignore")
 
         if "efficiency_curve" in df:
             df["efficiency_curve_name"] = self.curves.add_efficiency(df["efficiency_curve"])
