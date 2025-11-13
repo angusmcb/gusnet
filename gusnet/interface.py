@@ -1130,9 +1130,7 @@ class _FromGis:
 
             df = df.drop(columns=["vol_curve"])
 
-        if "tank_diameter" in df:
-            df["diameter"] = df["tank_diameter"]
-            df = df.drop(columns=["tank_diameter"])
+        df = df.rename(columns={"tank_diameter": "diameter"})
 
         return df
 
