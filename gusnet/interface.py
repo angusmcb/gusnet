@@ -750,7 +750,7 @@ def from_qgis(
             msg = tr("headloss must be set if wn is not set: possible values are: H-W, D-W, C-M")
             raise ValueError(msg)
 
-        headloss_formula = HeadlossFormula(headloss)
+        headloss_formula = HeadlossFormula(headloss.upper())
 
         options = dataclasses.replace(DefaultOptions(), headloss_formula=headloss_formula)
 
