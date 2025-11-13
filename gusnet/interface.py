@@ -444,7 +444,7 @@ class Writer:
 
             df = df.rename(columns={"initial_status": "valve_status"})
 
-        for fieldname in df.select_dtypes(include=["float"]):
+        for fieldname in df:
             try:
                 parameter = Field[str(fieldname).upper()].type
             except KeyError:
