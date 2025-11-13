@@ -1102,25 +1102,25 @@ class _FromGis:
         return name_series
 
     def _process_junctions(self, df: pd.DataFrame) -> pd.DataFrame:
-        if "demand_pattern" in df:
-            df["demand_pattern_name"] = self.patterns.add_all(
-                df.get("demand_pattern"), ModelLayer.JUNCTIONS, Field.DEMAND_PATTERN
-            )
-        else:
-            df["demand_pattern_name"] = None
+        if "base_demand" not in df.columns:
+            df["base_demand"] = np.nan
 
-        if "base_demand" in df.columns:
-            has_demand = df["base_demand"].notna()
+        if "demand_pattern" not in df.columns:
+            df["demand_pattern"] = np.nan
 
-            def make_demand_list(row):
-                return [
-                    {
-                        "base_val": row["base_demand"],
-                        "pattern_name": (row["demand_pattern_name"] if pd.notna(row["demand_pattern_name"]) else None),
-                    }
-                ]
+        timeseries_list: list[list | None] = []
 
-            df.loc[has_demand, "demand_timeseries_list"] = df.loc[has_demand].apply(make_demand_list, axis=1)
+        for base_val, pattern_name in zip(df["base_demand"], df["demand_pattern"]):
+            has_base_demand = not math.isnan(base_val)
+            has_pattern = isinstance(pattern_name, Pattern)
+            if has_base_demand or has_pattern:
+                base_val = base_val if has_base_demand else 0.0
+                pattern_name = self.patterns.add(pattern_name) if has_pattern else None
+                timeseries_list.append([{"base_val": base_val, "pattern_name": pattern_name}])
+            else:
+                timeseries_list.append(None)
+
+        df["demand_timeseries_list"] = timeseries_list
 
         return df.drop(columns=["base_demand", "demand_pattern", "demand_pattern_name"], errors="ignore")
 
