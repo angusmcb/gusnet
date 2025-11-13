@@ -209,8 +209,7 @@ class Writer:
         else:
             self._dfs = self._get_model_dfs(wn)
 
-        self._node_geometries = self._get_node_geometries(wn)
-        self._link_geometries = self._get_link_geometries(wn)
+        self._node_geometries, self._link_geometries = self._get_geometries(wn)
 
         field_group = FieldGroup.BASE | _get_field_groups(options)
 
@@ -221,39 +220,32 @@ class Writer:
         * When writing only those fields related to the layer bei_ng written will be used.
         """
 
-    def _get_node_geometries(self, wn: wntr.network.WaterNetworkModel) -> dict[str, QgsGeometry]:
-        """Get the geometries of the nodes in the water network model.
+    def _get_geometries(
+        self, wn: wntr.network.WaterNetworkModel
+    ) -> tuple[dict[str, QgsGeometry], dict[str, QgsGeometry]]:
+        """Get the geometries of the nodes and links in the water network model.
 
         Args:
             wn: The WNTR water network model.
 
         Returns:
-            dict[str, QgsGeometry]: A dictionary mapping node names to their geometries.
+            A tuple of nodes, links. Each containing a dictionary mapping link names to their geometries.
         """
-        return {name: QgsGeometry(QgsPoint(*node.coordinates)) for name, node in wn.nodes()}
 
-    def _get_link_geometries(self, wn: wntr.network.WaterNetworkModel) -> dict[str, QgsGeometry]:
-        """Get the geometries of the links in the water network model.
+        nodes = {name: QgsGeometry(QgsPoint(*node.coordinates)) for name, node in wn.nodes()}
 
-        Args:
-            wn: The WNTR water network model.
-
-        Returns:
-            dict[str, QgsGeometry]: A dictionary mapping link names to their geometries.
-        """
-        return {
+        links = {
             name: QgsGeometry.fromPolyline(
                 [
-                    QgsPoint(*vertex)
-                    for vertex in [
-                        link.start_node.coordinates,
-                        *link.vertices,
-                        link.end_node.coordinates,
-                    ]
+                    nodes[link.start_node.name].constGet(),
+                    *[QgsPoint(*vertex) for vertex in link.vertices],
+                    nodes[link.end_node.name].constGet(),
                 ]
             )
             for name, link in wn.links()
         }
+
+        return nodes, links
 
     def get_qgsfields(self, layer: ModelLayer | ResultLayer) -> QgsFields:
         """Get the set of QgsFields that will be written by 'write'.
