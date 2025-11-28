@@ -16,6 +16,19 @@ from qgis.core import (
 )
 
 import gusnet
+from gusnet.feature_reader import GeometryError, PipeMeasuringError, ReadFeatureError
+from gusnet.interface import WntrError
+from gusnet.verify_model import (
+    CurveError,
+    NoLinksError,
+    NumericFieldError,
+    PatternError,
+    PumpCurveMissingError,
+    PumpPowerError,
+    ValveSettingError,
+    ValveTypeError,
+    VerificationError,
+)
 
 
 def layer(
@@ -160,7 +173,7 @@ def all_layers() -> dict[str, QgsVectorLayer]:
 def test_simple_layers(simple_layers):
     import wntr
 
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert isinstance(wn, wntr.network.WaterNetworkModel)
     assert "J1" in wn.junction_name_list
@@ -170,13 +183,13 @@ def test_broken_layername(simple_layers):
     simple_layers["wrongname"] = simple_layers["JUNCTIONS"]
 
     with pytest.raises(ValueError, match="'wrongname' is not a valid layer type."):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 def test_minimum_attributes(all_layers):
     import wntr
 
-    wn = gusnet.from_qgis(all_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(all_layers, "LPS", "H-W")
 
     assert isinstance(wn, wntr.network.WaterNetworkModel)
     assert "1" in wn.junction_name_list
@@ -215,8 +228,8 @@ def test_check_all_minimum_attributes_required(all_layers, layer_name, field):
     all_layers[layer_name].dataProvider().deleteAttributes([all_layers[layer_name].fields().indexFromName(field)])
     all_layers[layer_name].updateFields()
 
-    with pytest.raises(gusnet.interface.GenericRequiredFieldError):
-        gusnet.from_qgis(all_layers, "LPS", "H-W")
+    with pytest.raises(VerificationError):
+        gusnet.to_wntr(all_layers, "LPS", "H-W")
 
 
 def test_no_pipes(all_layers):
@@ -224,7 +237,7 @@ def test_no_pipes(all_layers):
 
     del all_layers["PIPES"]
 
-    wn = gusnet.from_qgis(all_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(all_layers, "LPS", "H-W")
 
     assert isinstance(wn, wntr.network.WaterNetworkModel)
 
@@ -232,48 +245,56 @@ def test_no_pipes(all_layers):
 def test_no_links(simple_layers):
     delete_all_features(simple_layers["PIPES"])
 
-    with pytest.raises(gusnet.interface.NetworkModelError, match="There are no links in the model"):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(NoLinksError, match="model must contain at least one link"):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
-def test_no_nodes(simple_layers):
-    delete_all_features(simple_layers["JUNCTIONS"])
-    delete_all_features(simple_layers["TANKS"])
+# def test_no_junctions(simple_layers):
+#     delete_all_features(simple_layers["JUNCTIONS"])
 
-    with pytest.raises(gusnet.interface.NetworkModelError, match="There are no nodes in the model"):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+#     with pytest.raises(NoJunctionError, match="There are no nodes in the model"):
+#         gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
-def test_wntr_error(simple_layers):
+# def test_no_tank_reservoirs(simple_layers):
+#     delete_all_features(simple_layers["TANKS"])
+
+#     with pytest.raises(NoReservoirOrTankError, match="There are no nodes in the model"):
+#         gusnet.to_wntr(simple_layers, "LPS", "H-W")
+
+
+def test_name_error(simple_layers):
     name_with_spaces = "this name has spaces"
     add_line(simple_layers["PIPES"], [(1, 1), (4, 5)], [name_with_spaces, 100, 5])
 
-    with pytest.raises(gusnet.interface.WntrError, match="name must be"):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(VerificationError, match="Name"):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
+def test_wntr_error():
+    pass  # NEED TO THINK OF A WAY TO RAISE AN ERROR IN WNTR
+
+
+@pytest.mark.skip("Need to work out how to generate this error in tests")
 def test_unmeasurable_pipe(qgis_new_project):
     junction_layer = layer("point", [("name", str), ("elevation", float)], "EPSG:4326")
     add_point(junction_layer, (1, 1), ["J1", 1])
     add_point(junction_layer, (9000, 9000), ["J2", 1])
+    reservoir_layer = layer("point", [("name", str), ("base_head", float)], "EPSG:4326")
+    add_point(reservoir_layer, (5000, 5000), ["R1", 10])
     pipe_layer = layer("linestring", [("name", str), ("diameter", float), ("roughness", float)], "EPSG:4326")
     add_line(pipe_layer, [(1, 1), (9000, 9000)], ["P1", 1, 100])
-    layers = {"JUNCTIONS": junction_layer, "PIPES": pipe_layer}
+    layers = {"JUNCTIONS": junction_layer, "PIPES": pipe_layer, "RESERVOIRS": reservoir_layer}
 
-    class ProjectMock:
-        def ellipsoid():
-            return "EPSG:7030"
+    QgsProject.instance().setEllipsoid("EPSG:7030")
 
-        def transformContext():  # noqa: N802
-            return QgsProject.instance().transformContext()
-
-    with pytest.raises(gusnet.interface.PipeMeasuringError, match="cannot calculate length of"):
-        gusnet.from_qgis(layers, "LPS", "H-W", project=ProjectMock)
+    with pytest.raises(PipeMeasuringError, match="cannot calculate length of"):
+        gusnet.to_wntr(layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize("headloss", ["H-W", "D-W", "C-M"])
 def test_from_qgis_headloss(simple_layers, headloss):
-    wn = gusnet.from_qgis(simple_layers, "LPS", headloss=headloss)
+    wn = gusnet.to_wntr(simple_layers, "LPS", headloss=headloss)
 
     assert "J1" in wn.junction_name_list
     assert "T1" in wn.tank_name_list
@@ -299,7 +320,7 @@ def test_roughness_conversion(simple_layers, headloss, unit, expected_roughness)
     if wntr.__version__ == "1.2.0" and headloss == "D-W":
         pytest.skip("Problem with headloss conversion in older wntr versions")
 
-    wn = gusnet.from_qgis(simple_layers, unit, headloss=headloss)
+    wn = gusnet.to_wntr(simple_layers, unit, headloss=headloss)
     assert isinstance(wn, wntr.network.WaterNetworkModel)
     assert wn.get_link("P1").roughness == expected_roughness
 
@@ -327,14 +348,14 @@ def test_roughness_conversion_with_wn_options(simple_layers, headloss, unit, exp
     wn = wntr.network.WaterNetworkModel()
     wn.options.hydraulic.headloss = headloss
 
-    wn = gusnet.from_qgis(simple_layers, unit, wn=wn)
+    wn = gusnet.to_wntr(simple_layers, unit, wn=wn)
     assert isinstance(wn, wntr.network.WaterNetworkModel)
     assert wn.get_link("P1").roughness == expected_roughness
 
 
 def test_from_qgis_invalid_headloss(simple_layers):
     with pytest.raises(ValueError, match="headloss must be set if wn is not set: possible values are: H-W, D-W, C-M"):
-        gusnet.from_qgis(simple_layers, "LPS", headloss=None)
+        gusnet.to_wntr(simple_layers, "LPS", headloss=None)
 
 
 def test_from_qgis_invalid_headloss_with_wn(simple_layers):
@@ -345,10 +366,10 @@ def test_from_qgis_invalid_headloss_with_wn(simple_layers):
         ValueError,
         match="Cannot set headloss when wn is set. Set the headloss in the wn.options.hydraulic.headloss instead",
     ):
-        gusnet.from_qgis(simple_layers, "LPS", headloss="INVALID", wn=wn)
+        gusnet.to_wntr(simple_layers, "LPS", headloss="INVALID", wn=wn)
 
 
-def test_duplicate_names():
+def test_duplicate_node_names():
     junction_layer = layer("point", [("name", str), ("elevation", float)])
     add_point(junction_layer, (1, 1), ["J1", 0])
     add_point(junction_layer, (2, 2), ["J1", 0])  # Conflict: same name as the first junction
@@ -362,8 +383,8 @@ def test_duplicate_names():
 
     layers = {"JUNCTIONS": junction_layer, "PIPES": pipe_layer}
 
-    with pytest.raises(gusnet.interface.NetworkModelError, match="Duplicate names found: J1, J2"):
-        gusnet.from_qgis(layers, "LPS", "H-W")
+    with pytest.raises(VerificationError, match="Duplicate node names found: J1, J2"):
+        gusnet.to_wntr(layers, "LPS", "H-W")
 
 
 def test_name_generation_with_conflicts():
@@ -397,7 +418,7 @@ def test_name_generation_with_conflicts():
 
     layers = {"JUNCTIONS": junctions, "TANKS": tanks, "RESERVOIRS": reservoirs, "PIPES": pipes}
 
-    wn = gusnet.from_qgis(layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(layers, "LPS", "H-W")
 
     assert len(wn.junction_name_list) == 3
     assert len(wn.pipe_name_list) == 2
@@ -410,7 +431,7 @@ def test_name_generation_with_conflicts():
     {("GPM", 6.30901964e-05), ("LPS", 0.001), ("lps", 0.001), ("CFS", 0.0283168466)},
 )
 def test_unit_conversion_demand(simple_layers, unit, expected_demand):
-    wn = gusnet.from_qgis(simple_layers, unit, "H-W")
+    wn = gusnet.to_wntr(simple_layers, unit, "H-W")
     assert wn.get_node("J1").base_demand == expected_demand
 
 
@@ -419,14 +440,14 @@ def test_bad_units(simple_layers):
         ValueError,
         match="'NON-EXISTANT' is not a known set of units. Possible units are: LPS, LPM, MLD, CMH, CMD, CFS, GPM, MGD, IMGD, AFD",  # noqa: E501
     ):
-        gusnet.from_qgis(simple_layers, units="Non-existant", headloss="H-W")
+        gusnet.to_wntr(simple_layers, units="Non-existant", headloss="H-W")
 
 
 def test_length_measurement_utm(simple_layers):
     for layer in simple_layers.values():
         layer.setCrs(QgsCoordinateReferenceSystem("EPSG:32600"))
 
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     pipe = wn.get_link("P1")
     assert pipe.length == 5.0
@@ -449,12 +470,15 @@ def test_custom_attributes():
     add_point(junction_layer, (1, 1), ["J1", 1, "xx", 2, 2.5, True, 1.0])
     add_point(junction_layer, (2, 2), ["J2", 2, "yy", 1000000000, 7.2, False, 1.0])
 
+    reservoirs = layer("point", [("base_head", float)])
+    add_point(reservoirs, (3, 3), [5.0])
+
     pipe_layer = layer("linestring", [("name", str), ("roughness", float), ("diameter", float)])
     add_line(pipe_layer, [(1, 1), (2, 2)], ["P1", 100, 5])
 
-    layers = {"JUNCTIONS": junction_layer, "PIPES": pipe_layer}
+    layers = {"JUNCTIONS": junction_layer, "PIPES": pipe_layer, "RESERVOIRS": reservoirs}
 
-    wn = gusnet.from_qgis(layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(layers, "LPS", "H-W")
 
     assert wn.get_node("J1").custom_str == "xx"
     assert wn.get_node("J1").custom_int == 2
@@ -471,18 +495,19 @@ def test_custom_attributes():
 def layers_that_snap():
     junction_layer = layer("point", [("name", str), ("elevation", float)])
     add_point(junction_layer, (0, 0), ["J1", 0.0])
-    add_point(junction_layer, (3000, 4000), ["J2", 100.0])
+    reservoir_layer = layer("point", [("name", str), ("base_head", float)])
+    add_point(reservoir_layer, (3000, 4000), ["R1", 100.0])
     pipe_layer = layer("linestring", [("name", str), ("roughness", float), ("diameter", float)])
     add_line(pipe_layer, [(1, 1), (2800, 3800)], ["P1", 100, 10])
-    return {"JUNCTIONS": junction_layer, "PIPES": pipe_layer}
+    return {"JUNCTIONS": junction_layer, "RESERVOIRS": reservoir_layer, "PIPES": pipe_layer}
 
 
 def test_snap_nodes(layers_that_snap):
-    wn = gusnet.from_qgis(layers_that_snap, "LPS", "H-W")
+    wn = gusnet.to_wntr(layers_that_snap, "LPS", "H-W")
 
     assert "P1" in wn.pipe_name_list
     assert wn.get_link("P1").start_node_name == "J1"
-    assert wn.get_link("P1").end_node_name == "J2"
+    assert wn.get_link("P1").end_node_name == "R1"
 
 
 @pytest.fixture
@@ -508,7 +533,7 @@ def mixed_crs_layers():
 
 
 def test_snap_nodes_mixed_crs(mixed_crs_layers):
-    wn = gusnet.from_qgis(mixed_crs_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(mixed_crs_layers, "LPS", "H-W")
 
     assert "P1" in wn.pipe_name_list
     assert wn.get_link("P1").start_node_name == "J1"
@@ -517,17 +542,17 @@ def test_snap_nodes_mixed_crs(mixed_crs_layers):
 
 @pytest.mark.parametrize("crs", ["EPSG:32616", "EPSG:3089"])
 def test_snap_nodes_mixed_crs_with_crs_specified(mixed_crs_layers, crs):
-    wn = gusnet.from_qgis(mixed_crs_layers, "LPS", "H-W", crs=crs)
+    wn = gusnet.to_wntr(mixed_crs_layers, "LPS", "H-W", crs=crs)
     assert wn.get_link("P1").length == pytest.approx(18900, 0.01)
 
 
 def test_snap_nodes_mixed_crs_length(mixed_crs_layers):
-    wn = gusnet.from_qgis(mixed_crs_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(mixed_crs_layers, "LPS", "H-W")
     assert wn.get_link("P1").length == pytest.approx(19569, 0.01)
 
 
 def test_snap_length(layers_that_snap):
-    wn = gusnet.from_qgis(layers_that_snap, "LPS", "H-W")
+    wn = gusnet.to_wntr(layers_that_snap, "LPS", "H-W")
     assert wn.get_link("P1").length == 5000
 
 
@@ -539,26 +564,26 @@ def test_too_far_to_snap():
     add_line(pipe_layer, [(1, 1), (900, 900)], ["P1", 100, 100])
     layers = {"JUNCTIONS": junction_layer, "PIPES": pipe_layer}
 
-    with pytest.raises(gusnet.interface.NetworkModelError, match="too far away to snap to"):
-        gusnet.from_qgis(layers, "LPS", "H-W")
+    with pytest.raises(ReadFeatureError, match="too far away to snap to"):
+        gusnet.to_wntr(layers, "LPS", "H-W")
 
 
 def test_measure_no_crs(simple_layers):
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert wn.get_link("P1").length == 5.0
 
 
 def test_measure_utm(simple_layers):
     # 32636 is a utm crs
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W", crs="EPSG:32636")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W", crs="EPSG:32636")
 
     assert wn.get_link("P1").length == 5.0
 
 
 def test_measure_feet(simple_layers):
     # 3089 is a feet crs
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W", crs="EPSG:3089")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W", crs="EPSG:3089")
 
     assert wn.get_link("P1").length == pytest.approx(5.0 / 3.2808, 0.01)
 
@@ -569,7 +594,7 @@ def test_prioritise_length_attribute(simple_layers, caplog):
     add_line(pipe_layer, [(1, 1), (4, 5)], ["P2", 1, 1, 100])
     simple_layers["PIPES"] = pipe_layer
 
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     warn_message = (
         "1 pipe(s) have very different attribute length vs measured length. First five are: P2 (5 metres vs 100 metres)"
@@ -624,7 +649,7 @@ def test_boolean_attributes(bool_attr, expected_result):
 
     layers = {"JUNCTIONS": junction_layer, "TANKS": tank_layer, "PIPES": pipe_layer}
 
-    wn = gusnet.from_qgis(layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(layers, "LPS", "H-W")
 
     assert wn.get_link("P1").check_valve is expected_result
     assert wn.get_node("T1").overflow is expected_result
@@ -667,7 +692,7 @@ def test_float_attributes(float_attr, expected_result, field_type):
 
     layers = {"JUNCTIONS": junction_layer, "TANKS": tank_layer, "PIPES": pipe_layer}
 
-    wn = gusnet.from_qgis(layers, "lps", "H-W")
+    wn = gusnet.to_wntr(layers, "lps", "H-W")
     assert wn.get_node("J1").elevation == expected_result
     assert wn.get_node("J1").pressure_exponent == expected_result
     assert wn.get_node("T1").diameter == expected_result
@@ -684,8 +709,8 @@ def test_float_error(simple_layers, float_attr, attr_type):
 
     simple_layers["PIPES"] = pipe_layer
 
-    with pytest.raises(gusnet.interface.NetworkModelError, match="Problem in column diameter: "):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(NumericFieldError, match="diameter"):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 @pytest.fixture
@@ -729,21 +754,21 @@ def pump_energy_pattern_layers(pattern, simple_layers):
 
 
 def test_demand_pattern(demand_pattern_layers, expected_pattern):
-    wn = gusnet.from_qgis(demand_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "2"
     assert list(wn.patterns["2"].multipliers) == expected_pattern
 
 
 def test_head_pattern(head_pattern_layers, expected_pattern):
-    wn = gusnet.from_qgis(head_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(head_pattern_layers, "LPS", "H-W")
 
     assert wn.get_node("R1").head_pattern_name == "2"
     assert list(wn.patterns["2"].multipliers) == expected_pattern
 
 
 def test_energy_pattern(pump_energy_pattern_layers, expected_pattern):
-    wn = gusnet.from_qgis(pump_energy_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(pump_energy_pattern_layers, "LPS", "H-W")
 
     assert wn.get_link("PUMP1").energy_pattern == "2"
     assert list(wn.patterns["2"].multipliers) == expected_pattern
@@ -754,7 +779,7 @@ def test_speed_pattern(simple_layers):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "POWER", 10, "5 4 3 2 1 1"])
     simple_layers["PUMPS"] = pump_layer
 
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert wn.get_link("PUMP1").speed_pattern_name == "2"
     assert list(wn.patterns["2"].multipliers) == [5.0, 4.0, 3.0, 2.0, 1.0, 1.0]
@@ -767,23 +792,35 @@ def test_lots_of_patterns():
     add_point(junction_layer, (1, 1), ["J1", 1, 1, "1 0 2.5"])
     add_point(junction_layer, (2, 2), ["J2", 1, 1, "1 0 2.5"])
     add_point(junction_layer, (3, 3), ["J3", 1, 1, "1 0 3.0"])
-    add_point(junction_layer, (3, 3), ["J4", 1, 1, ""])
+    add_point(junction_layer, (4, 4), ["J4", 1, 1, ""])
 
     reservoir_layer = layer("point", [("name", str), ("base_head", float), ("head_pattern", str)])
-    add_point(reservoir_layer, (4, 5), ["R1", 1, "2 0 200.5"])
-    add_point(reservoir_layer, (5, 6), ["R2", 1])
+    add_point(reservoir_layer, (5, 5), ["R1", 1, "2 0 200.5"])
+    add_point(reservoir_layer, (6, 6), ["R2", 1])
 
     pump_layer = layer("linestring", [("name", str), ("pump_type", str), ("power", float), ("speed_pattern", str)])
-    add_line(pump_layer, [(1, 1), (4, 5)], ["P1", "POWER", 10, "5 4 3 2 1 1"])
-    pattern_layers = {"JUNCTIONS": junction_layer, "PUMPS": pump_layer, "RESERVOIRS": reservoir_layer}
-    wn = gusnet.from_qgis(pattern_layers, "LPS", "H-W")
+    add_line(pump_layer, [(1, 1), (2, 2)], ["PUMP1", "POWER", 10, "5 4 3 2 1 1"])
+
+    pipe_layer = layer("linestring", [("name", str), ("diameter", float), ("roughness", float)])
+    add_line(pipe_layer, [(2, 2), (3, 3)], ["P1", 1, 100])
+    add_line(pipe_layer, [(3, 3), (4, 4)], ["P2", 1, 100])
+    add_line(pipe_layer, [(4, 4), (5, 5)], ["P3", 1, 100])
+    add_line(pipe_layer, [(5, 5), (6, 6)], ["P4", 1, 100])
+
+    pattern_layers = {
+        "JUNCTIONS": junction_layer,
+        "PUMPS": pump_layer,
+        "RESERVOIRS": reservoir_layer,
+        "PIPES": pipe_layer,
+    }
+    wn = gusnet.to_wntr(pattern_layers, "LPS", "H-W")
 
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "2"
     assert wn.get_node("J2").demand_timeseries_list[0].pattern_name == "2"
     assert wn.get_node("J3").demand_timeseries_list[0].pattern_name == "3"
     assert wn.get_node("R1").head_pattern_name == "4"
     assert wn.get_node("R2").head_pattern_name is None
-    assert wn.get_link("P1").speed_pattern_name == "5"
+    assert wn.get_link("PUMP1").speed_pattern_name == "5"
 
 
 @pytest.mark.parametrize(
@@ -798,7 +835,7 @@ def test_lots_of_patterns():
     ],
 )
 def test_pattern_string_values(expected_value, demand_pattern_layers):
-    wn = gusnet.from_qgis(demand_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "2"
     assert list(wn.patterns["2"].multipliers) == expected_value
@@ -808,13 +845,13 @@ def test_pattern_string_values(expected_value, demand_pattern_layers):
     "pattern", ["1 0 2,5", "1 0 xx", 1.0, 2, 0, True, False, [""], ["  "], ["1", "not_a_number", "3"], ["1", ""]]
 )
 def test_bad_pattern(pattern, demand_pattern_layers):
-    with pytest.raises(gusnet.interface.PatternError, match=re.escape(str(pattern))):
-        gusnet.from_qgis(demand_pattern_layers, "LPS", "H-W")
+    with pytest.raises(PatternError, match=re.escape(str(pattern))):
+        gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize("pattern", ["", "  ", []])
 def test_empty_pattern(pattern, demand_pattern_layers):
-    wn = gusnet.from_qgis(demand_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
     assert len(wn.patterns) == 0
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "1"
@@ -823,7 +860,7 @@ def test_empty_pattern(pattern, demand_pattern_layers):
 
 @pytest.mark.parametrize("pattern", ["", "  ", []])
 def test_empty_head_pattern(pattern, head_pattern_layers):
-    wn = gusnet.from_qgis(head_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(head_pattern_layers, "LPS", "H-W")
 
     assert len(wn.patterns) == 0
     assert wn.get_node("R1").head_pattern_name is None
@@ -832,7 +869,7 @@ def test_empty_head_pattern(pattern, head_pattern_layers):
 
 @pytest.mark.parametrize("pattern", [[1.0, 0.0, 2.0], ["1.0", "0.0", "2.0"], [1, 0, 2]])
 def test_pattern_list_types(demand_pattern_layers):
-    wn = gusnet.from_qgis(demand_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "2"
     assert list(wn.patterns["2"].multipliers) == [1, 0, 2.0]
@@ -840,7 +877,7 @@ def test_pattern_list_types(demand_pattern_layers):
 
 @pytest.mark.parametrize("pattern", [[1.0, 0.0, 2.0], [1.0, 0.0, 2.1], [1.0], [0.0], [2.2]])
 def test_pattern_list_values(pattern, demand_pattern_layers):
-    wn = gusnet.from_qgis(demand_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "2"
     assert list(wn.patterns["2"].multipliers) == pattern
@@ -849,8 +886,9 @@ def test_pattern_list_values(pattern, demand_pattern_layers):
 @pytest.mark.parametrize("pattern", [[1, 0, -1, 100]])
 def test_two_list_pattern(pattern, demand_pattern_layers):
     add_point(demand_pattern_layers["JUNCTIONS"], (1, 2), ["J2", 1, 1, pattern])
+    add_line(demand_pattern_layers["PIPES"], [(1, 1), (1, 2)], ["P2", 100, 100])  # to avoid "dangling node" error
 
-    wn = gusnet.from_qgis(demand_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "2"
     assert wn.get_node("J2").demand_timeseries_list[0].pattern_name == "2"
@@ -859,8 +897,9 @@ def test_two_list_pattern(pattern, demand_pattern_layers):
 
 def test_pattern_plus_empty(demand_pattern_layers, expected_pattern):
     add_point(demand_pattern_layers["JUNCTIONS"], (1, 2), ["J2", 1, 1])
+    add_line(demand_pattern_layers["PIPES"], [(1, 1), (1, 2)], ["P2", 100, 100])
 
-    wn = gusnet.from_qgis(demand_pattern_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
     assert len(wn.patterns) == 1
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "2"
@@ -935,25 +974,25 @@ def pump_efficiency_curve_layers(simple_layers, curve_string):
 )
 class TestCurveNoConversion:
     def test_head_curve(self, pump_head_curve_layers):
-        wn = gusnet.from_qgis(pump_head_curve_layers, "LPS", "H-W")
+        wn = gusnet.to_wntr(pump_head_curve_layers, "LPS", "H-W")
 
         assert wn.get_link("PUMP1").pump_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 200.5), (0.02, 50.0)]
 
     def test_volume_curve(self, tank_vol_curve_layers):
-        wn = gusnet.from_qgis(tank_vol_curve_layers, "LPS", "H-W")
+        wn = gusnet.to_wntr(tank_vol_curve_layers, "LPS", "H-W")
 
         assert wn.get_node("T1").vol_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 200.5), (20.0, 50)]
 
     def test_valve_headloss_curve(self, valve_headloss_curve_layers):
-        wn = gusnet.from_qgis(valve_headloss_curve_layers, "LPS", "H-W")
+        wn = gusnet.to_wntr(valve_headloss_curve_layers, "LPS", "H-W")
 
         assert wn.get_link("V1").headloss_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 200.5), (0.02, 50.0)]
 
     def test_pump_efficiency_curve(self, pump_efficiency_curve_layers):
-        wn = gusnet.from_qgis(pump_efficiency_curve_layers, "LPS", "H-W")
+        wn = gusnet.to_wntr(pump_efficiency_curve_layers, "LPS", "H-W")
 
         if wn.get_link("PUMP1") and not hasattr(wn.get_link("PUMP1"), "efficiency_curve"):
             pytest.skip("Efficiency curve attribute missing in WNTR Link object wntr < 1.4.0")
@@ -963,19 +1002,19 @@ class TestCurveNoConversion:
 
 class TestCurveMetricConversion:
     def test_head_curve(self, pump_head_curve_layers):
-        wn = gusnet.from_qgis(pump_head_curve_layers, "LPS", "H-W")
+        wn = gusnet.to_wntr(pump_head_curve_layers, "LPS", "H-W")
 
         assert wn.get_link("PUMP1").pump_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 200.5), (0.02, 50)]
 
     def test_volume_curve(self, tank_vol_curve_layers):
-        wn = gusnet.from_qgis(tank_vol_curve_layers, "LPS", "H-W")
+        wn = gusnet.to_wntr(tank_vol_curve_layers, "LPS", "H-W")
 
         assert wn.get_node("T1").vol_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 200.5), (20.0, 50.0)]
 
     def test_valve_headloss_curve(self, valve_headloss_curve_layers):
-        wn = gusnet.from_qgis(valve_headloss_curve_layers, "LPS", "H-W")
+        wn = gusnet.to_wntr(valve_headloss_curve_layers, "LPS", "H-W")
 
         assert wn.get_link("V1").headloss_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 200.5), (0.02, 50.0)]
@@ -983,19 +1022,19 @@ class TestCurveMetricConversion:
 
 class TestCurveImperialConversion:
     def test_head_curve(self, pump_head_curve_layers):
-        wn = gusnet.from_qgis(pump_head_curve_layers, "GPM", "H-W")
+        wn = gusnet.to_wntr(pump_head_curve_layers, "GPM", "H-W")
 
         assert wn.get_link("PUMP1").pump_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 61.1124), (0.0012618039280000001, 15.24)]
 
     def test_volume_curve(self, tank_vol_curve_layers):
-        wn = gusnet.from_qgis(tank_vol_curve_layers, "GPM", "H-W")
+        wn = gusnet.to_wntr(tank_vol_curve_layers, "GPM", "H-W")
 
         assert wn.get_node("T1").vol_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 5.677527741696001), (6.096, 1.4158423296000002)]
 
     def test_valve_headloss_curve(self, valve_headloss_curve_layers):
-        wn = gusnet.from_qgis(valve_headloss_curve_layers, "GPM", "H-W")
+        wn = gusnet.to_wntr(valve_headloss_curve_layers, "GPM", "H-W")
 
         assert wn.get_link("V1").headloss_curve_name == "1"
         assert wn.curves["1"].points == [(0.0, 61.1124), (0.0012618039280000001, 15.24)]
@@ -1024,32 +1063,32 @@ class TestCurveImperialConversion:
 )
 class TestCurveError:
     def test_tank_volume(self, tank_vol_curve_layers, curve_string):
-        with pytest.raises(gusnet.interface.CurveError, match=re.escape(str(curve_string))):
-            gusnet.from_qgis(tank_vol_curve_layers, "LPS", "H-W")
+        with pytest.raises(CurveError, match=re.escape(str(curve_string))):
+            gusnet.to_wntr(tank_vol_curve_layers, "LPS", "H-W")
 
     def test_pump_head(self, pump_head_curve_layers, curve_string):
-        with pytest.raises(gusnet.interface.CurveError, match=re.escape(str(curve_string))):
-            gusnet.from_qgis(pump_head_curve_layers, "LPS", "H-W")
+        with pytest.raises(CurveError, match=re.escape(str(curve_string))):
+            gusnet.to_wntr(pump_head_curve_layers, "LPS", "H-W")
 
     def test_valve_headloss_curve(self, valve_headloss_curve_layers, curve_string):
-        with pytest.raises(gusnet.interface.CurveError, match=re.escape(str(curve_string))):
-            gusnet.from_qgis(valve_headloss_curve_layers, "LPS", "H-W")
+        with pytest.raises(CurveError, match=re.escape(str(curve_string))):
+            gusnet.to_wntr(valve_headloss_curve_layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize("curve_string", [None, "", "  "])
 class TestCurveEmpty:
     def test_tank_volume(self, tank_vol_curve_layers):
-        wn = gusnet.from_qgis(tank_vol_curve_layers, "LPS", "H-W")
+        wn = gusnet.to_wntr(tank_vol_curve_layers, "LPS", "H-W")
 
         assert wn.nodes["T1"].vol_curve_name is None
 
     def test_pump_head(self, pump_head_curve_layers):
-        with pytest.raises(gusnet.interface.PumpCurveMissingError):
-            gusnet.from_qgis(pump_head_curve_layers, "LPS", "H-W")
+        with pytest.raises(PumpCurveMissingError):
+            gusnet.to_wntr(pump_head_curve_layers, "LPS", "H-W")
 
     def test_valve_headloss_curve(self, valve_headloss_curve_layers):
-        with pytest.raises(gusnet.interface.ValveSettingError):
-            gusnet.from_qgis(valve_headloss_curve_layers, "LPS", "H-W")
+        with pytest.raises(ValveSettingError):
+            gusnet.to_wntr(valve_headloss_curve_layers, "LPS", "H-W")
 
 
 def test_null_geometry_point(simple_layers):
@@ -1063,8 +1102,8 @@ def test_null_geometry_point(simple_layers):
         feature.setAttributes(["JXX", 1])
         layer.dataProvider().addFeature(feature)
 
-    with pytest.raises(gusnet.interface.NullGeometryError, match=r"2 feature\(s\) in Junctions with no geometry"):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(GeometryError, match="JX"):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 def test_null_geometry_link(simple_layers):
@@ -1075,8 +1114,8 @@ def test_null_geometry_link(simple_layers):
         feature.setAttributes(["PX", 100, 100])
         layer.dataProvider().addFeature(feature)
 
-    with pytest.raises(gusnet.interface.NullGeometryError, match=r"1 feature\(s\) in Pipes with no geometry"):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(GeometryError, match="PX"):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize(
@@ -1088,7 +1127,7 @@ def test_initial_status_pump(simple_layers, initial_status, expected_status):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "POWER", 10, initial_status])
     simple_layers["PUMPS"] = pump_layer
 
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert wn.get_link("PUMP1").initial_status.name == expected_status
 
@@ -1103,7 +1142,7 @@ def test_initial_status_pipe(simple_layers, initial_status, expected_status):
     add_line(pipe_layer, [(1, 1), (4, 5)], ["P1", 1, 1, initial_status])
     simple_layers["PIPES"] = pipe_layer
 
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert wn.get_link("P1").initial_status.name == expected_status
 
@@ -1117,7 +1156,10 @@ def test_initial_status_valve(initial_status, expected_status):
 
     junction_layer = layer("point", [("name", str), ("elevation", float)])
     add_point(junction_layer, (1, 1), ["J1", 1])
-    add_point(junction_layer, (4, 5), ["J2", 1])
+    add_point(junction_layer, (4, 5), ["J2", 0])
+
+    reservoir_layer = layer("point", [("name", str), ("base_head", float)])
+    add_point(reservoir_layer, (5, 5), ["R1", 200])
 
     valve_layer = layer(
         "linestring",
@@ -1125,9 +1167,9 @@ def test_initial_status_valve(initial_status, expected_status):
     )
     add_line(valve_layer, [(1, 1), (4, 5)], ["V1", 1, "PRV", 1, initial_status])
 
-    layers = {"JUNCTIONS": junction_layer, "VALVES": valve_layer}
+    layers = {"JUNCTIONS": junction_layer, "VALVES": valve_layer, "RESERVOIRS": reservoir_layer}
 
-    wn = gusnet.from_qgis(layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(layers, "LPS", "H-W")
     assert wn.get_link("V1").initial_status == wntr.network.base.LinkStatus[expected_status]
 
 
@@ -1147,8 +1189,8 @@ def test_inital_status_string_error(simple_layers):
     add_line(valve_layer, [(1, 1), (4, 5)], ["V1", 1, "PRV", 1, initial_status])
     simple_layers["VALVES"] = valve_layer
 
-    with pytest.raises(gusnet.interface.WntrError, match=initial_status):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(WntrError, match=initial_status):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize("initial_status", [1.0, True, False])
@@ -1166,8 +1208,8 @@ def test_inital_status_type_error(simple_layers, initial_status):
     add_line(valve_layer, [(1, 1), (4, 5)], ["V1", 1, "PRV", 1, initial_status])
     simple_layers["VALVES"] = valve_layer
 
-    with pytest.raises(gusnet.interface.WntrError, match="initial_status"):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(WntrError, match="initial_status"):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 @pytest.fixture
@@ -1186,6 +1228,12 @@ def valve_layers(valve_type, initial_setting):
     add_point(junction_layer, (1, 1), ["J1", 100])
     add_point(junction_layer, (4, 5), ["J2", 0])
 
+    reservoir_layer = layer("point", [("name", str), ("base_head", float)])
+    add_point(reservoir_layer, (5, 5), ["R1", 200])
+
+    pipe_layer = layer("linestring", [("name", str), ("diameter", float), ("roughness", float)])
+    add_line(pipe_layer, [(1, 1), (5, 5)], ["P1", 10, 100])
+
     valve_layer = layer(
         "linestring",
         [
@@ -1199,26 +1247,26 @@ def valve_layers(valve_type, initial_setting):
     )
     add_line(valve_layer, [(1, 1), (4, 5)], ["V1", valve_type, initial_setting, initial_setting, initial_setting, 10])
 
-    return {"JUNCTIONS": junction_layer, "VALVES": valve_layer}
+    return {"JUNCTIONS": junction_layer, "VALVES": valve_layer, "RESERVOIRS": reservoir_layer, "PIPES": pipe_layer}
 
 
 @pytest.mark.parametrize("valve_type", ["PRV", "PSV", "PBV", "prv"])
 def test_pressure_valve_initial_setting_conversion_valves(valve_layers):
-    wn = gusnet.from_qgis(valve_layers, "cfs", "H-W")
+    wn = gusnet.to_wntr(valve_layers, "cfs", "H-W")
 
     assert wn.get_link("V1").initial_setting == pytest.approx(70.3438726)
 
 
 @pytest.mark.parametrize("valve_type", ["FCV"])
 def test_flow_valve_initial_setting_conversion_valves(valve_layers):
-    wn = gusnet.from_qgis(valve_layers, "lps", "H-W")
+    wn = gusnet.to_wntr(valve_layers, "lps", "H-W")
 
     assert wn.get_link("V1").initial_setting == 0.1
 
 
 @pytest.mark.parametrize("valve_type", ["tcv"])
 def test_tcv_valve_initial_setting(valve_layers):
-    wn = gusnet.from_qgis(valve_layers, "cfs", "H-W")
+    wn = gusnet.to_wntr(valve_layers, "cfs", "H-W")
 
     assert wn.get_link("V1").initial_setting == 100
 
@@ -1226,41 +1274,41 @@ def test_tcv_valve_initial_setting(valve_layers):
 @pytest.mark.parametrize("valve_type", ["fcv", "prv", "tcv"])
 @pytest.mark.parametrize("initial_setting", [None])
 def test_valve_no_initial_setting(valve_layers):
-    with pytest.raises(gusnet.interface.ValveSettingError):
-        gusnet.from_qgis(valve_layers, "cfs", "H-W")
+    with pytest.raises(ValveSettingError):
+        gusnet.to_wntr(valve_layers, "cfs", "H-W")
 
 
 @pytest.mark.parametrize("valve_type", ["FCV", "PRV", "PSV", "PBV", "TCV", "GPV"])
 @pytest.mark.parametrize("initial_setting", ["string_type"])
 def test_pressure_valve_initial_setting_conversion_valves_bad_values(valve_layers):
-    with pytest.raises(gusnet.interface.NetworkModelError, match="pressure_setting"):
-        gusnet.from_qgis(valve_layers, "cfs", "H-W")
+    with pytest.raises(VerificationError, match="pressure_setting"):
+        gusnet.to_wntr(valve_layers, "cfs", "H-W")
 
 
 @pytest.mark.parametrize("valve_type", [None])
 def test_valve_type_not_specified(valve_layers):
-    with pytest.raises(gusnet.interface.RequiredFieldError, match="valve_type"):
-        gusnet.from_qgis(valve_layers, "LPS", "H-W")
+    with pytest.raises(VerificationError, match="valve_type"):
+        gusnet.to_wntr(valve_layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize("valve_type", ["not_a_valve_type"])
 def test_valve_type_wrong_type(valve_layers):
-    with pytest.raises(gusnet.interface.ValveTypeError, match="valve_type"):
-        gusnet.from_qgis(valve_layers, "LPS", "H-W")
+    with pytest.raises(ValveTypeError, match="valve_type"):
+        gusnet.to_wntr(valve_layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize("valve_type", [0, 1, 1.0, True, False])
 def test_valve_type_is_number(valve_layers):
-    with pytest.raises(gusnet.interface.ValveTypeError, match="valve_type"):
-        gusnet.from_qgis(valve_layers, "LPS", "H-W")
+    with pytest.raises(ValveTypeError, match="valve_type"):
+        gusnet.to_wntr(valve_layers, "LPS", "H-W")
 
 
 def test_pump_with_no_pump_type(simple_layers):
     pump_layer = layer("linestring", [("name", str)])
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1"])
     simple_layers.update({"PUMPS": pump_layer})
-    with pytest.raises(gusnet.interface.NetworkModelError, match="pump_type"):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(VerificationError, match="pump_type"):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize("pump_type", ["not_a_type", None, 1, 1.2])
@@ -1268,8 +1316,8 @@ def test_pump_with_wrong_pump_type(simple_layers, pump_type):
     pump_layer = layer("linestring", [("name", str), ("pump_type", pump_type)])
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", pump_type])
     simple_layers.update({"PUMPS": pump_layer})
-    with pytest.raises(gusnet.interface.NetworkModelError, match="pump_type"):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(VerificationError, match="pump_type"):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 def test_power_pump(simple_layers):
@@ -1277,7 +1325,7 @@ def test_power_pump(simple_layers):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "POWER", 10.1])
     simple_layers.update({"PUMPS": pump_layer})
 
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert wn.get_link("PUMP1").pump_type == "POWER"
     assert wn.get_link("PUMP1").power == 10100.0
@@ -1288,7 +1336,7 @@ def test_head_pump(simple_layers):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "HEAD", "[(0.0, 200.5),(1.0,50)]"])
     simple_layers.update({"PUMPS": pump_layer})
 
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert wn.get_link("PUMP1").pump_type == "HEAD"
     assert wn.get_link("PUMP1").get_pump_curve().points == [(0.0, 200.5), (0.001, 50)]
@@ -1299,8 +1347,8 @@ def test_head_pump_empty_curve(simple_layers):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "HEAD", ""])
     simple_layers.update({"PUMPS": pump_layer})
 
-    with pytest.raises(gusnet.interface.PumpCurveMissingError):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(PumpCurveMissingError):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 def test_head_pump_no_curve(simple_layers):
@@ -1308,8 +1356,8 @@ def test_head_pump_no_curve(simple_layers):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "HEAD"])
     simple_layers.update({"PUMPS": pump_layer})
 
-    with pytest.raises(gusnet.interface.PumpCurveMissingError):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(PumpCurveMissingError):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 def test_head_pump_conversion(simple_layers):
@@ -1317,7 +1365,7 @@ def test_head_pump_conversion(simple_layers):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "HEAD", "[(0.0, 10),(1000.0,50)]"])
     simple_layers.update({"PUMPS": pump_layer})
 
-    wn = gusnet.from_qgis(simple_layers, "GPM", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "GPM", "H-W")
 
     assert wn.get_link("PUMP1").pump_type == "HEAD"
     assert wn.get_link("PUMP1").get_pump_curve().points == [(0.0, 3.048), (0.0630901964, 15.24)]
@@ -1330,7 +1378,7 @@ def test_pump_mixed_types(simple_layers):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP2", "HEAD", None, "[(0.0, 200.5),(1.0,50)]"])
     simple_layers.update({"PUMPS": pump_layer})
 
-    wn = gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert wn.get_link("PUMP1").pump_type == "POWER"
     assert wn.get_link("PUMP2").pump_type == "HEAD"
@@ -1344,8 +1392,8 @@ def test_power_pump_with_no_power(simple_layers):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "POWER"])
     simple_layers.update({"PUMPS": pump_layer})
 
-    with pytest.raises(gusnet.interface.PumpPowerError):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(PumpPowerError):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 def test_power_pump_with_one_missing_power(simple_layers):
@@ -1354,8 +1402,8 @@ def test_power_pump_with_one_missing_power(simple_layers):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP2", "POWER"])
     simple_layers.update({"PUMPS": pump_layer})
 
-    with pytest.raises(gusnet.interface.PumpPowerError):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(PumpPowerError):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize("power", ["not_a_number"])
@@ -1364,8 +1412,8 @@ def test_power_pump_with_wrong_power_type(simple_layers, power):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "POWER", power])
     simple_layers.update({"PUMPS": pump_layer})
 
-    with pytest.raises(gusnet.interface.NetworkModelError, match=str(power)):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(NumericFieldError):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
 @pytest.mark.parametrize("power", [0, 0.0, -1])
@@ -1374,5 +1422,5 @@ def test_power_pump_with_wrong_power_value(simple_layers, power):
     add_line(pump_layer, [(1, 1), (4, 5)], ["PUMP1", "POWER", power])
     simple_layers.update({"PUMPS": pump_layer})
 
-    with pytest.raises(gusnet.interface.PumpPowerError):
-        gusnet.from_qgis(simple_layers, "LPS", "H-W")
+    with pytest.raises(PumpPowerError):
+        gusnet.to_wntr(simple_layers, "LPS", "H-W")

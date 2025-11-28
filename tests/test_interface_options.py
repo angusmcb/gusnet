@@ -16,7 +16,7 @@ from gusnet.elements import (
     QualityParameter,
     WallReactionOrder,
 )
-from gusnet.interface import options_from_wn, options_to_wn
+from gusnet.interface import WntrModel
 from gusnet.pattern_curve import Pattern
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -60,7 +60,7 @@ def test_options_from_wn_reads_values(wn: wntr.network.WaterNetworkModel):
     o.energy.demand_charge = 5.0
 
     # Call the function under test using the real object; let failures surface if code is incorrect
-    opts = options_from_wn(wn)
+    opts = WntrModel(wn).options
 
     assert opts.flow_unit is FlowUnit.GPM
     assert opts.headloss_formula is HeadlossFormula.DARCY_WEISBACH
@@ -107,7 +107,7 @@ def test_options_to_wn_writes_values(wn: wntr.network.WaterNetworkModel):
         wall_coefficient_correlation=0.1,
     )
 
-    options_to_wn(opts, wn)
+    WntrModel(wn).options = opts
 
     o = wn.options
     assert o.hydraulic.inpfile_units == opts.flow_unit.name
@@ -158,8 +158,9 @@ def test_options_round_trip(wn: wntr.network.WaterNetworkModel):
         wall_coefficient_correlation=0.1,
     )
 
-    options_to_wn(opts, wn)
-    read_opts = options_from_wn(wn)
+    model = WntrModel(wn)
+    model.options = opts
+    read_opts = model.options_from_wn()
 
     assert read_opts.flow_unit is opts.flow_unit
     assert read_opts.headloss_formula is opts.headloss_formula
@@ -180,11 +181,13 @@ def test_options_round_trip(wn: wntr.network.WaterNetworkModel):
 def test_headloss_mappings(headloss, wn: wntr.network.WaterNetworkModel):
     """Ensure all HeadlossFormula enum members round-trip through the wn options."""
 
+    model = WntrModel(wn)
+
     opts = dataclasses.replace(DefaultOptions(), headloss_formula=headloss)
-    options_to_wn(opts, wn)
+    model.options = opts
 
     # read back
-    read_opts = options_from_wn(wn)
+    read_opts = model.options_from_wn()
 
     assert opts == read_opts
     assert read_opts.headloss_formula is headloss
@@ -195,9 +198,10 @@ def test_flowunit_mappings(flow_unit, wn: wntr.network.WaterNetworkModel):
     """Ensure all FlowUnit enum members round-trip through the wn options."""
 
     opts = dataclasses.replace(DefaultOptions(), flow_unit=flow_unit)
-    options_to_wn(opts, wn)
+    model = WntrModel(wn)
+    model.options = opts
 
-    read_opts = options_from_wn(wn)
+    read_opts = model.options_from_wn()
 
     assert opts == read_opts
     assert read_opts.flow_unit is flow_unit
@@ -208,9 +212,10 @@ def test_demandtype_mappings(demand, wn: wntr.network.WaterNetworkModel):
     """Ensure all DemandType enum members round-trip through the wn options."""
 
     opts = dataclasses.replace(DefaultOptions(), demand_type=demand)
-    options_to_wn(opts, wn)
+    model = WntrModel(wn)
+    model.options = opts
 
-    read_opts = options_from_wn(wn)
+    read_opts = model.options_from_wn()
 
     assert opts == read_opts
     assert read_opts.demand_type is demand
@@ -219,7 +224,8 @@ def test_demandtype_mappings(demand, wn: wntr.network.WaterNetworkModel):
 def test_wn_defaults(wn: wntr.network.WaterNetworkModel):
     """Ensure that the default WNTR options round-trip correctly."""
 
-    options_from_wn(wn)
+    model = WntrModel(wn)
+    model.options_from_wn()
 
 
 def test_wn_roundtrip(wn: wntr.network.WaterNetworkModel):
@@ -228,10 +234,11 @@ def test_wn_roundtrip(wn: wntr.network.WaterNetworkModel):
     original_opts = deepcopy(wn.options)
 
     # Get WNTR defaults
-    default_opts = options_from_wn(wn)
+    model = WntrModel(wn)
+    default_opts = model.options_from_wn()
 
     # Write them back to WNTR
-    options_to_wn(default_opts, wn)
+    model.options = default_opts
 
     # little fudge
     wn.options.energy.global_price = 0

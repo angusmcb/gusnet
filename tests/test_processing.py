@@ -318,24 +318,24 @@ def test_import_layers_reservoirs(import_layers):
 def test_template_layers_pipes(template_result):
     assert template_result["PIPES"].fields().names() == [
         "name",
-        "diameter",
         "length",
+        "diameter",
         "roughness",
         "minor_loss",
-        "check_valve",
         "initial_status",
+        "check_valve",
     ]
 
 
 def test_import_layers_pipes(import_layers):
     assert import_layers["PIPES"].fields().names() == [
         "name",
-        "diameter",
         "length",
+        "diameter",
         "roughness",
         "minor_loss",
-        "check_valve",
         "initial_status",
+        "check_valve",
         "bulk_coeff",
         "wall_coeff",
     ]

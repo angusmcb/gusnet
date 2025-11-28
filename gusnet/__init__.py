@@ -1,4 +1,4 @@
-__all__ = ["examples", "from_qgis", "to_qgis"]
+__all__ = ["examples", "from_inp", "from_wntr", "from_wntr", "to_wntr"]
 
 import codecs
 import configparser
@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from qgis.PyQt import QtCore
 
 import gusnet.dependencies
-from gusnet.interface import from_qgis, to_qgis
+from gusnet.api import from_inp, from_wntr, to_wntr
 
 _packages_path = gusnet.dependencies.WntrInstaller.package_directory()
 if _packages_path not in sys.path:

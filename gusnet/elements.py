@@ -59,6 +59,14 @@ class FlowUnit(Enum):
 
         raise ValueError  # pragma: no cover
 
+    @property
+    def is_traditional(self) -> bool:
+        """Is the flow unit a traditional US unit?"""
+        return self in _TRADITIONAL_FLOW_UNITS
+
+
+_TRADITIONAL_FLOW_UNITS = {FlowUnit.CFS, FlowUnit.GPM, FlowUnit.MGD, FlowUnit.IMGD, FlowUnit.AFD}
+
 
 class MassUnit(Enum):
     MG = "mg/L"
@@ -256,7 +264,6 @@ class SimpleFieldType(FieldType):
     STR = auto()
     BOOL = auto()
     PATTERN = auto()
-    CURVE = auto()
 
 
 class Parameter(FieldType):
@@ -285,6 +292,13 @@ class Parameter(FieldType):
     CURRENCY = auto()
 
 
+class CurveType(FieldType):
+    HEAD = "HEAD", (Parameter.FLOW, Parameter.HYDRAULIC_HEAD)
+    EFFICIENCY = "EFFICIENCY", (Parameter.FLOW, Parameter.UNITLESS)  # flow vs percentage
+    VOLUME = "VOLUME", (Parameter.LENGTH, Parameter.VOLUME)
+    HEADLOSS = "HEADLOSS", (Parameter.FLOW, Parameter.HYDRAULIC_HEAD)
+
+
 class FieldGroup(Flag):
     BASE = auto()
     WATER_QUALITY_ANALYSIS = auto()
@@ -293,30 +307,6 @@ class FieldGroup(Flag):
     EXTRA = auto()
     REQUIRED = auto()
     LIST_IN_EXTENDED_PERIOD = auto()
-
-
-class LayerType(Flag):
-    JUNCTIONS = auto()
-    RESERVOIRS = auto()
-    TANKS = auto()
-    PIPES = auto()
-    PUMPS = auto()
-    VALVES = auto()
-    NODES = JUNCTIONS | RESERVOIRS | TANKS
-    LINKS = PIPES | PUMPS | VALVES
-    ALL = NODES | LINKS
-
-    @property
-    def friendly_name(self):
-        return self.name.title()
-
-    @property
-    def qgs_wkb_type(self):
-        return QgsWkbTypes.Point if self in LayerType.NODES else QgsWkbTypes.LineString
-
-    @property
-    def acceptable_processing_vectors(self):
-        return [QgsProcessing.TypeVectorPoint] if self in LayerType.NODES else [QgsProcessing.TypeVectorLine]
 
 
 class _AbstractLayer(StrEnum):
@@ -328,13 +318,15 @@ class _AbstractLayer(StrEnum):
         return "RESULT_" + self.name
 
     @property
-    def is_node(self) -> bool:
-        msg = "is_node must be implemented in subclasses"
-        raise NotImplementedError(msg)
+    def is_node(self) -> bool:  # pragma: no cover
+        raise NotImplementedError
 
     @property
     def qgs_wkb_type(self):
         return QgsWkbTypes.Point if self.is_node else QgsWkbTypes.LineString
+
+    def wq_fields(self) -> list[Field]:
+        raise NotImplementedError
 
 
 class ModelLayer(_AbstractLayer):
@@ -529,12 +521,12 @@ class Field(StrEnum):
     PRESSURE_SETTING = "pressure_setting", Parameter.PRESSURE, FieldGroup.BASE
     FLOW_SETTING = "flow_setting", Parameter.FLOW, FieldGroup.BASE
     THROTTLE_SETTING = "throttle_setting", Parameter.UNITLESS, FieldGroup.BASE
-    HEADLOSS_CURVE = "headloss_curve", SimpleFieldType.CURVE, FieldGroup.BASE
+    HEADLOSS_CURVE = "headloss_curve", CurveType.HEADLOSS, FieldGroup.BASE
 
     DIAMETER = "diameter", Parameter.PIPE_DIAMETER, FieldGroup.BASE | FieldGroup.REQUIRED
     TANK_DIAMETER = "tank_diameter", Parameter.TANK_DIAMETER, FieldGroup.BASE | FieldGroup.REQUIRED
     MIN_VOL = "min_vol", Parameter.VOLUME, FieldGroup.BASE
-    VOL_CURVE = "vol_curve", SimpleFieldType.CURVE, FieldGroup.BASE
+    VOL_CURVE = "vol_curve", CurveType.VOLUME, FieldGroup.BASE
     OVERFLOW = "overflow", SimpleFieldType.BOOL, FieldGroup.BASE
     BASE_HEAD = "base_head", Parameter.ELEVATION, FieldGroup.BASE | FieldGroup.REQUIRED
     HEAD_PATTERN = "head_pattern", SimpleFieldType.PATTERN, FieldGroup.BASE
@@ -543,7 +535,7 @@ class Field(StrEnum):
     MINOR_LOSS = "minor_loss", Parameter.UNITLESS, FieldGroup.BASE
     CHECK_VALVE = "check_valve", SimpleFieldType.BOOL, FieldGroup.BASE
     PUMP_TYPE = "pump_type", MapFieldType.PUMP_TYPE, FieldGroup.BASE | FieldGroup.REQUIRED
-    PUMP_CURVE = "pump_curve", SimpleFieldType.CURVE, FieldGroup.BASE
+    PUMP_CURVE = "pump_curve", CurveType.HEAD, FieldGroup.BASE
     POWER = "power", Parameter.POWER, FieldGroup.BASE
     BASE_SPEED = "base_speed", Parameter.FRACTION, FieldGroup.BASE
     SPEED_PATTERN = "speed_pattern", SimpleFieldType.PATTERN, FieldGroup.BASE
@@ -560,7 +552,7 @@ class Field(StrEnum):
     REQUIRED_PRESSURE = "required_pressure", Parameter.PRESSURE, FieldGroup.PRESSURE_DEPENDENT_DEMAND
     PRESSURE_EXPONENT = "pressure_exponent", Parameter.UNITLESS, FieldGroup.PRESSURE_DEPENDENT_DEMAND
 
-    EFFICIENCY_CURVE = "efficiency_curve", SimpleFieldType.CURVE, FieldGroup.ENERGY
+    EFFICIENCY_CURVE = "efficiency_curve", CurveType.EFFICIENCY, FieldGroup.ENERGY
     ENERGY_PRICE = "energy_price", Parameter.CURRENCY, FieldGroup.ENERGY
     ENERGY_PATTERN = "energy_pattern", SimpleFieldType.PATTERN, FieldGroup.ENERGY
 

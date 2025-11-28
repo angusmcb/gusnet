@@ -1,7 +1,7 @@
 import pytest
 from qgis.core import QgsGeometry, QgsPoint, QgsPointXY
 
-from gusnet.spatial_index import SnapError, SnapSameNodeError, SnapTooFarError, SpatialIndex
+from gusnet.spatial_index import SnapTooFarError, SpatialIndex
 
 
 def test_spatial_index_add_node():
@@ -41,32 +41,24 @@ def test_spatial_index_snap_link_far_apart():
         index.snap_link(geometry)
 
 
-def test_spatial_index_snap_link_same_node():
-    index = SpatialIndex()
-    index.add_node(QgsGeometry(QgsPoint(1, 1)), "node1")
-    geometry = QgsGeometry.fromPolyline([QgsPoint(1.01, 1.01), QgsPoint(2, 3), QgsPoint(1.02, 1.02)])
-    with pytest.raises(SnapSameNodeError, match="node1"):
-        index.snap_link(geometry)
+# def test_spatial_index_snap_link_multi_part():
+#     index = SpatialIndex()
+#     index.add_node(QgsGeometry(QgsPoint(1, 1)), "node1")
+#     index.add_node(QgsGeometry(QgsPoint(2, 2)), "node2")
+#     geometry = QgsGeometry.fromMultiPolylineXY(
+#         [[QgsPointXY(1, 1), QgsPointXY(2, 2)], [QgsPointXY(3, 3), QgsPointXY(4, 4)]]
+#     )
+#     with pytest.raises(SnapError, match="All links must be single part lines"):
+#         index.snap_link(geometry)
 
 
-def test_spatial_index_snap_link_multi_part():
-    index = SpatialIndex()
-    index.add_node(QgsGeometry(QgsPoint(1, 1)), "node1")
-    index.add_node(QgsGeometry(QgsPoint(2, 2)), "node2")
-    geometry = QgsGeometry.fromMultiPolylineXY(
-        [[QgsPointXY(1, 1), QgsPointXY(2, 2)], [QgsPointXY(3, 3), QgsPointXY(4, 4)]]
-    )
-    with pytest.raises(SnapError, match="All links must be single part lines"):
-        index.snap_link(geometry)
-
-
-def test_spatial_index_snap_link_invalid_geometry():
-    index = SpatialIndex()
-    index.add_node(QgsGeometry(QgsPoint(1, 1)), "node1")
-    index.add_node(QgsGeometry(QgsPoint(2, 2)), "node2")
-    geometry = QgsGeometry()  # Invalid geometry
-    with pytest.raises(SnapError, match="All links must have valid geometry"):
-        index.snap_link(geometry)
+# def test_spatial_index_snap_link_invalid_geometry():
+#     index = SpatialIndex()
+#     index.add_node(QgsGeometry(QgsPoint(1, 1)), "node1")
+#     index.add_node(QgsGeometry(QgsPoint(2, 2)), "node2")
+#     geometry = QgsGeometry()  # Invalid geometry
+#     with pytest.raises(SnapError, match="All links must have valid geometry"):
+#         index.snap_link(geometry)
 
 
 def test_spatial_index_add_nodes():

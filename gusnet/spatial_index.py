@@ -28,8 +28,8 @@ class SpatialIndex:
     def add_nodes(self, geometries: pd.Series, names: pd.Series) -> None:
         """Add nodes from pandas series to the spatial index."""
 
-        for geometry, element_name in zip(geometries, names):
-            self.add_node(geometry, element_name)
+        for parts in zip(geometries, names):
+            self.add_node(*parts)
 
     def snap_links(self, geometries: pd.Series, names: pd.Series) -> list[tuple[QgsGeometry, str, str]]:
         """Snap the start and end points of links to the nearest nodes in the spatial index.
@@ -44,14 +44,8 @@ class SpatialIndex:
 
         Returns:
             tuple: A tuple containing the snapped geometry, start node name, and end node name."""
-        try:
-            vertices = geometry.asPolyline()
-        except TypeError:
-            msg = tr("All links must be single part lines")
-            raise SnapError(msg) from None
-        except ValueError:
-            msg = tr("All links must have valid geometry")
-            raise SnapError(msg) from None
+
+        vertices = geometry.asPolyline()
 
         start_point = vertices.pop(0)
         end_point = vertices.pop()
@@ -59,9 +53,6 @@ class SpatialIndex:
 
         new_start_point, start_node_name = self._snapper(start_point, original_length, link_name)
         new_end_point, end_node_name = self._snapper(end_point, original_length, link_name)
-
-        if start_node_name == end_node_name:
-            raise SnapSameNodeError(link_name, start_node_name)
 
         snapped_geometry = QgsGeometry.fromPolylineXY([new_start_point, *vertices, new_end_point])
 
@@ -92,15 +83,5 @@ class SnapTooFarError(SnapError):
     def __init__(self, link_name: str, closest_node: str) -> None:
         message = tr("For the link '{link_name}', the closest node ({node_name}) is too far away to snap to.").format(
             link_name=link_name, node_name=closest_node
-        )
-        super().__init__(message)
-
-
-class SnapSameNodeError(SnapError):
-    """Custom exception for snapping errors when the start and end nodes are the same."""
-
-    def __init__(self, link_name: str, node_name: str) -> None:
-        message = tr("The link '{link_name}' connects to the same node on both ends ({node_name}).").format(
-            link_name=link_name, node_name=node_name
         )
         super().__init__(message)

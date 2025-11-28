@@ -15,7 +15,7 @@ import logging
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from qgis.core import (
     QgsApplication,
@@ -37,7 +37,6 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QCoreApplication, QThread
 from qgis.PyQt.QtGui import QIcon
 
-import gusnet
 from gusnet.elements import (
     DefaultOptions,
     DemandType,
@@ -50,24 +49,16 @@ from gusnet.elements import (
     ResultLayer,
     WallReactionOrder,
 )
+from gusnet.feature_reader import ReadFeatureError
+from gusnet.feature_writer import get_qgs_fields, write
 from gusnet.gusnet_processing.common import CommonProcessingBase, profile
 from gusnet.i18n import tr
-from gusnet.interface import (
-    NetworkModelError,
-    Writer,
-    check_network,
-    describe_network,
-    describe_pipes,
-    options_from_wn,
-    options_to_wn,
-)
+from gusnet.interface import NetworkModelError, WntrModel
 from gusnet.pattern_curve import Pattern
 from gusnet.settings import ProjectSettings, SettingKey
 from gusnet.style import style
 from gusnet.units import SpecificUnitNames
-
-if TYPE_CHECKING:
-    import wntr
+from gusnet.verify_model import VerificationError
 
 
 class _ModelCreatorAlgorithm(CommonProcessingBase):
@@ -136,9 +127,9 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         project_settings = ProjectSettings(QgsProject.instance())
         saved_layers = project_settings.get(SettingKey.MODEL_LAYERS, {})
         input_layers = {
-            layer_type.name: saved_layers.get(layer_type.name)
+            str(layer_type): saved_layers.get(layer_type.name)
             for layer_type in ModelLayer
-            if QgsProject.instance().mapLayer(saved_layers.get(layer_type.name))
+            if QgsProject.instance().mapLayer(saved_layers.get(layer_type))
         }
         return input_layers
 
@@ -310,7 +301,7 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         )
 
     def _get_crs(self, parameters: dict[str, Any], context: QgsProcessingContext) -> QgsCoordinateReferenceSystem:
-        junction_source = self.parameterAsSource(parameters, ModelLayer.JUNCTIONS.name, context)
+        junction_source = self.parameterAsSource(parameters, ModelLayer.JUNCTIONS, context)
         return junction_source.sourceCrs()
 
     def _get_model_options(self, parameters: dict[str, Any], context: QgsProcessingContext) -> ModelOptions:
@@ -387,58 +378,47 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
             wall_coefficient_correlation=wall_coefficient_correlation,
         )
 
-    def _get_wn(
-        self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
-    ) -> wntr.network.WaterNetworkModel:
-        sources = {lyr.name: self.parameterAsSource(parameters, lyr.name, context) for lyr in ModelLayer}
+    def _get_model(self, parameters: dict[str, Any], context: QgsProcessingContext) -> WntrModel:
+        from gusnet.feature_reader import read
+        from gusnet.verify_model import verify_model
+
+        sources = {lyr: self.parameterAsSource(parameters, lyr.name, context) for lyr in ModelLayer}
 
         crs = self._get_crs(parameters, context)
 
         model_options = self._get_model_options(parameters, context)
 
-        flow_unit_string = model_options.flow_unit.name
-        headloss_string = model_options.headloss_formula.value
+        ellipsoid = context.ellipsoid()
+        transform_context = context.transformContext()
 
         try:
-            with logger_to_feedback("gusnet", feedback), logger_to_feedback("wntr", feedback):
-                wn = gusnet.from_qgis(sources, flow_unit_string, headloss_string, project=context.project(), crs=crs)
-            check_network(wn)
+            elements = read(sources, crs, transform_context, ellipsoid, model_options.flow_unit)
+        except ReadFeatureError as e:
+            raise QgsProcessingException(tr("Error reading features: {exception}").format(exception=e)) from e
+
+        try:
+            verify_model(elements)
+        except VerificationError as e:
+            raise QgsProcessingException(tr("Error verifying model: {exception}").format(exception=e)) from None
+
+        model = WntrModel()
+
+        model.options = model_options
+
+        try:
+            model.set_elements(elements)
         except NetworkModelError as e:
-            raise QgsProcessingException(tr("Error preparing model: {exception}").format(exception=e)) from None
-
-        try:
-            options_to_wn(model_options, wn)
-        except ValueError as e:
             raise QgsProcessingException(e) from e
 
-        return wn
+        return model
 
-    def _run_simulation(
-        self, feedback: QgsProcessingFeedback, wn: wntr.network.WaterNetworkModel
-    ) -> wntr.sim.SimulationResults:
-        """
-        Run the simulation on the given WaterNetworkModel.
-        """
-
-        import wntr
-
-        temp_folder = Path(QgsProcessingUtils.tempFolder()) / "wntr"
-        sim = wntr.sim.EpanetSimulator(wn)
-        try:
-            with logger_to_feedback("wntr", feedback):
-                sim_results = sim.run_sim(file_prefix=str(temp_folder))
-        except wntr.epanet.exceptions.EpanetException as e:
-            raise QgsProcessingException(tr("Epanet error: {exception}").format(exception=e)) from e
-
-        return sim_results
-
-    def _describe_model(self, wn: wntr.network.WaterNetworkModel, feedback: QgsProcessingFeedback) -> None:
+    def _describe_model(self, model: WntrModel, feedback: QgsProcessingFeedback) -> None:
         if hasattr(feedback, "pushFormattedMessage"):  # QGIS > 3.32
-            feedback.pushFormattedMessage(*describe_network(wn))
-            feedback.pushFormattedMessage(*describe_pipes(wn))
+            feedback.pushFormattedMessage(*model.describe_network())
+            feedback.pushFormattedMessage(*model.describe_pipes())
         else:
-            feedback.pushInfo(describe_network(wn)[1])
-            feedback.pushInfo(describe_pipes(wn)[1])
+            feedback.pushInfo(model.describe_network()[1])
+            feedback.pushInfo(model.describe_pipes()[1])
 
     def prepareAlgorithm(  # noqa: N802
         self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
@@ -447,9 +427,9 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
             project_settings = ProjectSettings()
 
             layers = {
-                lyr.name: input_layer.id()
+                str(lyr): input_layer.id()
                 for lyr in ModelLayer
-                if (input_layer := self.parameterAsVectorLayer(parameters, lyr.name, context))
+                if (input_layer := self.parameterAsVectorLayer(parameters, str(lyr), context))
             }
             project_settings.set(SettingKey.MODEL_LAYERS, layers)
 
@@ -461,32 +441,33 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        feedback: QgsProcessingFeedback,
-        wn: wntr.network.WaterNetworkModel,
-        sim_results: wntr.sim.SimulationResults,
+        model: WntrModel,
     ) -> dict[str, str]:
         outputs: dict[str, str] = {}
-
-        with logger_to_feedback("wntr", feedback), logger_to_feedback("gusnet", feedback):
-            result_writer = Writer(wn, sim_results)  # type: ignore
 
         crs = self._get_crs(parameters, context)
 
         group_name = tr("Simulation Results ({finish_time})").format(finish_time=time.strftime("%X"))
 
-        options = options_from_wn(wn)
+        style_theme = "extended" if model.options.simulation_duration else None
+        unit_names = SpecificUnitNames.from_options(model.options)
 
-        style_theme = "extended" if options.simulation_duration else None
-        unit_names = SpecificUnitNames.from_options(options)
+        results = model.get_results()
 
         for layer_type in ResultLayer:
-            fields = result_writer.get_qgsfields(layer_type)
+            field_enums = model.suggested_fields(layer_type)
+
+            attribute_df = results.get(layer_type)
+
+            fields = get_qgs_fields(field_enums, attribute_df, model.options.simulation_duration > 0)
 
             (sink, layer_id) = self.parameterAsSink(
                 parameters, layer_type.results_name, context, fields, layer_type.qgs_wkb_type, crs
             )
 
-            result_writer.write(layer_type, sink)
+            geometries = model.node_geometries if layer_type.is_node else model.link_geometries
+
+            write(sink, fields, attribute_df, geometries)
 
             outputs[layer_type.results_name] = layer_id
 
@@ -509,13 +490,13 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         parameters: dict[str, Any],
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback,
-        wn: wntr.network.WaterNetworkModel,
+        model: WntrModel,
     ) -> dict[str, str]:
         import wntr
 
         inp_file = self.parameterAsFile(parameters, self.OUTPUT_INP, context)
 
-        wntr.network.write_inpfile(wn, inp_file)
+        wntr.network.write_inpfile(model.wn, inp_file)
 
         feedback.pushInfo(tr(".inp file written to: {file_path}").format(file_path=inp_file))
 
@@ -558,16 +539,21 @@ in other software.
         with profile(tr("Verifying Dependencies"), 10, feedback):
             self._check_wntr()
 
-        with profile(tr("Preparing Model"), 30, feedback):
-            wn = self._get_wn(parameters, context, feedback)
+        with logger_to_feedback("wntr", feedback), logger_to_feedback("gusnet", feedback):
+            with profile(tr("Preparing Model"), 30, feedback):
+                model = self._get_model(parameters, context)
 
-            self._describe_model(wn, feedback)
+                self._describe_model(model, feedback)
 
-        with profile(tr("Running Simulation"), 50, feedback):
-            sim_results = self._run_simulation(feedback, wn)
+            with profile(tr("Running Simulation"), 50, feedback):
+                temp_folder = Path(QgsProcessingUtils.tempFolder()) / "wntr"
+                try:
+                    model.run(str(temp_folder))
+                except NetworkModelError as e:
+                    raise QgsProcessingException(e) from e
 
-        with profile(tr("Creating Outputs"), 80, feedback):
-            outputs = self.write_output_result_layers(parameters, context, feedback, wn, sim_results)
+            with profile(tr("Creating Outputs"), 80, feedback):
+                outputs = self.write_output_result_layers(parameters, context, model)
 
         return outputs
 
@@ -608,13 +594,13 @@ in other software.
         with profile(tr("Verifying Dependencies"), 10, feedback):
             self._check_wntr()
 
-        with profile(tr("Preparing Model"), 30, feedback):
-            wn = self._get_wn(parameters, context, feedback)
+        with logger_to_feedback("wntr", feedback), logger_to_feedback("gusnet", feedback):
+            with profile(tr("Preparing Model"), 30, feedback):
+                model = self._get_model(parameters, context)
+                self._describe_model(model, feedback)
 
-            self._describe_model(wn, feedback)
-
-        with profile(tr("Creating Outputs"), 80, feedback):
-            outputs = self.write_inp_file(parameters, context, feedback, wn)
+            with profile(tr("Creating Outputs"), 80, feedback):
+                outputs = self.write_inp_file(parameters, context, feedback, model)
 
         return outputs
 

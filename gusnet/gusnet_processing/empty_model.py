@@ -13,10 +13,10 @@ from qgis.core import (
 )
 from qgis.PyQt.QtGui import QIcon
 
-from gusnet.elements import Field, FieldGroup, ModelLayer
+from gusnet.elements import FieldGroup, ModelLayer
+from gusnet.feature_writer import get_qgs_fields
 from gusnet.gusnet_processing.common import CommonProcessingBase, profile
 from gusnet.i18n import tr
-from gusnet.interface import Writer
 
 
 class TemplateLayers(CommonProcessingBase):
@@ -65,10 +65,6 @@ class TemplateLayers(CommonProcessingBase):
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback,  # noqa: ARG002
     ) -> dict:
-        self._check_wntr()
-        # only import wntr-using modules once we are sure wntr is installed.
-        import wntr
-
         analysis_types_to_use = FieldGroup.BASE
         for analysis_type in FieldGroup:
             if self.parameterAsBoolean(parameters, analysis_type.name, context):
@@ -76,22 +72,17 @@ class TemplateLayers(CommonProcessingBase):
 
         crs = self.parameterAsCrs(parameters, self.CRS, context)
 
-        wn = wntr.network.WaterNetworkModel()
-        network_writer = Writer(wn)
-        network_writer.fields = [field for field in Field if field.field_group & analysis_types_to_use]
-
         # for shapefile writing
         warnings.filterwarnings("ignore", "Field", RuntimeWarning)
         warnings.filterwarnings("ignore", "Normalized/laundered field name:", RuntimeWarning)
 
         outputs: dict[str, str] = {}
-        layers: dict[ModelLayer, str] = {}
         for layer in ModelLayer:
-            fields = network_writer.get_qgsfields(layer)
+            field_enums = [field for field in layer.wq_fields() if field.field_group & analysis_types_to_use]
+            fields = get_qgs_fields(field_enums)
             wkb_type = layer.qgs_wkb_type
-            (_, outputs[layer.name]) = self.parameterAsSink(parameters, layer.name, context, fields, wkb_type, crs)
-            layers[layer] = outputs[layer.name]
+            (_, outputs[layer]) = self.parameterAsSink(parameters, layer, context, fields, wkb_type, crs)
 
-        self._setup_postprocessing(context, layers, tr("Model Layers"), True)
+        self._setup_postprocessing(context, outputs, tr("Model Layers"), True)
 
         return outputs

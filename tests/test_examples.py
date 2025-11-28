@@ -19,7 +19,7 @@ def test_examples(example):
 
 @pytest.mark.parametrize("example", gusnet.examples.values())
 def test_to_qgis(example, qgis_new_project):
-    layers = gusnet.to_qgis(example)
+    layers = gusnet.from_wntr(example)
     assert isinstance(layers, dict)
     assert isinstance(layers["JUNCTIONS"], QgsVectorLayer)
     assert isinstance(layers["PIPES"], QgsVectorLayer)
@@ -36,7 +36,7 @@ def test_to_qgis_results(example, qgis_new_project):
     wn = wntr.network.WaterNetworkModel(example)
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
-    layers = gusnet.to_qgis(wn, results)
+    layers = gusnet.from_wntr(wn, results)
 
     assert isinstance(layers, dict)
     assert isinstance(layers["LINKS"], QgsVectorLayer)
@@ -45,5 +45,5 @@ def test_to_qgis_results(example, qgis_new_project):
 
 @pytest.mark.parametrize("example", gusnet.examples.values())
 def test_to_from_qgis_roundtrip(example, qgis_new_project):
-    layers = gusnet.to_qgis(example)
-    gusnet.from_qgis(layers, units="GPM", headloss="H-W")
+    layers = gusnet.from_wntr(example)
+    gusnet.to_wntr(layers, units="GPM", headloss="H-W")

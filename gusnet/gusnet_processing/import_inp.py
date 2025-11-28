@@ -28,9 +28,10 @@ from qgis.core import (
 from qgis.PyQt.QtGui import QIcon
 
 from gusnet.elements import FlowUnit, ModelLayer, ModelOptions
+from gusnet.feature_writer import get_qgs_fields, write
 from gusnet.gusnet_processing.common import CommonProcessingBase, profile
 from gusnet.i18n import tr
-from gusnet.interface import Writer, options_from_wn, options_to_wn
+from gusnet.interface import WntrModel
 from gusnet.settings import SettingKey
 from gusnet.units import SpecificUnitNames, UnitNames
 
@@ -110,26 +111,23 @@ class ImportInp(CommonProcessingBase):
         with profile(tr("Loading INP File"), 40, feedback):
             input_file = self.parameterAsFile(parameters, self.INPUT, context)
             wn = self._load_inp(input_file)
+            model = WntrModel(wn)
 
-        options = options_from_wn(wn)
+            model.options = self._set_flow_unit(parameters, context, model.options)
 
-        options = self._set_flow_unit(parameters, context, options)
+            self._describe_model(model.wn, feedback)
 
-        options_to_wn(options, wn)
+            feedback.pushInfo(
+                tr("Will output with the following units: {flow_unit}").format(
+                    flow_unit=model.options.flow_unit.friendly_name
+                )
+            )
 
-        self._describe_model(wn, feedback)
-
-        feedback.pushInfo(
-            tr("Will output with the following units: {flow_unit}").format(flow_unit=options.flow_unit.friendly_name)
-        )
-
-        self._options_to_save = options
+        self._options_to_save = model.options
 
         self._settings = {SettingKey.MODEL_LAYERS: {}}
 
         with profile(tr("Creating Outputs"), 80, feedback):
-            network_writer = Writer(wn)
-
             # this is just to give a little user output
             # extra_analysis_type_names = [
             #     str(atype.name)
@@ -139,8 +137,8 @@ class ImportInp(CommonProcessingBase):
             # if len(extra_analysis_type_names):
             #     feedback.pushInfo("Will include columns for analysis types: " + ", ".join(extra_analysis_type_names))
             group_name = tr("Model Layers ({filename})").format(filename=Path(input_file).stem)
-            units = SpecificUnitNames.from_options(options)
-            outputs = self._write_to_sinks(parameters, context, network_writer, group_name, units)
+            units = SpecificUnitNames.from_options(model.options)
+            outputs = self._write_to_sinks(parameters, context, model, group_name, units)
 
         return outputs
 
@@ -172,7 +170,7 @@ class ImportInp(CommonProcessingBase):
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        network_writer: Writer,
+        model: WntrModel,
         group_name: str,
         units: UnitNames | None,
     ) -> dict[str, str]:
@@ -183,15 +181,18 @@ class ImportInp(CommonProcessingBase):
         warnings.filterwarnings("ignore", "Normalized/laundered field name:", RuntimeWarning)
 
         outputs: dict[str, str] = {}
-        layers: dict[ModelLayer, str] = {}
         for layer in ModelLayer:
-            fields = network_writer.get_qgsfields(layer)
-            (sink, outputs[layer.name]) = self.parameterAsSink(
-                parameters, layer.name, context, fields, layer.qgs_wkb_type, crs
-            )
-            layers[layer] = outputs[layer.name]
-            network_writer.write(layer, sink)
+            attribute_df = model.get_elements().get(layer)
+            field_enums = model.suggested_fields(layer)
+            fields = get_qgs_fields(field_enums, attribute_df)
 
-        self._setup_postprocessing(context, layers, group_name, False, unit_names=units)
+            (sink, outputs[layer]) = self.parameterAsSink(parameters, layer, context, fields, layer.qgs_wkb_type, crs)
+
+            geometries = model.node_geometries if layer.is_node else model.link_geometries
+
+            if attribute_df is not None:
+                write(sink, fields, attribute_df, geometries)
+
+        self._setup_postprocessing(context, outputs, group_name, False, unit_names=units)
 
         return outputs

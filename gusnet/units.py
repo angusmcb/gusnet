@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 from gusnet.elements import FlowUnit, HeadlossFormula, MassUnit, ModelOptions, Parameter, WallReactionOrder
 from gusnet.i18n import tr
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import numpy as np
     import pandas as pd
 
-
-_TRADITIONAL_FLOW_UNITS = {FlowUnit.CFS, FlowUnit.GPM, FlowUnit.MGD, FlowUnit.IMGD, FlowUnit.AFD}
+NumberType = TypeVar("NumberType", float, np.ndarray, pd.Series, pd.DataFrame)
 
 
 class Converter:
@@ -33,7 +32,7 @@ class Converter:
         self.mass_unit = mass_unit
         self.wall_reaction_order = wall_reaction_order
 
-        self.traditional = self.flow_units in _TRADITIONAL_FLOW_UNITS
+        self.traditional = self.flow_units.is_traditional
         self.flow_unit_factor = self._flow_unit_factor()
         self.mass_unit_factor = self._mass_unit_factor()
 
@@ -43,17 +42,17 @@ class Converter:
 
     def to_si(
         self,
-        value: float | np.ndarray[float] | pd.Series[float] | pd.DataFrame,
+        value: NumberType,
         parameter: Parameter,
-    ) -> float | np.ndarray[float] | pd.Series[float] | pd.DataFrame:
+    ) -> NumberType:
         factor = self._factor(parameter)
         return value * factor
 
     def from_si(
         self,
-        value: float | np.ndarray[float] | pd.Series[float] | pd.DataFrame,
+        value: NumberType,
         parameter: Parameter,
-    ) -> float | np.ndarray[float] | pd.Series[float] | pd.DataFrame:
+    ) -> NumberType:
         factor = self._factor(parameter)
         return value / factor
 
@@ -279,7 +278,7 @@ class SpecificUnitNames(Converter, UnitNames):
             return tr("imp gal/day")
         if flow_unit is FlowUnit.AFD:
             return tr("Acre-ft/day")
-        raise ValueError
+        raise ValueError  # pragma: no cover
 
     def mass_unit_name(self):
         mass_unit = self.mass_unit
