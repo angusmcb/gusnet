@@ -110,6 +110,12 @@ def verify_model(layers: dict[ModelLayer, pd.DataFrame]) -> None:
         except VerificationError as e:
             errors.append(e)
 
+    if ModelLayer.PIPES in layers:
+        try:
+            _check_pipe_length_exists(layers[ModelLayer.PIPES])
+        except VerificationError as e:
+            errors.append(e)
+
     for link_layer in [ModelLayer.PIPES, ModelLayer.PUMPS, ModelLayer.VALVES]:
         if link_layer in layers:
             try:
@@ -230,6 +236,18 @@ def _check_required_field(df: pd.DataFrame, layer: ModelLayer, field: Field) -> 
 
     if df[field].hasnans:
         raise RequiredFieldError(layer, field)
+
+
+def _check_pipe_length_exists(pipe_df: pd.DataFrame) -> None:
+    """Check that the LENGTH field exists and has no missing values.
+
+    Args:
+        df: DataFrame to check."""
+    if Field.LENGTH not in pipe_df:
+        raise PipeLengthMissingError
+
+    if pipe_df[Field.LENGTH].hasnans:
+        raise PipeLengthMissingError
 
 
 def _check_names(layers: dict[ModelLayer, pd.DataFrame]) -> None:
@@ -525,6 +543,15 @@ class RequiredFieldError(VerificationError):
             tr("In {layer_type}, all elements must have {field_name} '{field_id}'").format(
                 layer_type=layer.friendly_name, field_name=field.friendly_name, field_id=field.name.lower()
             )
+        )
+
+
+class PipeLengthMissingError(VerificationError):
+    """Raised when the LENGTH field is missing from the pipes layer."""
+
+    def __init__(self):
+        super().__init__(
+            tr("In Pipes, lengths could not be calculated and length field is missing or contains blanks.")
         )
 
 

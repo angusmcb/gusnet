@@ -38,6 +38,7 @@ from gusnet.verify_model import (
     _check_names,
     _check_no_orphan_junctions,
     _check_numeric_field_type,
+    _check_pipe_length_exists,
     _check_pump_parameters,
     _check_required_field,
     _check_reservoir_or_tank_exists,
@@ -70,6 +71,7 @@ def layers():
             Field.NAME: "P1",
             Field.DIAMETER: 100.0,
             Field.ROUGHNESS: 0.01,
+            Field.LENGTH: 100.0,
             "start_node_name": "J1",
             "end_node_name": "R1",
         },
@@ -354,6 +356,7 @@ def test_verify_model_raises_no_reservoir_or_tank_and_appends(layers):
         Field.NAME: "P1",
         Field.DIAMETER: 100.0,
         Field.ROUGHNESS: 0.01,
+        Field.LENGTH: 100.0,
         "start_node_name": "J1",
         "end_node_name": "J2",
     }
@@ -383,6 +386,7 @@ def test_verify_model_appends_orphan_error(layers):
                 "end_node_name": "R1",
                 Field.DIAMETER: 100.0,
                 Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 100.0,
             }
         ]
     )
@@ -510,7 +514,7 @@ def test_check_pump_parameters_various_paths():
 def test_verify_model_invalid_pattern_raises_pattern_error():
     # invalid demand pattern for junction should raise PatternError
     j = pd.DataFrame([{Field.NAME: "J1", Field.ELEVATION: 1.0, Field.DEMAND_PATTERN: "a b c"}])
-    p = pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01}])
+    p = pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}])
     # include a reservoir so the reservoir/tank check does not also fail
     r = pd.DataFrame([make_row(ModelLayer.RESERVOIRS, {Field.NAME: "R1", Field.BASE_HEAD: 10.0})])
     layers = {ModelLayer.JUNCTIONS: j, ModelLayer.PIPES: p, ModelLayer.RESERVOIRS: r}
@@ -533,7 +537,7 @@ def test_verify_model_tank_invalid_vol_curve_raises_curve_error():
             }
         ]
     )
-    p = pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01}])
+    p = pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}])
     j_row = make_row(ModelLayer.JUNCTIONS, {Field.NAME: "J1", Field.ELEVATION: 1.0})
     layers = {ModelLayer.TANKS: t, ModelLayer.JUNCTIONS: pd.DataFrame([j_row]), ModelLayer.PIPES: p}
     with pytest.raises(CurveError):
@@ -550,7 +554,9 @@ def test_verify_model_valve_gpv_invalid_curve_raises_curve_error():
     layers = {
         ModelLayer.VALVES: v,
         ModelLayer.JUNCTIONS: pd.DataFrame([j_row]),
-        ModelLayer.PIPES: pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01}]),
+        ModelLayer.PIPES: pd.DataFrame(
+            [{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}]
+        ),
         ModelLayer.RESERVOIRS: r,
     }
     with pytest.raises(CurveError):
@@ -565,7 +571,9 @@ def test_verify_model_valve_gpv_empty_curve_raises_valve_setting_error():
     layers = {
         ModelLayer.VALVES: v,
         ModelLayer.JUNCTIONS: pd.DataFrame([j_row]),
-        ModelLayer.PIPES: pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01}]),
+        ModelLayer.PIPES: pd.DataFrame(
+            [{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}]
+        ),
         ModelLayer.RESERVOIRS: r,
     }
     with pytest.raises(ValveSettingError):
@@ -583,7 +591,9 @@ def test_verify_model_pump_head_curve_invalid_raises_curve_error():
     layers = {
         ModelLayer.PUMPS: pu,
         ModelLayer.JUNCTIONS: pd.DataFrame([j_row]),
-        ModelLayer.PIPES: pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01}]),
+        ModelLayer.PIPES: pd.DataFrame(
+            [{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}]
+        ),
         ModelLayer.RESERVOIRS: r,
     }
     with pytest.raises(CurveError):
@@ -670,6 +680,24 @@ def test_check_model_not_empty_accepts_non_empty_layer():
     _check_model_not_empty(layers)
 
 
+def test_check_pipe_length_exists_behaviour():
+    # missing LENGTH column -> PipeLengthMissingError
+    df_missing = pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 10.0}])
+    from gusnet.verify_model import PipeLengthMissingError
+
+    with pytest.raises(PipeLengthMissingError):
+        _check_pipe_length_exists(df_missing)
+
+    # LENGTH present but NaN -> PipeLengthMissingError
+    df_nan = pd.DataFrame([{Field.NAME: "P1", Field.LENGTH: float("nan")}])
+    with pytest.raises(PipeLengthMissingError):
+        _check_pipe_length_exists(df_nan)
+
+    # Valid LENGTH -> should not raise
+    df_ok = pd.DataFrame([{Field.NAME: "P1", Field.LENGTH: 50.0}])
+    _check_pipe_length_exists(df_ok)
+
+
 @pytest.mark.parametrize("bad_name", ["bad name"])
 def test_verify_names_reject_whitespace(bad_name):
     j = pd.DataFrame([{Field.NAME: bad_name, Field.ELEVATION: 1.0}])
@@ -679,6 +707,7 @@ def test_verify_names_reject_whitespace(bad_name):
                 Field.NAME: "P1",
                 Field.DIAMETER: 10.0,
                 Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 10.0,
                 "start_node_name": bad_name,
                 "end_node_name": "R1",
             }
@@ -699,6 +728,7 @@ def test_verify_names_reject_blank(blank):
                 Field.NAME: "P1",
                 Field.DIAMETER: 10.0,
                 Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 10.0,
                 "start_node_name": blank,
                 "end_node_name": "R1",
             }
@@ -719,6 +749,7 @@ def test_verify_names_reject_long_name():
                 Field.NAME: "P1",
                 Field.DIAMETER: 10.0,
                 Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 10.0,
                 "start_node_name": long_name,
                 "end_node_name": "R1",
             }
@@ -738,6 +769,7 @@ def test_verify_names_accept_valid_and_nulls():
                 Field.NAME: "P1",
                 Field.DIAMETER: 10.0,
                 Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 10.0,
                 "start_node_name": "J_OK",
                 "end_node_name": "R1",
             }
@@ -870,6 +902,7 @@ def test_verify_model_curve_error_includes_notes_via_mapping(monkeypatch):
             Field.NAME: "P1",
             Field.DIAMETER: 100.0,
             Field.ROUGHNESS: 0.01,
+            Field.LENGTH: 100.0,
             "start_node_name": "J1",
             "end_node_name": "T1",
         },
@@ -926,6 +959,7 @@ def test_verify_model_raises_numeric_field_error_via_verify_model():
                 Field.NAME: "P1",
                 Field.DIAMETER: 100.0,
                 Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 100.0,
                 "start_node_name": "J1",
                 "end_node_name": "R1",
             }
@@ -946,6 +980,7 @@ def test_verify_model_raises_boolean_field_error_via_verify_model():
                 Field.NAME: "P1",
                 Field.DIAMETER: 100.0,
                 Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 100.0,
                 "start_node_name": "J1",
                 "end_node_name": "T1",
             }
@@ -978,6 +1013,7 @@ def test_verify_power_pump_power_non_numeric_raises_numeric_field_error():
                 Field.NAME: "P1",
                 Field.DIAMETER: 100.0,
                 Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 100.0,
                 "start_node_name": "J1",
                 "end_node_name": "R1",
             }

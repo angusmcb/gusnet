@@ -38,7 +38,7 @@ def layer(
         fields = []
 
     field_string = "&".join([f"field={name}:{type_to_string(the_type)}" for name, the_type in fields])
-    crs_string = f"crs={crs}" if crs else "crs=None"
+    crs_string = f"crs={crs}" if crs else "crs=EPSG:9001"
     return QgsVectorLayer(f"{layer_type}?{crs_string}&{field_string}", "", "memory")
 
 
@@ -182,7 +182,7 @@ def test_simple_layers(simple_layers):
 def test_broken_layername(simple_layers):
     simple_layers["wrongname"] = simple_layers["JUNCTIONS"]
 
-    with pytest.raises(ValueError, match="'wrongname' is not a valid layer type."):
+    with pytest.raises(ValueError, match="WRONGNAME"):
         gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
 
@@ -540,15 +540,9 @@ def test_snap_nodes_mixed_crs(mixed_crs_layers):
     assert wn.get_link("P1").end_node_name == "T1"
 
 
-@pytest.mark.parametrize("crs", ["EPSG:32616", "EPSG:3089"])
-def test_snap_nodes_mixed_crs_with_crs_specified(mixed_crs_layers, crs):
-    wn = gusnet.to_wntr(mixed_crs_layers, "LPS", "H-W", crs=crs)
-    assert wn.get_link("P1").length == pytest.approx(18900, 0.01)
-
-
 def test_snap_nodes_mixed_crs_length(mixed_crs_layers):
     wn = gusnet.to_wntr(mixed_crs_layers, "LPS", "H-W")
-    assert wn.get_link("P1").length == pytest.approx(19569, 0.01)
+    assert wn.get_link("P1").length == pytest.approx(18900, 0.01)
 
 
 def test_snap_length(layers_that_snap):
@@ -575,15 +569,16 @@ def test_measure_no_crs(simple_layers):
 
 
 def test_measure_utm(simple_layers):
-    # 32636 is a utm crs
-    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W", crs="EPSG:32636")
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert wn.get_link("P1").length == 5.0
 
 
 def test_measure_feet(simple_layers):
-    # 3089 is a feet crs
-    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W", crs="EPSG:3089")
+    for layer in simple_layers.values():
+        layer.setCrs(QgsCoordinateReferenceSystem("EPSG:3089"))
+
+    wn = gusnet.to_wntr(simple_layers, "LPS", "H-W")
 
     assert wn.get_link("P1").length == pytest.approx(5.0 / 3.2808, 0.01)
 

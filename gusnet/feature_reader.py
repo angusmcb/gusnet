@@ -70,15 +70,18 @@ def read(
         link_dfs = _snap_links_to_nodes(node_dfs, link_dfs)
 
     if ModelLayer.PIPES in link_dfs:
-        link_dfs[ModelLayer.PIPES]["length"] = _process_pipe_length(
-            link_dfs[ModelLayer.PIPES], crs, transform_context, ellipsoid, flow_unit
-        )
+        if crs and crs.isValid():
+            link_dfs[ModelLayer.PIPES]["length"] = _process_pipe_length(
+                link_dfs[ModelLayer.PIPES], crs, transform_context, ellipsoid, flow_unit
+            )
+        else:
+            logger.warning(tr("Cannot calculate pipe lengths without a valid coordinate reference system."))
 
     return node_dfs | link_dfs
 
 
 def _source_to_df(
-    source: QgsFeatureSource, crs: QgsCoordinateReferenceSystem, transform_context: QgsCoordinateTransformContext
+    source: QgsFeatureSource, crs: QgsCoordinateReferenceSystem | None, transform_context: QgsCoordinateTransformContext
 ) -> pd.DataFrame:
     import numpy as np
     import pandas as pd
@@ -88,7 +91,9 @@ def _source_to_df(
     column_names.append("geometry")
 
     feature_list: list[list] = []
-    feature_request = QgsFeatureRequest().setDestinationCrs(crs, transform_context)
+    feature_request = QgsFeatureRequest()
+    if crs and crs.isValid():
+        feature_request.setDestinationCrs(crs, transform_context)
     ft: QgsFeature
     for ft in source.getFeatures(feature_request):
         attrs = [attr if attr != NULL else np.nan for attr in ft]  # is not faster than !=
@@ -188,43 +193,40 @@ def _process_pipe_length(
     if measurer.lengthUnits() != qgis_length_unit:
         calculated_lengths = calculated_lengths.apply(measurer.convertLengthMeasurement, args=(qgis_length_unit,))
 
-    if calculated_lengths.isna().any():
-        raise PipeMeasuringError(calculated_lengths.isna().sum())
+    # if calculated_lengths.isna().any():
+    #    raise PipeMeasuringError(calculated_lengths.isna().sum())
 
     attribute_lengths = pipe_df.get("length")
 
-    if attribute_lengths is None:
+    if attribute_lengths is None or attribute_lengths.isna().all():
         return calculated_lengths
 
-    else:
-        mismatch = _get_mismatches(calculated_lengths, attribute_lengths)
+    _mismatch_warning(pipe_df["name"], calculated_lengths, attribute_lengths, flow_unit)
 
-        if mismatch.any():
-            _mismatch_warning(pipe_df["name"], calculated_lengths, attribute_lengths, flow_unit)
-
-        return attribute_lengths.fillna(calculated_lengths)
+    return attribute_lengths.fillna(calculated_lengths)
 
 
-def _get_mismatches(calculated_lengths: pd.Series, attribute_lengths: pd.Series) -> pd.Series:
-    """Get a boolean series indicating which rows have a mismatch between calculated and attribute lengths."""
+def _mismatch_warning(
+    names: pd.Series, calculated_lengths: pd.Series, attribute_lengths: pd.Series, flow_unit: FlowUnit
+) -> None:
     import numpy as np
+    import pandas as pd
 
-    return attribute_lengths.notna() & ~np.isclose(
+    if calculated_lengths.isna().any():
+        return
+
+    mismatch = attribute_lengths.notna() & ~np.isclose(
         calculated_lengths,
         attribute_lengths,
         rtol=0.05,
         atol=10,
     )
 
-
-def _mismatch_warning(
-    names: pd.Series, calculated_lengths: pd.Series, attribute_lengths: pd.Series, flow_unit: FlowUnit
-) -> None:
-    import pandas as pd
+    if not mismatch.any():
+        return
 
     unit_string = "feet" if flow_unit.is_traditional else "metres"
 
-    mismatch = _get_mismatches(calculated_lengths, attribute_lengths)
     examples = pd.concat(
         [names, calculated_lengths, attribute_lengths],
         axis=1,
@@ -232,6 +234,7 @@ def _mismatch_warning(
     )
     examples.columns = pd.Index(["name", "attribute_length", "calculated_length"])
     examples = examples.loc[mismatch].head(5)
+
     msg = tr(
         "%n pipe(s) have very different attribute length vs measured length. First five are: ",
         "",

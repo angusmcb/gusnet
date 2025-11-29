@@ -12,7 +12,7 @@ def template_layers():
 
     wn = wntr.network.WaterNetworkModel()
     wn.options.quality.parameter = "CHEMICAL"
-    layers = from_wntr(wn)
+    layers = from_wntr(wn, crs="EPSG:9001")
     for layer in layers.values():
         layer.startEditing()
     return layers

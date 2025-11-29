@@ -34,11 +34,20 @@ def from_wntr(
     Args:
         wn: the water network model
         results: simulation results, if any.
-        crs: The coordinate Reference System of the coordinates in the wntr model
+        crs: The coordinate Reference System of the coordinates in the wntr model. E.g. 'EPSG:4326'.
+        units: The flow unit set to use for the created layers.
 
     """
 
     network = WntrModel(wn)
+
+    if crs:
+        crs_object = QgsCoordinateReferenceSystem(crs)
+        if not crs_object.isValid():
+            msg = tr("CRS {crs} is not valid.").format(crs=crs)
+            raise ValueError(msg)
+    else:
+        crs_object = QgsCoordinateReferenceSystem()
 
     if units:
         try:
@@ -55,14 +64,6 @@ def from_wntr(
                 units_friendly_name=network.options.flow_unit.friendly_name
             )
         )
-
-    if crs:
-        crs_object = QgsCoordinateReferenceSystem(crs)
-        if not crs_object.isValid():
-            msg = tr("CRS {crs} is not valid.").format(crs=crs)
-            raise ValueError(msg)
-    else:
-        crs_object = QgsCoordinateReferenceSystem()
 
     unit_names = SpecificUnitNames.from_options(network.options)
 
@@ -111,34 +112,18 @@ def from_wntr(
 def from_inp(
     inp_path: pathlib.Path | str,
     crs: QgsCoordinateReferenceSystem | str | None = None,
-    units: Literal["LPS", "LPM", "MLD", "CMH", "CFS", "GPM", "MGD", "IMGD", "AFD", "CMD"] | None = None,
 ) -> dict[str, QgsVectorLayer]:
     """Write from INP file to QGIS Layers
 
     Args:
         inp_path: path (string or path object) to an input file
         crs: The coordinate Reference System of the coordinates in the inp file.
-        units: the set of units to write the layers using (can be different from units in inp file).
 
     """
 
     network = WntrModel(inp_path)
 
-    if units:
-        try:
-            flow_unit = FlowUnit[units.upper()]
-        except KeyError as e:
-            raise FlowUnitError(units) from e
-        network.options = dataclasses.replace(network.options, flow_unit=flow_unit)
-
-    else:
-        logger.warning(
-            tr("Will output in the following units: {units_friendly_name}").format(
-                units_friendly_name=network.options.flow_unit.friendly_name
-            )
-        )
-
-    return from_wntr(network.wn, crs=crs)
+    return from_wntr(network.wn, crs=crs, units=network.options.flow_unit.name)  # type: ignore[arg-type]
 
 
 def to_wntr(
@@ -146,7 +131,6 @@ def to_wntr(
     units: Literal["LPS", "LPM", "MLD", "CMH", "CFS", "GPM", "MGD", "IMGD", "AFD", "CMD"],
     headloss: Literal["H-W", "D-W", "C-M"] | None = None,
     wn: wntr.network.WaterNetworkModel | None = None,
-    crs: QgsCoordinateReferenceSystem | str | None = None,
 ) -> wntr.network.WaterNetworkModel:
     """Read from QGIS layers or feature sources to a WNTR ``WaterNetworkModel``
 
@@ -158,10 +142,13 @@ def to_wntr(
             Must be set if there is no wn.
             If wn is provided, headloss in wn.options.hydraulic.headloss will be used instead.
         wn: The `WaterNetworkModel` that the layers will be read into. Will create a new model if `None`.
-        crs: All geometry will be transformed into this coordinate reference system.
-            If not set the geometry of the first layer will be used.
 
     """
+
+    try:
+        model_layers = {ModelLayer(str(layer_name).upper()): layer for layer_name, layer in layers.items()}
+    except ValueError as e:
+        raise InvalidLayerError(e) from None
 
     try:
         unit = FlowUnit[units.upper()]
@@ -176,6 +163,7 @@ def to_wntr(
             raise ValueError(msg)
 
         model = WntrModel(wn)
+        model.options = dataclasses.replace(model.options, flow_unit=unit)
 
     else:
         model = WntrModel()
@@ -186,19 +174,20 @@ def to_wntr(
 
         headloss_formula = HeadlossFormula(headloss.upper())
 
-        model.options = dataclasses.replace(DefaultOptions(), headloss_formula=headloss_formula)
+        model.options = dataclasses.replace(DefaultOptions(), headloss_formula=headloss_formula, flow_unit=unit)
 
-    model.options = dataclasses.replace(model.options, flow_unit=unit)
+    all_crs = [layer.sourceCrs().authid() for layer in layers.values() if layer.sourceCrs().isValid()]
 
-    crs = QgsCoordinateReferenceSystem(crs) if crs else next(iter(layers.values())).sourceCrs()
+    if len(all_crs) == 0:
+        logger.warn(tr("No valid CRS found on input layers. Pipe lengths will not be calculated."))
 
-    try:
-        model_layers = {}
-        for layer_name, layer in layers.items():
-            model_layers.update({ModelLayer(str(layer_name).upper()): layer})
-    except ValueError:
-        msg = tr("'{layer_name}' is not a valid layer type.").format(layer_name=layer_name)
-        raise ValueError(msg) from None
+    elif len(all_crs) != len(layers):
+        logger.warn(tr("Some input layers do not have a valid CRS. Pipe lengths may not be calculated correctly."))
+
+    if len(set(all_crs)) > 1:
+        logger.warn(tr("Multiple different CRSs found on input layers."))
+
+    crs = QgsCoordinateReferenceSystem(all_crs[0]) if all_crs else None
 
     project = QgsProject.instance()
     transform_context = project.transformContext()
@@ -218,4 +207,13 @@ class FlowUnitError(ValueError):
         super().__init__(
             tr("{exception} is not a known set of units. Possible units are: ").format(exception=exception)
             + ", ".join(FlowUnit._member_names_)
+        )
+
+
+class InvalidLayerError(ValueError):
+    def __init__(self, value_error: ValueError):
+        super().__init__(
+            tr(
+                "{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS', 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."  # noqa: E501
+            ).format(value_error=value_error)
         )

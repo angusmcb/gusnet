@@ -21,13 +21,13 @@ We will use one of the example .inp files provided
 
 We can load the example file into QGIS
 
->>> layers = gusnet.from_inp(gusnet.examples['KY10'], crs='EPSG:3089', units='LPS')
+>>> layers = gusnet.from_inp(gusnet.examples['KY10'], crs='EPSG:3089')
 >>> layers
 {'JUNCTIONS': <QgsVectorLayer: 'Junctions' (memory)>, 'RESERVOIRS': ..., 'TANKS': ..., 'PIPES': ..., 'PUMPS': ..., 'VALVES': ...}
 
 The layers will now have been added to QGIS. You can make edits to them and create a :py:class:`~wntr.network.model.WaterNetworkModel` when done.
 
->>> wn = gusnet.to_wntr(layers, units='LPS', headloss='H-W')
+>>> wn = gusnet.to_wntr(layers, units='GPM', headloss='H-W')
 >>> wn
 <wntr.network.model.WaterNetworkModel object ...>
 

@@ -150,6 +150,10 @@ class WntrModel:
 
         return Pattern(pattern.multipliers)
 
+    # required for older python/qgis verisons
+    def get_pattern_str(self, pattern_name: wntr.network.Pattern | str | None) -> str:
+        return str(self.get_pattern(pattern_name))
+
     def add_curve(self, curve: str, curve_type: CurveType) -> str | None:
         if not isinstance(curve, Curve):
             curve = Curve(curve)
@@ -177,6 +181,9 @@ class WntrModel:
         converted_points = _convert_curve_points(wntr_curve.points, curve_type, self._converter.from_si)
 
         return Curve(converted_points)
+
+    def get_curve_str(self, curve_name: str) -> str:
+        return str(self.get_curve(curve_name))
 
     @property
     def node_geometries(self) -> dict[str, QgsGeometry] | pd.Series[QgsGeometry]:
@@ -293,16 +300,16 @@ class WntrModel:
             demand_pattern = self._wn.query_node_attribute(
                 "demand_timeseries_list", node_type=wntr.network.model.Junction
             ).map(lambda dtl: dtl.pattern_list()[0] or None)
-            df["demand_pattern"] = demand_pattern.map(self.get_pattern, na_action="ignore")
+            df["demand_pattern"] = demand_pattern.map(self.get_pattern_str, na_action="ignore")
 
         elif layer is ModelLayer.RESERVOIRS:
             if "head_pattern_name" in df:
-                df["head_pattern"] = df["head_pattern_name"].map(self.get_pattern, na_action="ignore")
+                df["head_pattern"] = df["head_pattern_name"].map(self.get_pattern_str, na_action="ignore")
                 df = df.drop(columns="head_pattern_name")
 
         elif layer is ModelLayer.TANKS:
             if "vol_curve_name" in df:
-                df["vol_curve"] = df["vol_curve_name"].map(self.get_curve, na_action="ignore")
+                df["vol_curve"] = df["vol_curve_name"].map(self.get_curve_str, na_action="ignore")
                 df = df.drop(columns="vol_curve_name")
 
             df = df.rename(columns={"diameter": "tank_diameter"})
@@ -310,7 +317,7 @@ class WntrModel:
         elif layer is ModelLayer.PUMPS:
             # not all pumps will have a pump curve (power pumps)!
             if "pump_curve_name" in df:
-                df["pump_curve"] = df["pump_curve_name"].map(self.get_curve, na_action="ignore")
+                df["pump_curve"] = df["pump_curve_name"].map(self.get_curve_str, na_action="ignore")
                 df = df.drop(columns="pump_curve_name")
 
             if "speed_pattern_name" in df:
@@ -318,9 +325,9 @@ class WntrModel:
                 df = df.drop(columns="speed_pattern_name")
             # 'energy pattern' is not called energy pattern name!
             if "energy_pattern" in df:
-                df["energy_pattern"] = df["energy_pattern"].map(self.get_pattern, na_action="ignore")
+                df["energy_pattern"] = df["energy_pattern"].map(self.get_pattern_str, na_action="ignore")
             if "efficiency_curve_name" in df:
-                df["efficiency_curve"] = df["efficiency_curve_name"].map(self.get_curve, na_action="ignore")
+                df["efficiency_curve"] = df["efficiency_curve_name"].map(self.get_curve_str, na_action="ignore")
                 df = df.drop(columns="efficiency_curve_name")
 
         elif layer is ModelLayer.VALVES:
@@ -337,7 +344,7 @@ class WntrModel:
 
             if "headloss_curve" in df:
                 df.loc[general_valves, "headloss_curve"] = df.loc[general_valves, "headloss_curve_name"].map(
-                    self.get_curve, na_action="ignore"
+                    self.get_curve_str, na_action="ignore"
                 )
 
             df = df.rename(columns={"initial_status": "valve_status"})
