@@ -163,6 +163,11 @@ def to_wntr(
 
     """
 
+    try:
+        unit = FlowUnit[units.upper()]
+    except KeyError as e:
+        raise FlowUnitError(e) from e
+
     if wn:
         if headloss:
             msg = tr(
@@ -182,11 +187,6 @@ def to_wntr(
         headloss_formula = HeadlossFormula(headloss.upper())
 
         model.options = dataclasses.replace(DefaultOptions(), headloss_formula=headloss_formula)
-
-    try:
-        unit = FlowUnit[units.upper()]
-    except KeyError as e:
-        raise FlowUnitError(e) from e
 
     model.options = dataclasses.replace(model.options, flow_unit=unit)
 
