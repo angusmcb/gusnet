@@ -9,7 +9,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import numpy as np
     import pandas as pd
 
-NumberType = TypeVar("NumberType", float, np.ndarray, pd.Series, pd.DataFrame)
+    NumberType = TypeVar("NumberType", float, np.ndarray, pd.Series, pd.DataFrame)
 
 
 class Converter:
