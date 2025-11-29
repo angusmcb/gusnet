@@ -2,7 +2,6 @@ import types
 
 import pandas as pd
 import pytest
-import wntr
 
 from gusnet.elements import Field
 from gusnet.interface import WntrModel
@@ -29,6 +28,8 @@ def make_wn_with_pipe(use_dummy_converter: bool = True) -> WntrModel:
       (`from_si` returns the input unchanged). If False, the model keeps the
       real converter so tests can exercise unit conversions (e.g. GPM).
     """
+    import wntr
+
     wn = wntr.network.WaterNetworkModel()
     wn.add_junction("J1", base_demand=0, elevation=0)
     wn.add_junction("J2", base_demand=0, elevation=0)
