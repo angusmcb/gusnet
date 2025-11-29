@@ -91,7 +91,7 @@ def _source_to_df(
     feature_request = QgsFeatureRequest().setDestinationCrs(crs, transform_context)
     ft: QgsFeature
     for ft in source.getFeatures(feature_request):
-        attrs = [attr if attr is not NULL else np.nan for attr in ft]  # is not faster than !=
+        attrs = [attr if attr != NULL else np.nan for attr in ft]  # is not faster than !=
         geometry = ft.geometry()
         if geometry.isMultipart():
             geometry.convertToSingleType()
