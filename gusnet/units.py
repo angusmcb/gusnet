@@ -40,26 +40,15 @@ class Converter:
     def from_options(cls, options: ModelOptions):
         return cls(options.flow_unit, options.headloss_formula, options.mass_unit, options.wall_reaction_order)
 
-    def to_si(
-        self,
-        value: NumberType,
-        parameter: Parameter,
-    ) -> NumberType:
+    def to_si(self, value: NumberType, parameter: Parameter) -> NumberType:
         factor = self._factor(parameter)
         return value * factor
 
-    def from_si(
-        self,
-        value: NumberType,
-        parameter: Parameter,
-    ) -> NumberType:
+    def from_si(self, value: NumberType, parameter: Parameter) -> NumberType:
         factor = self._factor(parameter)
         return value / factor
 
-    def _factor(
-        self,
-        parameter: Parameter,
-    ) -> float:
+    def _factor(self, parameter: Parameter) -> float:
         # [Parameter.TANK_DIAMETER, Parameter.ELEVATION, Parameter.HYDRAULIC_HEAD, Parameter.LENGTH]:
         if parameter is Parameter.LENGTH:
             if self.traditional:
@@ -288,10 +277,7 @@ class SpecificUnitNames(Converter, UnitNames):
             return tr("ug")
         raise ValueError(mass_unit)  # pragma: no cover
 
-    def get(
-        self,
-        parameter: Parameter,
-    ) -> str:
+    def get(self, parameter: Parameter) -> str:
         if parameter is Parameter.FLOW:
             return self.flow_unit_name()
 
