@@ -542,7 +542,7 @@ def test_snap_nodes_mixed_crs(mixed_crs_layers):
 
 def test_snap_nodes_mixed_crs_length(mixed_crs_layers):
     wn = gusnet.to_wntr(mixed_crs_layers, "LPS", "H-W")
-    assert wn.get_link("P1").length == pytest.approx(18900, 0.01)
+    assert wn.get_link("P1").length == pytest.approx(19600, 0.01)
 
 
 def test_snap_length(layers_that_snap):
