@@ -136,9 +136,13 @@ class WntrModel:
             return existing_pattern_name
 
         name = self._next_pattern_name()
-        self._wn.add_pattern(name=name, pattern=list(pattern))
+        self._add_finalised_pattern(name, pattern)
         self._existing_patterns[pattern] = name
         return name
+
+    def _add_finalised_pattern(self, name: str, pattern: Pattern) -> None:
+        """Adds a pattern that has already been finalised with a name."""
+        self._wn.add_pattern(name=name, pattern=list(pattern))
 
     def get_pattern(self, pattern_name: wntr.network.Pattern | str | None) -> Pattern:
         if not pattern_name:
@@ -161,12 +165,16 @@ class WntrModel:
         if not curve:
             return None
 
-        curve_points = _convert_curve_points(list(curve), curve_type, self._converter.to_si)
-
         name = self._next_curve_name()
 
-        self._wn.add_curve(name=name, curve_type=curve_type.name, xy_tuples_list=curve_points)
+        self._add_finalised_curve(name, curve_type, curve)
         return name
+
+    def _add_finalised_curve(self, name: str, curve_type: CurveType, curve: Curve) -> None:
+        """Adds a curve that has already been finalised with a name."""
+        curve_points = _convert_curve_points(list(curve), curve_type, self._converter.to_si)
+
+        self._wn.add_curve(name=name, curve_type=curve_type.name, xy_tuples_list=curve_points)
 
     add_head_curve = functools.partialmethod(add_curve, curve_type=CurveType.HEAD)
     add_efficiency_curve = functools.partialmethod(add_curve, curve_type=CurveType.EFFICIENCY)
@@ -187,7 +195,7 @@ class WntrModel:
 
     @property
     def node_geometries(self) -> dict[str, QgsGeometry] | pd.Series[QgsGeometry]:
-        if self._node_geometry:
+        if self._node_geometry is not None:
             return self._node_geometry
 
         nodes = {name: QgsGeometry(QgsPoint(*node.coordinates)) for name, node in self._wn.nodes()}
@@ -196,7 +204,7 @@ class WntrModel:
 
     @property
     def link_geometries(self) -> dict[str, QgsGeometry] | pd.Series[QgsGeometry]:
-        if self._link_geometry:
+        if self._link_geometry is not None:
             return self._link_geometry
 
         nodes = self.node_geometries
@@ -479,8 +487,6 @@ class WntrModel:
         self._processed_results = None
 
     def get_results(self) -> dict[ResultLayer, pd.DataFrame]:
-        import pandas as pd
-
         if self._processed_results:
             return self._processed_results
 
@@ -490,8 +496,7 @@ class WntrModel:
         node_dfs = self._wntr_results.node
         link_dfs = self._wntr_results.link
 
-        pipe_lengths = pd.Series({name: pipe.length for name, pipe in self._wn.pipes()})
-
+        pipe_lengths = self._get_pipe_lengths()
         link_dfs["unit_headloss"], link_dfs["headloss"] = _fix_headloss_df(link_dfs[Field.HEADLOSS.value], pipe_lengths)
 
         node_df = self._process_results_layer(ResultLayer.NODES, node_dfs)
@@ -499,6 +504,11 @@ class WntrModel:
 
         self._processed_results = {ResultLayer.NODES: node_df, ResultLayer.LINKS: link_df}
         return self._processed_results
+
+    def _get_pipe_lengths(self) -> pd.Series:
+        import pandas as pd
+
+        return pd.Series({name: pipe.length for name, pipe in self._wn.pipes()})
 
     def _process_results_layer(self, layer: ResultLayer, results_dfs: dict[str, pd.DataFrame]) -> pd.DataFrame:
         import pandas as pd
@@ -526,6 +536,11 @@ class WntrModel:
         combined_df["name"] = combined_df.index.to_series()
 
         return combined_df
+
+    def write_inp_file(self, file_path: str | pathlib.Path) -> None:
+        import wntr
+
+        wntr.network.write_inpfile(self.wn, str(file_path))
 
     def options_from_wn(self) -> ModelOptions:
         o: wntr.network.Options = self.wn.options

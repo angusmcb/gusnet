@@ -52,6 +52,7 @@ from gusnet.elements import (
 from gusnet.feature_reader import ReadFeatureError
 from gusnet.feature_writer import get_qgs_fields, write
 from gusnet.gusnet_processing.common import CommonProcessingBase, profile
+from gusnet.hybrid_wntr import HybridWntrModel
 from gusnet.i18n import tr
 from gusnet.interface import NetworkModelError, WntrModel
 from gusnet.pattern_curve import Pattern
@@ -401,7 +402,7 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         except VerificationError as e:
             raise QgsProcessingException(tr("Error verifying model: {exception}").format(exception=e)) from None
 
-        model = WntrModel()
+        model = HybridWntrModel()
 
         model.options = model_options
 
@@ -492,11 +493,9 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         feedback: QgsProcessingFeedback,
         model: WntrModel,
     ) -> dict[str, str]:
-        import wntr
-
         inp_file = self.parameterAsFile(parameters, self.OUTPUT_INP, context)
 
-        wntr.network.write_inpfile(model.wn, inp_file)
+        model.write_inp_file(inp_file)
 
         feedback.pushInfo(tr(".inp file written to: {file_path}").format(file_path=inp_file))
 
@@ -543,7 +542,7 @@ in other software.
             with profile(tr("Preparing Model"), 30, feedback):
                 model = self._get_model(parameters, context)
 
-                self._describe_model(model, feedback)
+                # self._describe_model(model, feedback)
 
             with profile(tr("Running Simulation"), 50, feedback):
                 temp_folder = Path(QgsProcessingUtils.tempFolder()) / "wntr"
@@ -597,7 +596,7 @@ in other software.
         with logger_to_feedback("wntr", feedback), logger_to_feedback("gusnet", feedback):
             with profile(tr("Preparing Model"), 30, feedback):
                 model = self._get_model(parameters, context)
-                self._describe_model(model, feedback)
+                # self._describe_model(model, feedback)
 
             with profile(tr("Creating Outputs"), 80, feedback):
                 outputs = self.write_inp_file(parameters, context, feedback, model)

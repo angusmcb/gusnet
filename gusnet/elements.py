@@ -525,7 +525,7 @@ class Field(StrEnum):
 
     DIAMETER = "diameter", Parameter.PIPE_DIAMETER, FieldGroup.BASE | FieldGroup.REQUIRED
     TANK_DIAMETER = "tank_diameter", Parameter.TANK_DIAMETER, FieldGroup.BASE | FieldGroup.REQUIRED
-    MIN_VOL = "min_vol", Parameter.VOLUME, FieldGroup.BASE
+    MIN_VOL = "min_vol", Parameter.VOLUME, FieldGroup.BASE | FieldGroup.REQUIRED
     VOL_CURVE = "vol_curve", CurveType.VOLUME, FieldGroup.BASE
     OVERFLOW = "overflow", SimpleFieldType.BOOL, FieldGroup.BASE
     BASE_HEAD = "base_head", Parameter.ELEVATION, FieldGroup.BASE | FieldGroup.REQUIRED
