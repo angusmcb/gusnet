@@ -221,7 +221,7 @@ def test_energy_pattern(wn):
 
 
 def test_efficiency_curve(wn):
-    wn.add_curve("C1", "EFFICIENCY", [(0, 0), (10, 0.5), (20, 1)])
+    wn.add_curve("C1", "EFFICIENCY", [(0, 0), (10, 0.5), (20, 1)])  # this is in m3/s vs %
     wn.add_pump("PUMP1", "J1", "J2")
 
     try:  # wntr <= 1.3
@@ -234,7 +234,10 @@ def test_efficiency_curve(wn):
 
         layers = gusnet.from_wntr(wn)
 
-        check_values(layers["PUMPS"], "efficiency_curve", ["[(0.0, 0.0), (10000.0, 0.5), (20000.0, 1.0)]"])
+        # check also that it's converted to gpm vs %
+        check_values(
+            layers["PUMPS"], "efficiency_curve", ["(0.0, 0.0), (158503.23141488904, 0.5), (317006.4628297781, 1.0)"]
+        )
 
 
 def test_valve_active(wn):
