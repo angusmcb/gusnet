@@ -3,18 +3,19 @@ from __future__ import annotations
 import csv
 import functools
 import itertools
+from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gusnet.elements import (
     CurveType,
     DefaultOptions,
-    DemandType,
     Field,
     ModelLayer,
     ModelOptions,
     Parameter,
     QualityParameter,
+    ResultLayer,
     SimpleFieldType,
 )
 from gusnet.interface import EpanetError, WntrModel
@@ -75,6 +76,7 @@ class HybridWntrModel(WntrModel):
 
         self._junctions = elements.get(ModelLayer.JUNCTIONS)
         self._reservoirs = elements.get(ModelLayer.RESERVOIRS)
+
         self._tanks = elements.get(ModelLayer.TANKS)
         self._pipes = elements.get(ModelLayer.PIPES)
         self._pumps = elements.get(ModelLayer.PUMPS)
@@ -105,46 +107,16 @@ class HybridWntrModel(WntrModel):
         return name
 
     def write_inp_file(self, file_path: str | Path) -> None:
-        import pandas as pd
+        inp_file_dict: dict[str, pd.DataFrame | Iterable[str] | None] = {}
 
-        inp_file_dict = self.get_inp_file_dict()
+        inp_file_dict["JUNCTIONS"] = inp_file_junctions(self._junctions) if self._junctions is not None else None
+        inp_file_dict["RESERVOIRS"] = inp_file_reservoirs(self._reservoirs) if self._reservoirs is not None else None
 
-        with Path(file_path).open("w", newline="") as file:
-            for section, data in inp_file_dict.items():
-                file.write(f"[{section}]\n")
-                if isinstance(data, (pd.DataFrame, pd.Series)):
-                    # quote none means errors will be thrown rather than adding quotes
-                    data.to_csv(file, sep=" ", header=False, index=False, quoting=csv.QUOTE_NONE)
-                else:
-                    file.writelines(line + "\n" for line in data)
-                file.write("\n")
+        inp_file_dict.update(self.get_inp_file_dict())
+        inp_file_writer(file_path, inp_file_dict)
 
     def get_inp_file_dict(self) -> dict[str, pd.DataFrame]:
-        import pandas as pd
-
         inp_file_dict: dict[str, pd.DataFrame] = {}
-
-        if self._junctions is not None:
-            junction_list = []
-
-            names = self._junctions[Field.NAME]
-            elevations = self._junctions[Field.ELEVATION]
-            base_demands = self._junctions.get(Field.BASE_DEMAND, itertools.repeat(None))
-            demand_pattern = self._junctions.get(Field.DEMAND_PATTERN, itertools.repeat(None))
-
-            for junction in zip(names, elevations, base_demands, demand_pattern):
-                line = f"{junction[0]} {junction[1]}"
-                if pd.notna(junction[2]):
-                    line += f" {junction[2]}"
-                    if pd.notna(junction[3]):
-                        line += f" {junction[3]}"
-
-                junction_list.append(line)
-
-            inp_file_dict["JUNCTIONS"] = junction_list
-
-        if self._reservoirs is not None:
-            inp_file_dict["RESERVOIRS"] = subset(self._reservoirs, [Field.NAME, Field.BASE_HEAD, Field.HEAD_PATTERN])
 
         if self._tanks is not None:
             vol_curve_field = (
@@ -204,16 +176,15 @@ class HybridWntrModel(WntrModel):
             inp_file_dict["PIPES"] = (" ".join(str(p) for p in pipe) for pipe in pipe_data)
 
         if self._pumps is not None:
-            powers = (
-                self._pumps[Field.POWER].map(lambda x: f"POWER {x}", na_action="ignore").fillna("")
-                if Field.POWER in self._pumps.columns
-                else itertools.repeat("")
+            pump_param = (
+                f"POWER {p[1]}" if p[0] == "POWER" else f"HEAD {p[2]}"
+                for p in zip(
+                    self._pumps[Field.PUMP_TYPE],
+                    self._pumps.get(Field.POWER, itertools.repeat(None)),
+                    self._pumps.get(Field.PUMP_CURVE, itertools.repeat(None)),
+                )
             )
-            curves = (
-                self._pumps[Field.PUMP_CURVE].map(lambda x: f"HEAD {x}", na_action="ignore").fillna("")
-                if Field.PUMP_CURVE in self._pumps.columns
-                else itertools.repeat("")
-            )
+
             base_speeds = (
                 self._pumps[Field.BASE_SPEED].map(lambda x: f"SPEED {x}", na_action="ignore").fillna("")
                 if Field.BASE_SPEED in self._pumps.columns
@@ -229,8 +200,7 @@ class HybridWntrModel(WntrModel):
                 self._pumps[Field.NAME],
                 self._pumps["start_node_name"],
                 self._pumps["end_node_name"],
-                powers,
-                curves,
+                pump_param,
                 base_speeds,
                 speed_patterns,
             )
@@ -284,13 +254,12 @@ class HybridWntrModel(WntrModel):
         )
 
         if self.options.quality_parameter is not QualityParameter.NONE:
-            reaction_rows = [
+            inp_file_dict["REACTIONS"] = [
                 f"ORDER BULK {self.options.bulk_reaction_order}",
                 f"ORDER WALL {self.options.wall_reaction_order.value}",
                 f"GLOBAL BULK {self.options.global_bulk_coefficient}",
                 f"GLOBAL WALL {self.options.global_wall_coefficient}",
             ]
-            inp_file_dict["REACTIONS"] = reaction_rows
 
         if (
             self._tanks is not None
@@ -308,36 +277,25 @@ class HybridWntrModel(WntrModel):
                 if model
             )
 
-        options_rows = [
+        trace_node = self.options.trace_node if self.options.quality_parameter is QualityParameter.TRACE else ""
+
+        inp_file_dict["OPTIONS"] = [
             f"UNITS {self.options.flow_unit.value}",
             f"HEADLOSS {self.options.headloss_formula.value}",
+            f"DEMAND MODEL {self.options.demand_type.value}",
+            f"MINIMUM PRESSURE {self.options.minimum_pressure}",
+            f"REQUIRED PRESSURE {self.options.required_pressure}",
+            f"PRESSURE EXPONENT {self.options.pressure_exponent}",
             f"DEMAND MULTIPLIER {self.options.demand_multiplier}",
             f"EMITTER EXPONENT {self.options.emitter_exponent}",
+            f"QUALITY {self.options.quality_parameter.value} {trace_node}",
+            f"DIFFUSIVITY {self.options.relative_diffusivity}",
+            f"TOLERANCE {self.options.quality_tolerance}",
         ]
-        if self.options.demand_type == DemandType.PRESSURE_DEPENDENT:
-            options_rows.extend(
-                [
-                    "DEMAND MODEL PDA",
-                    f"MINIMUM PRESSURE {self.options.minimum_pressure}",
-                    f"REQUIRED PRESSURE {self.options.required_pressure}",
-                    f"PRESSURE EXPONENT {self.options.pressure_exponent}",
-                ]
-            )
-        if self.options.quality_parameter is not QualityParameter.NONE:
-            options_rows.extend(
-                [
-                    f"QUALITY {self.options.quality_parameter.value}",
-                    f"DIFFUSIVITY {self.options.relative_diffusivity}",
-                ]
-            )
 
-        inp_file_dict["OPTIONS"] = options_rows
-
-        if self.options.simulation_duration > 0:
-            time_rows = [
-                f"DURATION {self.options.simulation_duration}",
-            ]
-            inp_file_dict["TIMES"] = time_rows
+        inp_file_dict["TIMES"] = [
+            f"DURATION {self.options.simulation_duration}",
+        ]
 
         return inp_file_dict
 
@@ -369,7 +327,7 @@ class HybridWntrModel(WntrModel):
         import pandas as pd
 
         if self._pipes is None:
-            raise ValueError
+            return pd.Series(dtype=float)
         return pd.Series(self._pipes[Field.LENGTH].values, index=self._pipes[Field.NAME])
 
 
@@ -377,6 +335,53 @@ def subset(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     """Return a subset of the dataframe where the column matches one of the values."""
     existing_columns = set(df.columns.tolist())
     return df[[c for c in columns if c in existing_columns]]
+
+
+def inp_file_junctions(junctions_df: pd.DataFrame) -> Iterable[str]:
+    import pandas as pd
+
+    junction_list = []
+
+    names = junctions_df[Field.NAME]
+    elevations = junctions_df[Field.ELEVATION]
+    base_demands = junctions_df.get(Field.BASE_DEMAND, itertools.repeat(None))
+    demand_pattern = junctions_df.get(Field.DEMAND_PATTERN, itertools.repeat(None))
+
+    for junction in zip(names, elevations, base_demands, demand_pattern):
+        line = f"{junction[0]} {junction[1]}"
+        if pd.notna(junction[2]):
+            line += f" {junction[2]}"
+            if pd.notna(junction[3]):
+                line += f" {junction[3]}"
+
+        junction_list.append(line)
+
+    return junction_list
+
+
+def inp_file_reservoirs(reservoirs_df: pd.DataFrame) -> Iterable[str]:
+    reservoir_data = zip(
+        reservoirs_df[Field.NAME],
+        reservoirs_df[Field.BASE_HEAD],
+        reservoirs_df[Field.HEAD_PATTERN].fillna("") if Field.HEAD_PATTERN in reservoirs_df else itertools.repeat(""),
+    )
+    return (" ".join(str(p) for p in reservoir) for reservoir in reservoir_data)
+
+
+def inp_file_writer(file_path: str | Path, inp_file_dict: dict[str, pd.DataFrame]) -> None:
+    import pandas as pd
+
+    with Path(file_path).open("w", newline="") as file:
+        for section, data in inp_file_dict.items():
+            if data is None:
+                continue
+            file.write(f"[{section}]\n")
+            if isinstance(data, (pd.DataFrame, pd.Series)):
+                # quote none means errors will be thrown rather than adding quotes
+                data.to_csv(file, sep=" ", header=False, index=False, quoting=csv.QUOTE_NONE)
+            else:
+                file.writelines(line + "\n" for line in data)
+            file.write("\n")
 
 
 class DummyConverter(Converter):
@@ -460,4 +465,7 @@ if __name__ == "__main__":
 
     model.run()
 
-    print(model.get_results())
+    results = model.get_results()
+
+    print(results[ResultLayer.NODES])
+    print(results[ResultLayer.LINKS])
