@@ -784,9 +784,6 @@ def _get_field_groups(options: ModelOptions) -> FieldGroup:
     if options.energy_report:
         field_groups = field_groups | FieldGroup.ENERGY
 
-    if options.demand_type is DemandType.PRESSURE_DEPENDENT:
-        field_groups = field_groups | FieldGroup.PRESSURE_DEPENDENT_DEMAND
-
     return field_groups
 
 

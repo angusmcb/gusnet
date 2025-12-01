@@ -1,8 +1,8 @@
 import pytest
 from qgis.core import QgsVectorLayer
 
-import gusnet.elements
-from gusnet.interface import WntrModel
+from gusnet.elements import DefaultOptions, FieldGroup
+from gusnet.interface import WntrModel, _get_field_groups
 
 
 @pytest.fixture
@@ -18,16 +18,13 @@ def qgs_layer():
 
 
 def test_get_field_groups(wn):
-    from gusnet.elements import DefaultOptions, FieldGroup
-
-    assert gusnet.interface._get_field_groups(DefaultOptions()) == FieldGroup(0)
+    assert _get_field_groups(DefaultOptions()) == FieldGroup(0)
 
     wn.options.quality.parameter = "CHEMICAL"
     wn.options.report.energy = "YES"
-    wn.options.hydraulic.demand_model = "PDD"
 
     options = WntrModel(wn).options
 
-    field_groups = gusnet.interface._get_field_groups(options)
+    field_groups = _get_field_groups(options)
 
-    assert field_groups == FieldGroup.PRESSURE_DEPENDENT_DEMAND | FieldGroup.ENERGY | FieldGroup.WATER_QUALITY_ANALYSIS
+    assert field_groups == FieldGroup.ENERGY | FieldGroup.WATER_QUALITY_ANALYSIS

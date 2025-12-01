@@ -302,7 +302,6 @@ class CurveType(FieldType):
 class FieldGroup(Flag):
     BASE = auto()
     WATER_QUALITY_ANALYSIS = auto()
-    PRESSURE_DEPENDENT_DEMAND = auto()
     ENERGY = auto()
     EXTRA = auto()
     REQUIRED = auto()
@@ -389,9 +388,6 @@ class ModelLayer(_AbstractLayer):
                 Field.DEMAND_PATTERN,
                 Field.EMITTER_COEFFICIENT,
                 Field.INITIAL_QUALITY,
-                Field.MINIMUM_PRESSURE,
-                Field.REQUIRED_PRESSURE,
-                Field.PRESSURE_EXPONENT,
             ],
             ModelLayer.TANKS: [
                 Field.NAME,
@@ -548,10 +544,6 @@ class Field(StrEnum):
     BULK_COEFF = "bulk_coeff", Parameter.BULK_REACTION_COEFFICIENT, FieldGroup.WATER_QUALITY_ANALYSIS
     WALL_COEFF = "wall_coeff", Parameter.WALL_REACTION_COEFFICIENT, FieldGroup.WATER_QUALITY_ANALYSIS
 
-    MINIMUM_PRESSURE = "minimum_pressure", Parameter.PRESSURE, FieldGroup.PRESSURE_DEPENDENT_DEMAND
-    REQUIRED_PRESSURE = "required_pressure", Parameter.PRESSURE, FieldGroup.PRESSURE_DEPENDENT_DEMAND
-    PRESSURE_EXPONENT = "pressure_exponent", Parameter.UNITLESS, FieldGroup.PRESSURE_DEPENDENT_DEMAND
-
     EFFICIENCY_CURVE = "efficiency_curve", CurveType.EFFICIENCY, FieldGroup.ENERGY
     ENERGY_PRICE = "energy_price", Parameter.CURRENCY, FieldGroup.ENERGY
     ENERGY_PATTERN = "energy_pattern", SimpleFieldType.PATTERN, FieldGroup.ENERGY
@@ -647,12 +639,6 @@ class Field(StrEnum):
             return tr("Bulk Reaction Rate Coefficient")
         if self is Field.WALL_COEFF:
             return tr("Wall Reaction Rate Coefficient")
-        if self is Field.MINIMUM_PRESSURE:
-            return tr("Minimum Pressure")
-        if self is Field.REQUIRED_PRESSURE:
-            return tr("Required Pressure")
-        if self is Field.PRESSURE_EXPONENT:
-            return tr("Pressure Exponent")
         if self is Field.EFFICIENCY_CURVE:
             return tr("Efficiency Curve")
         if self is Field.ENERGY_PATTERN:
@@ -754,12 +740,6 @@ class Field(StrEnum):
             return tr("Bulk reaction rate coefficient for water quality analysis")
         if self is Field.WALL_COEFF:
             return tr("Wall reaction rate coefficient for water quality analysis")
-        if self is Field.MINIMUM_PRESSURE:
-            return tr("Minimum pressure for pressure-dependent demand")
-        if self is Field.REQUIRED_PRESSURE:
-            return tr("Required pressure for full demand delivery in pressure-dependent demand")
-        if self is Field.PRESSURE_EXPONENT:
-            return tr("Pressure exponent for demand calculation in pressure-dependent demand")
         if self is Field.EFFICIENCY_CURVE:
             return tr("Pump efficiency curve (flow vs efficiency) for energy use analysis")
         if self is Field.ENERGY_PATTERN:

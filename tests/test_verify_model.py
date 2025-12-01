@@ -533,6 +533,7 @@ def test_verify_model_tank_invalid_vol_curve_raises_curve_error():
                 Field.MIN_LEVEL: 0.0,
                 Field.MAX_LEVEL: 2.0,
                 Field.TANK_DIAMETER: 10.0,
+                Field.MIN_VOL: 0.0,
                 Field.VOL_CURVE: "not a curve",
             }
         ]
@@ -889,6 +890,7 @@ def test_verify_model_curve_error_includes_notes_via_mapping(monkeypatch):
                 Field.MIN_LEVEL: 0.0,
                 Field.MAX_LEVEL: 2.0,
                 Field.TANK_DIAMETER: 10.0,
+                Field.MIN_VOL: 0.0,
                 Field.VOL_CURVE: "not a curve",
             }
         ]
@@ -995,6 +997,7 @@ def test_verify_model_raises_boolean_field_error_via_verify_model():
                 Field.MIN_LEVEL: 0.0,
                 Field.MAX_LEVEL: 2.0,
                 Field.TANK_DIAMETER: 10.0,
+                Field.MIN_VOL: 0.0,
                 Field.OVERFLOW: "yes",
             }
         ]

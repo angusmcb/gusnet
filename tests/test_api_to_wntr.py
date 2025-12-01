@@ -118,9 +118,10 @@ def simple_layers() -> dict[str, QgsVectorLayer]:
             ("max_level", float),
             ("init_level", float),
             ("tank_diameter", float),
+            ("min_vol", float),
         ],
     )
-    add_point(tank_layer, (4, 5), ["T1", 1.0, 0, 1, 0.1, 5.0])
+    add_point(tank_layer, (4, 5), ["T1", 1.0, 0, 1, 0.1, 5.0, 0.0])
     pipe_layer = layer("linestring", [("name", str), ("roughness", float), ("diameter", float)])
     add_line(pipe_layer, [(1, 1), (4, 5)], ["P1", 100, 10])
     return {"JUNCTIONS": junction_layer, "PIPES": pipe_layer, "TANKS": tank_layer}
@@ -140,9 +141,10 @@ def all_layers() -> dict[str, QgsVectorLayer]:
             ("max_level", float),
             ("init_level", float),
             ("tank_diameter", float),
+            ("min_vol", float),
         ],
     )
-    add_point(tank_layer, (3, 3), [0, 0, 1, 0.5, 5.0])
+    add_point(tank_layer, (3, 3), [0, 0, 1, 0.5, 5.0, 0.0])
 
     reservoir_layer = layer("Point", [("base_head", float)])
     add_point(reservoir_layer, (4, 4), [5.0])
@@ -212,6 +214,7 @@ def test_minimum_attributes(all_layers):
         ("TANKS", "max_level"),
         ("TANKS", "init_level"),
         ("TANKS", "tank_diameter"),
+        ("TANKS", "min_vol"),
         ("RESERVOIRS", "base_head"),
         ("PIPES", "diameter"),
         ("PIPES", "roughness"),
@@ -402,11 +405,12 @@ def test_name_generation_with_conflicts():
             ("max_level", float),
             ("init_level", float),
             ("tank_diameter", float),
+            ("min_vol", float),
         ],
     )
-    add_point(tanks, (5, 1), ["xx", 1, 1, 1, 1, 1])
-    add_point(tanks, (6, 2), ["0", 1, 1, 1, 1, 1])
-    add_point(tanks, (7, 3), [None, 1, 1, 1, 1, 1])
+    add_point(tanks, (5, 1), ["xx", 1, 1, 1, 1, 1, 1])
+    add_point(tanks, (6, 2), ["0", 1, 1, 1, 1, 1, 1])
+    add_point(tanks, (7, 3), [None, 1, 1, 1, 1, 1, 1])
 
     reservoirs = layer("point", [("base_head", float)])
     add_point(reservoirs, (8, 1), [1])
@@ -523,10 +527,11 @@ def mixed_crs_layers():
             ("max_level", float),
             ("init_level", float),
             ("tank_diameter", float),
+            ("min_vol", float),
         ],
         "EPSG:32616",
     )
-    add_point(tank_layer, (844219, 4230929), ["T1", 100.0, 0, 1, 0.5, 1.0])
+    add_point(tank_layer, (844219, 4230929), ["T1", 100.0, 0, 1, 0.5, 1.0, 0.0])
     pipe_layer = layer("linestring", [("name", str), ("diameter", float), ("roughness", float)], "EPSG:3089")
     add_line(pipe_layer, [(5713511, 3899366), (5691228, 3957214)], ["P1", 1, 100])
     return {"JUNCTIONS": junction_layer, "PIPES": pipe_layer, "TANKS": tank_layer}
@@ -634,9 +639,10 @@ def test_boolean_attributes(bool_attr, expected_result):
             ("init_level", float),
             ("tank_diameter", float),
             ("overflow", bool_attr),
+            ("min_vol", float),
         ],
     )
-    add_point(tank_layer, (4, 5), ["T1", 1.0, 0, 1, 0.5, 5, bool_attr])
+    add_point(tank_layer, (4, 5), ["T1", 1.0, 0, 1, 0.5, 5, bool_attr, 1.0])
     pipe_layer = layer(
         "linestring", [("name", str), ("diameter", float), ("roughness", float), ("check_valve", bool_attr)]
     )
@@ -667,8 +673,8 @@ def test_float_attributes(float_attr, expected_result, field_type):
     if float_attr in ["True", "False"]:
         pytest.skip("String True/False Boolean attributes are not supported in WNTR yet")
 
-    junction_layer = layer("point", [("name", str), ("elevation", field_type), ("pressure_exponent", field_type)])
-    add_point(junction_layer, (1, 1), ["J1", float_attr, float_attr])
+    junction_layer = layer("point", [("name", str), ("elevation", field_type)])
+    add_point(junction_layer, (1, 1), ["J1", float_attr])
     # additionally check that 'elevation' can accept mixed types
     tank_layer = layer(
         "point",
@@ -679,9 +685,10 @@ def test_float_attributes(float_attr, expected_result, field_type):
             ("min_level", float),
             ("max_level", float),
             ("init_level", float),
+            ("min_vol", float),
         ],
     )
-    add_point(tank_layer, (4, 5), ["T1", float_attr, 865.0, float_attr, float_attr, float_attr])
+    add_point(tank_layer, (4, 5), ["T1", float_attr, 865.0, float_attr, float_attr, float_attr, float_attr])
     pipe_layer = layer("linestring", [("name", str), ("length", field_type), ("diameter", float), ("roughness", float)])
     add_line(pipe_layer, [(1, 1), (4, 5)], ["P1", float_attr, 100.0, 100.0])
 
@@ -689,7 +696,6 @@ def test_float_attributes(float_attr, expected_result, field_type):
 
     wn = gusnet.to_wntr(layers, "lps", "H-W")
     assert wn.get_node("J1").elevation == expected_result
-    assert wn.get_node("J1").pressure_exponent == expected_result
     assert wn.get_node("T1").diameter == expected_result
     assert wn.get_node("T1").elevation == 865.0
     assert wn.get_link("P1").length == expected_result
@@ -927,10 +933,11 @@ def tank_vol_curve_layers(simple_layers, curve_string):
             ("max_level", float),
             ("min_level", float),
             ("init_level", float),
+            ("min_vol", float),
             ("vol_curve", curve_string),
         ],
     )
-    add_point(tank_layer, (4, 5), ["T1", 1, 20, 20, 1, 1, curve_string])
+    add_point(tank_layer, (4, 5), ["T1", 1, 20, 20, 1, 1, 0.0, curve_string])
     simple_layers["TANKS"] = tank_layer
     return simple_layers
 

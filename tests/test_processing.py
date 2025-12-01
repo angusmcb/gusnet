@@ -410,16 +410,6 @@ def test_alg_template_layers_water_quality(processing, template_alg, template_al
     assert "wall_coeff" in result["PIPES"].fields().names()
 
 
-def test_alg_template_layers_pressure_dependent_demand(processing, template_alg, template_alg_params):
-    template_alg_params["PRESSURE_DEPENDENT_DEMAND"] = True
-
-    result = processing.run(template_alg, template_alg_params)
-
-    assert "required_pressure" in result["JUNCTIONS"].fields().names()
-    assert "minimum_pressure" in result["JUNCTIONS"].fields().names()
-    assert "pressure_exponent" in result["JUNCTIONS"].fields().names()
-
-
 def test_alg_template_layers_energy(processing, template_alg, template_alg_params):
     template_alg_params["ENERGY"] = True
 
@@ -532,6 +522,9 @@ def test_pipe_length_warning(run_result, feedback):
 @pytest.mark.parametrize("output_type", ["TEMPORARY_OUTPUT", "gpkg", "geojson", "shp"])
 def test_inp_results_match(export_result, inp_file):
     import wntr
+
+    if wntr.__version__ in ("1.2.0", "1.3.2") and inp_file.endswith("valves.inp"):
+        pytest.skip("WNTR 1.2.0 and 1.3.2 have a bug with valves that affects results")
 
     wn = wntr.network.read_inpfile(inp_file)
     in_results = wntr.sim.EpanetSimulator(wn).run_sim()

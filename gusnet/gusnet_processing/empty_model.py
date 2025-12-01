@@ -45,7 +45,6 @@ class TemplateLayers(CommonProcessingBase):
 
         advanced_analysis_types = [
             (FieldGroup.WATER_QUALITY_ANALYSIS, tr("Create Fields for Water Quality Analysis")),
-            (FieldGroup.PRESSURE_DEPENDENT_DEMAND, tr("Create Fields for Pressure Driven Analysis")),
             (FieldGroup.ENERGY, tr("Create Fields for Energy Analysis")),
         ]
         for analysis_type, description in advanced_analysis_types:
