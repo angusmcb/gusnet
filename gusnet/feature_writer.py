@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import itertools
 import math
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from qgis.core import NULL, Qgis, QgsFeature, QgsFeatureSink, QgsField, QgsFields, QgsGeometry
 from qgis.PyQt.QtCore import QMetaType, QVariant
@@ -53,14 +54,14 @@ def get_qgs_fields(fields: list[Field], df: pd.DataFrame | None = None, use_list
         return qgs_fields
 
     for series_name in df.columns:
-        if series_name.lower() in qgs_fields.names():
+        if series_name in qgs_fields.names():
             continue
 
         series = df[series_name]
 
         series = series.convert_dtypes(convert_string=False)
 
-        qf = QgsField(series_name.lower(), _qgs_field_type_from_pandas(series.dtype))
+        qf = QgsField(series_name, _qgs_field_type_from_pandas(series.dtype))
         qgs_fields.append(qf)
 
     return qgs_fields
@@ -80,33 +81,22 @@ def write(
         fields: QgsFields describing the schema to be written.
         attributes: pandas DataFrame of attribute values indexed by feature id.
         geometries: mapping of index -> QgsGeometry for each feature.
-
-    Returns:
-        None
     """
+    null_iterator = itertools.repeat(NULL)
 
-    field_names = fields.names()
+    ordered_attributes = [attributes.get(field_name, null_iterator) for field_name in fields.names()]
 
-    missing_cols = list(set(field_names) - set([col.lower() for col in attributes.columns]))
-    if missing_cols:
-        attributes[missing_cols] = NULL
-
-    ordered_df = attributes[field_names]
-
-    attribute_list = ordered_df.to_numpy().tolist()
-    name_list = ordered_df.index.to_list()
-
-    for name, attributes in zip(name_list, attribute_list):
+    for name, feature_attributes in zip(attributes.index, zip(*ordered_attributes)):
         f = QgsFeature()
         f.setGeometry(geometries[name])
         attributes_with_null = [
-            value if not (isinstance(value, float) and math.isnan(value)) else NULL for value in attributes
+            value if not (isinstance(value, float) and math.isnan(value)) else NULL for value in feature_attributes
         ]
         f.setAttributes(attributes_with_null)
         sink.addFeature(f, QgsFeatureSink.FastInsert)
 
 
-def _qgs_field_type_from_pandas(dtype: pd.api.types) -> QMetaType | QVariant:
+def _qgs_field_type_from_pandas(dtype: Any) -> QMetaType | QVariant:
     """Map a pandas dtype to the corresponding QGIS field type constant.
 
     Args:
