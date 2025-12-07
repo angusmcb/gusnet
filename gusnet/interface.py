@@ -203,7 +203,7 @@ class WntrModel:
         return nodes
 
     @property
-    def link_geometries(self) -> dict[str, QgsGeometry] | pd.Series[QgsGeometry]:
+    def link_geometries(self) -> dict[str, QgsGeometry] | pd.Series:
         if self._link_geometry is not None:
             return self._link_geometry
 
