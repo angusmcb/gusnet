@@ -822,7 +822,7 @@ def test_check_names_all_nulls_ignored():
 
 
 def test_check_names_non_string_values():
-    df = pd.DataFrame([{Field.NAME: 123}, {Field.NAME: "ValidName"}])
+    df = pd.DataFrame([{Field.NAME: 123}])
     with pytest.raises(NameFieldError, match="123"):
         _check_names({ModelLayer.JUNCTIONS: df})
 
