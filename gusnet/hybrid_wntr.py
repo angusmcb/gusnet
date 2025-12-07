@@ -299,8 +299,6 @@ def inp_file_pumps(
 
 
 def inp_file_valves(valves_df: pd.DataFrame, curves: dict[CurveType, dict[Curve, str]]) -> Iterable[str]:
-    valves_df["valve_setting"] = 0.0
-
     valve_setting = (
         v[1]
         if v[0] == ValveType.PRV.value
@@ -320,7 +318,7 @@ def inp_file_valves(valves_df: pd.DataFrame, curves: dict[CurveType, dict[Curve,
             valves_df.get(Field.PRESSURE_SETTING, itertools.repeat(None)),
             valves_df.get(Field.FLOW_SETTING, itertools.repeat(None)),
             valves_df.get(Field.THROTTLE_SETTING, itertools.repeat(None)),
-            valves_df[Field.HEADLOSS_CURVE].map(curves.get(CurveType.HEADLOSS), na_action="ignore")
+            valves_df[Field.HEADLOSS_CURVE].map(curves.get(CurveType.HEADLOSS, {}), na_action="ignore")
             if Field.HEADLOSS_CURVE in valves_df.columns
             else itertools.repeat(None),
         )
