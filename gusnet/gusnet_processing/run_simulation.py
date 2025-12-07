@@ -301,11 +301,6 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
             QgsProcessingParameterFeatureSink(ResultLayer.LINKS.results_name, tr("Simulation Results - Links"))
         )
 
-    def init_export_inp_parameter(self):
-        self.addParameter(
-            QgsProcessingParameterFileDestination(self.OUTPUT_INP, tr("Output .inp file"), fileFilter="*.inp")
-        )
-
     def _get_crs(self, parameters: dict[str, Any], context: QgsProcessingContext) -> QgsCoordinateReferenceSystem:
         junction_source = self.parameterAsSource(parameters, ModelLayer.JUNCTIONS, context)
         junction_source = cast(QgsProcessingFeatureSource, junction_source)
@@ -570,6 +565,11 @@ in other software.
         return outputs
 
 
+class ProcessingParameterInpFileDestination(QgsProcessingParameterFileDestination):
+    def defaultFileExtension(self):  # noqa: N802
+        return "inp"
+
+
 class ExportInpFile(_ModelCreatorAlgorithm):
     def createInstance(self):  # noqa N802
         return ExportInpFile()
@@ -594,7 +594,9 @@ in other software.
         return QgsApplication.getThemeIcon("mActionFileSave.svg")
 
     def init_output_parameters(self):
-        self.init_export_inp_parameter()
+        self.addParameter(
+            ProcessingParameterInpFileDestination(self.OUTPUT_INP, tr("Output .inp file"), fileFilter="*.inp")
+        )
 
     @profile(tr("Export Inp File"))
     def processAlgorithm(  # noqa N802
