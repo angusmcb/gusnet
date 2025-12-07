@@ -13,15 +13,17 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from qgis.core import (
     QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsProcessingContext,
     QgsProcessingException,
+    QgsProcessingFeatureSource,
     QgsProcessingFeedback,
     QgsProcessingLayerPostProcessorInterface,
     QgsProcessingParameterDefinition,
@@ -125,12 +127,15 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         return param_values
 
     def get_default_input_layers(self) -> dict[str, str]:
-        project_settings = ProjectSettings(QgsProject.instance())
-        saved_layers = project_settings.get(SettingKey.MODEL_LAYERS, {})
+        project = QgsProject.instance()
+        if not project:
+            return {}
+
+        saved_layers = ProjectSettings(project).get(SettingKey.MODEL_LAYERS, {})
         input_layers = {
             str(layer_type): saved_layers.get(layer_type.name)
             for layer_type in ModelLayer
-            if QgsProject.instance().mapLayer(saved_layers.get(layer_type))
+            if project.mapLayer(saved_layers.get(layer_type))
         }
         return input_layers
 
@@ -303,6 +308,7 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
 
     def _get_crs(self, parameters: dict[str, Any], context: QgsProcessingContext) -> QgsCoordinateReferenceSystem:
         junction_source = self.parameterAsSource(parameters, ModelLayer.JUNCTIONS, context)
+        junction_source = cast(QgsProcessingFeatureSource, junction_source)
         return junction_source.sourceCrs()
 
     def _get_model_options(self, parameters: dict[str, Any], context: QgsProcessingContext) -> ModelOptions:
@@ -383,7 +389,9 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         from gusnet.feature_reader import read
         from gusnet.verify_model import verify_model
 
-        sources = {lyr: self.parameterAsSource(parameters, lyr.name, context) for lyr in ModelLayer}
+        sources = {
+            lyr: source for lyr in ModelLayer if (source := self.parameterAsSource(parameters, lyr.name, context))
+        }
 
         crs = self._get_crs(parameters, context)
 
@@ -422,9 +430,10 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
             feedback.pushInfo(model.describe_pipes()[1])
 
     def prepareAlgorithm(  # noqa: N802
-        self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback
-    ) -> None:
-        if QThread.currentThread() == QCoreApplication.instance().thread():
+        self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback | None
+    ) -> bool:
+        app = QCoreApplication.instance()
+        if app and QThread.currentThread() == app.thread():
             project_settings = ProjectSettings()
 
             layers = {
@@ -458,13 +467,16 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         for layer_type in ResultLayer:
             field_enums = model.suggested_fields(layer_type)
 
-            attribute_df = results.get(layer_type)
+            attribute_df = results[layer_type]
 
             fields = get_qgs_fields(field_enums, attribute_df, model.options.simulation_duration > 0)
 
             (sink, layer_id) = self.parameterAsSink(
                 parameters, layer_type.results_name, context, fields, layer_type.qgs_wkb_type, crs
             )
+
+            if not sink:
+                continue
 
             geometries = model.node_geometries if layer_type.is_node else model.link_geometries
 
@@ -490,14 +502,15 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        feedback: QgsProcessingFeedback,
+        feedback: QgsProcessingFeedback | None,
         model: WntrModel,
     ) -> dict[str, str]:
         inp_file = self.parameterAsFile(parameters, self.OUTPUT_INP, context)
 
         model.write_inp_file(inp_file)
 
-        feedback.pushInfo(tr(".inp file written to: {file_path}").format(file_path=inp_file))
+        if feedback:
+            feedback.pushInfo(tr(".inp file written to: {file_path}").format(file_path=inp_file))
 
         return {self.OUTPUT_INP: inp_file}
 
@@ -533,7 +546,7 @@ in other software.
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        feedback: QgsProcessingFeedback,
+        feedback: QgsProcessingFeedback | None,
     ) -> dict:
         with profile(tr("Verifying Dependencies"), 10, feedback):
             self._check_wntr()
@@ -588,7 +601,7 @@ in other software.
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        feedback: QgsProcessingFeedback,
+        feedback: QgsProcessingFeedback | None,
     ) -> dict:
         with profile(tr("Verifying Dependencies"), 10, feedback):
             self._check_wntr()
@@ -616,10 +629,13 @@ class LayerPostProcessor(QgsProcessingLayerPostProcessorInterface):
 
 
 @contextmanager
-def logger_to_feedback(logger_name: str, feedback: QgsProcessingFeedback):
+def logger_to_feedback(logger_name: str, feedback: QgsProcessingFeedback | None) -> Generator[None, None, None]:
     """
     Context manager to redirect logging messages to QgsProcessingFeedback.
     """
+
+    if not feedback:
+        feedback = QgsProcessingFeedback()
 
     class FeedbackHandler(logging.Handler):
         def emit(self, record):

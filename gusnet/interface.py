@@ -284,7 +284,7 @@ class WntrModel:
         self._elements = dfs
         return self._elements
 
-    def _process_model_df_from_wntr(self, df: pd.DataFrame, layer: ModelLayer) -> pd.DataFrame | None:
+    def _process_model_df_from_wntr(self, df: pd.DataFrame, layer: ModelLayer) -> pd.DataFrame:
         df = df.drop(columns=["link_type", "node_type"], errors="ignore")
 
         df = df.dropna(axis=1, how="all")

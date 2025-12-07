@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 from qgis.core import (
@@ -35,7 +36,7 @@ SHAPEFILE_NAME_MAP = {field[:10]: field for field in Field}
 
 
 def read(
-    feature_sources: dict[ModelLayer, QgsFeatureSource],
+    feature_sources: Mapping[ModelLayer, QgsFeatureSource],
     crs: QgsCoordinateReferenceSystem | None,
     transform_context: QgsCoordinateTransformContext,
     ellipsoid: str,
@@ -135,7 +136,7 @@ def _fix_column_types(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _do_geometries(dfs: dict[ModelLayer, pd.DataFrame]) -> pd.DataFrame:
+def _do_geometries(dfs: dict[ModelLayer, pd.DataFrame]) -> None:
     """Check and transform geometries.
 
     Check that all geometries are valid and convert node geometries to coordinate tuples and

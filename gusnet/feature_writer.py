@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from qgis.core import NULL, Qgis, QgsFeature, QgsFeatureSink, QgsField, QgsFields, QgsGeometry
 from qgis.PyQt.QtCore import QMetaType, QVariant
@@ -45,7 +45,12 @@ def get_qgs_fields(fields: list[Field], df: pd.DataFrame | None = None, use_list
 
     for field in fields:
         if use_list_types and field.field_group & FieldGroup.LIST_IN_EXTENDED_PERIOD:
-            qf = QgsField(field.value, LIST_TYPE, subType=DOUBLE_TYPE, comment=field.description)
+            qf = QgsField(
+                field.value,
+                cast(QMetaType.Type, LIST_TYPE),
+                subType=cast(QMetaType.Type, DOUBLE_TYPE),
+                comment=field.description,
+            )
         else:
             qf = QgsField(field.value, _qgs_field_type_from_field(field), comment=field.description)
         qgs_fields.append(qf)
@@ -68,7 +73,10 @@ def get_qgs_fields(fields: list[Field], df: pd.DataFrame | None = None, use_list
 
 
 def write(
-    sink: QgsFeatureSink, fields: QgsFields, attributes: pd.DataFrame, geometries: dict[str, QgsGeometry]
+    sink: QgsFeatureSink,
+    fields: QgsFields,
+    attributes: pd.DataFrame,
+    geometries: dict[str, QgsGeometry] | pd.Series,
 ) -> None:
     """Write features to a QGIS feature sink (or provider).
 
@@ -93,10 +101,10 @@ def write(
             value if not (isinstance(value, float) and math.isnan(value)) else NULL for value in feature_attributes
         ]
         f.setAttributes(attributes_with_null)
-        sink.addFeature(f, QgsFeatureSink.FastInsert)
+        sink.addFeature(f, QgsFeatureSink.Flag.FastInsert)
 
 
-def _qgs_field_type_from_pandas(dtype: Any) -> QMetaType | QVariant:
+def _qgs_field_type_from_pandas(dtype: Any) -> QMetaType.Type | QVariant.Type:
     """Map a pandas dtype to the corresponding QGIS field type constant.
 
     Args:
@@ -122,7 +130,7 @@ def _qgs_field_type_from_pandas(dtype: Any) -> QMetaType | QVariant:
     raise KeyError(f"Couldn't get qgs field type for {dtype}")  # noqa: EM102, TRY003 # pragma: no cover
 
 
-def _qgs_field_type_from_field(field: Field) -> QMetaType | QVariant:
+def _qgs_field_type_from_field(field: Field) -> QMetaType.Type | QVariant.Type:
     """Return the QGIS field type constant for a `Field`.
 
     The function inspects the domain-specific ``field.type`` value and maps
