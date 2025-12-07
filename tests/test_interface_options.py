@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from gusnet.elements import (
-    DefaultOptions,
+    DEFAULT_OPTIONS,
     DemandType,
     FlowUnit,
     HeadlossFormula,
@@ -183,7 +183,7 @@ def test_headloss_mappings(headloss, wn: wntr.network.WaterNetworkModel):
 
     model = WntrModel(wn)
 
-    opts = dataclasses.replace(DefaultOptions(), headloss_formula=headloss)
+    opts = dataclasses.replace(DEFAULT_OPTIONS, headloss_formula=headloss)
     model.options = opts
 
     # read back
@@ -197,7 +197,7 @@ def test_headloss_mappings(headloss, wn: wntr.network.WaterNetworkModel):
 def test_flowunit_mappings(flow_unit, wn: wntr.network.WaterNetworkModel):
     """Ensure all FlowUnit enum members round-trip through the wn options."""
 
-    opts = dataclasses.replace(DefaultOptions(), flow_unit=flow_unit)
+    opts = dataclasses.replace(DEFAULT_OPTIONS, flow_unit=flow_unit)
     model = WntrModel(wn)
     model.options = opts
 
@@ -211,7 +211,7 @@ def test_flowunit_mappings(flow_unit, wn: wntr.network.WaterNetworkModel):
 def test_demandtype_mappings(demand, wn: wntr.network.WaterNetworkModel):
     """Ensure all DemandType enum members round-trip through the wn options."""
 
-    opts = dataclasses.replace(DefaultOptions(), demand_type=demand)
+    opts = dataclasses.replace(DEFAULT_OPTIONS, demand_type=demand)
     model = WntrModel(wn)
     model.options = opts
 

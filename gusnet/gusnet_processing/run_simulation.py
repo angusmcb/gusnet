@@ -40,7 +40,7 @@ from qgis.PyQt.QtCore import QCoreApplication, QThread
 from qgis.PyQt.QtGui import QIcon
 
 from gusnet.elements import (
-    DefaultOptions,
+    DEFAULT_OPTIONS,
     DemandType,
     FlowUnit,
     HeadlossFormula,
@@ -142,7 +142,7 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
     def init_input_parameters(self):
         project_settings = ProjectSettings(QgsProject.instance())
 
-        default_values = self.options_to_param_values(DefaultOptions())
+        default_values = self.options_to_param_values(DEFAULT_OPTIONS)
         saved_values = self.options_to_param_values(project_settings.load_options())
 
         default_layers = project_settings.get(SettingKey.MODEL_LAYERS, {})

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Literal
 from qgis.core import QgsCoordinateReferenceSystem, QgsFeatureSource, QgsProject, QgsVectorLayer
 
 from gusnet import feature_writer
-from gusnet.elements import DefaultOptions, FlowUnit, HeadlossFormula, ModelLayer, ResultLayer
+from gusnet.elements import DEFAULT_OPTIONS, FlowUnit, HeadlossFormula, ModelLayer, ResultLayer
 from gusnet.feature_reader import read
 from gusnet.i18n import tr
 from gusnet.interface import WntrModel
@@ -174,7 +174,7 @@ def to_wntr(
 
         headloss_formula = HeadlossFormula(headloss.upper())
 
-        model.options = dataclasses.replace(DefaultOptions(), headloss_formula=headloss_formula, flow_unit=unit)
+        model.options = dataclasses.replace(DEFAULT_OPTIONS, headloss_formula=headloss_formula, flow_unit=unit)
 
     all_crs = [layer.sourceCrs().authid() for layer in layers.values() if layer.sourceCrs().isValid()]
 

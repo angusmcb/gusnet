@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gusnet.elements import (
+    DEFAULT_OPTIONS,
     CurveType,
-    DefaultOptions,
     Field,
     ModelLayer,
     ModelOptions,
@@ -29,7 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class HybridWntrModel(WntrModel):
     _elements: dict[ModelLayer, pd.DataFrame]
-    _options: ModelOptions = DefaultOptions()
+    _options: ModelOptions = DEFAULT_OPTIONS
 
     def __init__(self) -> None:
         self._converter = DummyConverter.from_options(self.options)
@@ -205,7 +205,7 @@ def inp_file_reservoirs(reservoirs_df: pd.DataFrame, patterns: dict[Pattern, str
 
 def inp_file_tanks(tanks_df: pd.DataFrame, curves: dict[CurveType, dict[Curve, str]]) -> Iterable[str]:
     vol_curve_field = (
-        tanks_df[Field.VOL_CURVE].map(curves.get(CurveType.VOLUME), na_action="ignore").fillna("*")
+        tanks_df[Field.VOL_CURVE].map(curves.get(CurveType.VOLUME, {}), na_action="ignore").fillna("*")
         if Field.VOL_CURVE in tanks_df.columns
         else itertools.repeat("*")
     )
@@ -266,7 +266,7 @@ def inp_file_pumps(
         for p in zip(
             pumps_df[Field.PUMP_TYPE],
             pumps_df.get(Field.POWER, itertools.repeat(None)),
-            pumps_df[Field.PUMP_CURVE].map(curves.get(CurveType.HEAD), na_action="ignore")
+            pumps_df[Field.PUMP_CURVE].map(curves.get(CurveType.HEAD, {}), na_action="ignore")
             if Field.PUMP_CURVE in pumps_df.columns
             else itertools.repeat(None),
         )

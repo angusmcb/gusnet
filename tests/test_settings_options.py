@@ -1,7 +1,7 @@
 from qgis.core import QgsExpressionContextUtils, QgsProject
 
 from gusnet.elements import (
-    DefaultOptions,
+    DEFAULT_OPTIONS,
     DemandType,
     FlowUnit,
     HeadlossFormula,
@@ -71,7 +71,7 @@ def test_load_options_partial_values_use_defaults():
 
     assert loaded.flow_unit == FlowUnit.GPM
     # other fields should be defaults from ModelOptions
-    defaults = DefaultOptions()
+    defaults = DEFAULT_OPTIONS
     assert loaded.headloss_formula == defaults.headloss_formula
     assert loaded.demand_type == defaults.demand_type
     assert loaded.emitter_exponent == defaults.emitter_exponent

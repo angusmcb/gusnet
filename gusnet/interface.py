@@ -16,8 +16,8 @@ from typing import TYPE_CHECKING, Any
 from qgis.core import Qgis, QgsGeometry, QgsPoint, QgsUnitTypes
 
 from gusnet.elements import (
+    DEFAULT_OPTIONS,
     CurveType,
-    DefaultOptions,
     DemandType,
     Field,
     FieldGroup,
@@ -72,7 +72,7 @@ class WntrModel:
             options = self.options_from_wn()
         else:
             self._wn = wntr.network.WaterNetworkModel()
-            options = DefaultOptions()
+            options = DEFAULT_OPTIONS
 
         self._next_pattern_name = functools.partial(
             next, filter(lambda n: n not in self._wn.pattern_name_list, map(str, itertools.count(2)))

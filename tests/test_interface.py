@@ -1,7 +1,7 @@
 import pytest
 from qgis.core import QgsVectorLayer
 
-from gusnet.elements import DefaultOptions, FieldGroup
+from gusnet.elements import DEFAULT_OPTIONS, FieldGroup
 from gusnet.interface import WntrModel, _get_field_groups
 
 
@@ -18,7 +18,7 @@ def qgs_layer():
 
 
 def test_get_field_groups(wn):
-    assert _get_field_groups(DefaultOptions()) == FieldGroup(0)
+    assert _get_field_groups(DEFAULT_OPTIONS) == FieldGroup(0)
 
     wn.options.quality.parameter = "CHEMICAL"
     wn.options.report.energy = "YES"

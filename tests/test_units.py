@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from gusnet.elements import DefaultOptions, FlowUnit, HeadlossFormula, Parameter
+from gusnet.elements import DEFAULT_OPTIONS, FlowUnit, HeadlossFormula, Parameter
 from gusnet.units import Converter, SpecificUnitNames, UnitNames
 
 
@@ -12,9 +12,7 @@ def converter():
 
 
 def test_factory_creation():
-    options = DefaultOptions()
-
-    c = Converter.from_options(options)
+    c = Converter.from_options(DEFAULT_OPTIONS)
 
     assert isinstance(c, Converter)
 

@@ -8,7 +8,7 @@ from typing import Any
 
 from qgis.core import QgsExpressionContextUtils, QgsProject
 
-from gusnet.elements import DefaultOptions, DemandType, FlowUnit, HeadlossFormula, ModelOptions
+from gusnet.elements import DEFAULT_OPTIONS, DemandType, FlowUnit, HeadlossFormula, ModelOptions
 from gusnet.pattern_curve import Pattern
 
 
@@ -126,7 +126,7 @@ class ProjectSettings:
 
             data[field.name] = required_type(value)
 
-        return dataclasses.replace(DefaultOptions(), **data)
+        return dataclasses.replace(DEFAULT_OPTIONS, **data)
 
     def save_options(self, options: ModelOptions) -> None:
         """Save water network model options"""
