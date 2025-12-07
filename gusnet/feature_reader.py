@@ -276,14 +276,16 @@ def _snap_links_to_nodes(
 
 
 def _do_names(dfs: dict[ModelLayer, pd.DataFrame]) -> dict[ModelLayer, pd.DataFrame]:
+    """Fill blank names, not duplicting between nodes/links"""
+
     import numpy as np
     import pandas as pd
 
-    existing_names = set()
+    existing_names: set[str] = set()
     names = {}
     for layer, df in dfs.items():
         if "name" in df.columns:
-            names[layer] = df["name"].astype("string").str.strip().replace("", None)
+            names[layer] = df["name"].astype("string").str.strip().replace("", pd.NA)
             existing_names.update(names[layer].dropna())
         else:
             names[layer] = pd.Series(index=df.index, dtype="string")
