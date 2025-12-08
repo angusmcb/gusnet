@@ -13,6 +13,7 @@ from gusnet.verify_model import (
     DuplicateNodeNameError,
     EmptyModelError,
     LinkEndsSameNodeError,
+    LinkNotConnectedToNodesError,
     MultipleVerificationError,
     NameFieldError,
     NoJunctionError,
@@ -32,6 +33,7 @@ from gusnet.verify_model import (
     _check_duplicate_link_names,
     _check_duplicate_node_names,
     _check_junction_layer,
+    _check_link_connects_to_nodes,
     _check_link_ends_not_same_node,
     _check_link_layers,
     _check_model_not_empty,
@@ -51,6 +53,10 @@ from gusnet.verify_model import (
 def make_row(layer, overrides=None):
     """Return a dict with all `layer.wq_fields()` keys set to None, updated by `overrides`."""
     row = {f: None for f in layer.wq_fields()}
+    # For link layers, add default node connections if not provided
+    if layer in [ModelLayer.PIPES, ModelLayer.PUMPS, ModelLayer.VALVES]:
+        row["start_node_name"] = "DefaultStart"
+        row["end_node_name"] = "DefaultEnd"
     if overrides:
         row.update(overrides)
     return row
@@ -138,14 +144,26 @@ def test_verify_multiple_errors_aggregated_into_multiple_verification_error():
 def test_verify_valve_type_missing_column_raises_valve_type_error(layers):
     # include a valve_type column with a non-string value so
     # _verify_valve_settings raises ValveTypeError (AttributeError path)
-    layers[ModelLayer.VALVES] = pd.DataFrame([{Field.NAME: "V1", Field.VALVE_TYPE: 1, Field.DIAMETER: 100.0}])
+    layers[ModelLayer.VALVES] = pd.DataFrame(
+        [{Field.NAME: "V1", Field.VALVE_TYPE: 1, Field.DIAMETER: 100.0, "start_node_name": "J1", "end_node_name": "R1"}]
+    )
     with pytest.raises(ValveTypeError):
         verify_model(layers)
 
 
 def test_verify_valve_setting_missing_for_type_raises_valve_setting_error(layers):
     # valve declared as PRV but missing pressure_setting column; include diameter
-    layers[ModelLayer.VALVES] = pd.DataFrame([{Field.NAME: "V1", Field.VALVE_TYPE: "PRV", Field.DIAMETER: 50.0}])
+    layers[ModelLayer.VALVES] = pd.DataFrame(
+        [
+            {
+                Field.NAME: "V1",
+                Field.VALVE_TYPE: "PRV",
+                Field.DIAMETER: 50.0,
+                "start_node_name": "J1",
+                "end_node_name": "R1",
+            }
+        ]
+    )
     with pytest.raises(ValveSettingError):
         verify_model(layers)
 
@@ -153,7 +171,16 @@ def test_verify_valve_setting_missing_for_type_raises_valve_setting_error(layers
 def test_verify_valve_setting_nan_raises_valve_setting_error(layers):
     # valve declared as PRV with pressure_setting NaN
     layers[ModelLayer.VALVES] = pd.DataFrame(
-        [{Field.NAME: "V1", Field.VALVE_TYPE: "PRV", Field.PRESSURE_SETTING: math.nan, Field.DIAMETER: 50.0}]
+        [
+            {
+                Field.NAME: "V1",
+                Field.VALVE_TYPE: "PRV",
+                Field.PRESSURE_SETTING: math.nan,
+                Field.DIAMETER: 50.0,
+                "start_node_name": "J1",
+                "end_node_name": "R1",
+            }
+        ]
     )
     with pytest.raises(ValveSettingError):
         verify_model(layers)
@@ -163,7 +190,7 @@ def test_verify_pump_type_missing_column_raises_pump_type_error(layers):
     # Missing the required pump_type will produce a RequiredFieldError and
     # a PumpTypeError; verify_model aggregates these so expect
     # MultipleVerificationError here.
-    layers[ModelLayer.PUMPS] = pd.DataFrame([{Field.NAME: "PU1"}])
+    layers[ModelLayer.PUMPS] = pd.DataFrame([{Field.NAME: "PU1", "start_node_name": "J1", "end_node_name": "R1"}])
     with pytest.raises(MultipleVerificationError):
         verify_model(layers)
 
@@ -263,7 +290,17 @@ def test_check_reservoir_or_tank_exists_raises_when_missing_or_empty():
 def test_check_link_layers_accepts_at_least_one_link():
     layers = {
         ModelLayer.JUNCTIONS: pd.DataFrame([{Field.NAME: "J1", Field.ELEVATION: 1.0, Field.DEMAND_PATTERN: None}]),
-        ModelLayer.PIPES: pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 10.0, Field.ROUGHNESS: 0.01}]),
+        ModelLayer.PIPES: pd.DataFrame(
+            [
+                {
+                    Field.NAME: "P1",
+                    Field.DIAMETER: 10.0,
+                    Field.ROUGHNESS: 0.01,
+                    "start_node_name": "J1",
+                    "end_node_name": "J1",
+                }
+            ]
+        ),
     }
     _check_link_layers(layers)
 
@@ -274,6 +311,62 @@ def test_check_link_layers_raises_when_no_links():
     }
     with pytest.raises(NoLinksError):
         _check_link_layers(layers)
+
+
+def test_check_link_connects_to_nodes_raises_when_columns_missing():
+    # If start_node_name or end_node_name columns are missing, raise error
+    df = pd.DataFrame([{Field.NAME: "L1", Field.DIAMETER: 10.0}])
+    with pytest.raises(LinkNotConnectedToNodesError) as exc:
+        _check_link_connects_to_nodes(ModelLayer.PIPES, df)
+    assert "L1" in str(exc.value)
+
+
+def test_check_link_connects_to_nodes_raises_when_start_node_missing():
+    # If start_node_name is NA, raise error
+    df = pd.DataFrame([{Field.NAME: "L1", "start_node_name": None, "end_node_name": "J2", Field.DIAMETER: 10.0}])
+    with pytest.raises(LinkNotConnectedToNodesError) as exc:
+        _check_link_connects_to_nodes(ModelLayer.PIPES, df)
+    assert "L1" in str(exc.value)
+
+
+def test_check_link_connects_to_nodes_raises_when_end_node_missing():
+    # If end_node_name is NA, raise error
+    df = pd.DataFrame([{Field.NAME: "L1", "start_node_name": "J1", "end_node_name": None, Field.DIAMETER: 10.0}])
+    with pytest.raises(LinkNotConnectedToNodesError) as exc:
+        _check_link_connects_to_nodes(ModelLayer.PIPES, df)
+    assert "L1" in str(exc.value)
+
+
+def test_check_link_connects_to_nodes_raises_when_both_nodes_missing():
+    # If both start_node_name and end_node_name are NA, raise error
+    df = pd.DataFrame([{Field.NAME: "L1", "start_node_name": None, "end_node_name": None, Field.DIAMETER: 10.0}])
+    with pytest.raises(LinkNotConnectedToNodesError) as exc:
+        _check_link_connects_to_nodes(ModelLayer.PIPES, df)
+    assert "L1" in str(exc.value)
+
+
+def test_check_link_connects_to_nodes_accepts_valid_rows():
+    # Valid link with both nodes connected
+    df = pd.DataFrame([{Field.NAME: "L1", "start_node_name": "J1", "end_node_name": "J2", Field.DIAMETER: 10.0}])
+    # should not raise
+    _check_link_connects_to_nodes(ModelLayer.PIPES, df)
+
+
+def test_check_link_connects_to_nodes_multiple_links_some_invalid():
+    # Multiple links, some without connections
+    df = pd.DataFrame(
+        [
+            {Field.NAME: "L1", "start_node_name": "J1", "end_node_name": "J2", Field.DIAMETER: 10.0},
+            {Field.NAME: "L2", "start_node_name": None, "end_node_name": "J3", Field.DIAMETER: 10.0},
+            {Field.NAME: "L3", "start_node_name": "J4", "end_node_name": None, Field.DIAMETER: 10.0},
+        ]
+    )
+    with pytest.raises(LinkNotConnectedToNodesError) as exc:
+        _check_link_connects_to_nodes(ModelLayer.PIPES, df)
+    # Should mention the problematic links
+    assert "L2" in str(exc.value)
+    assert "L3" in str(exc.value)
+    assert "L1" not in str(exc.value)
 
 
 def test_check_link_ends_not_same_node_raises_on_same_node():
@@ -514,7 +607,18 @@ def test_check_pump_parameters_various_paths():
 def test_verify_model_invalid_pattern_raises_pattern_error():
     # invalid demand pattern for junction should raise PatternError
     j = pd.DataFrame([{Field.NAME: "J1", Field.ELEVATION: 1.0, Field.DEMAND_PATTERN: "a b c"}])
-    p = pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}])
+    p = pd.DataFrame(
+        [
+            {
+                Field.NAME: "P1",
+                Field.DIAMETER: 100.0,
+                Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 100.0,
+                "start_node_name": "J1",
+                "end_node_name": "R1",
+            }
+        ]
+    )
     # include a reservoir so the reservoir/tank check does not also fail
     r = pd.DataFrame([make_row(ModelLayer.RESERVOIRS, {Field.NAME: "R1", Field.BASE_HEAD: 10.0})])
     layers = {ModelLayer.JUNCTIONS: j, ModelLayer.PIPES: p, ModelLayer.RESERVOIRS: r}
@@ -538,7 +642,18 @@ def test_verify_model_tank_invalid_vol_curve_raises_curve_error():
             }
         ]
     )
-    p = pd.DataFrame([{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}])
+    p = pd.DataFrame(
+        [
+            {
+                Field.NAME: "P1",
+                Field.DIAMETER: 100.0,
+                Field.ROUGHNESS: 0.01,
+                Field.LENGTH: 100.0,
+                "start_node_name": "J1",
+                "end_node_name": "T1",
+            }
+        ]
+    )
     j_row = make_row(ModelLayer.JUNCTIONS, {Field.NAME: "J1", Field.ELEVATION: 1.0})
     layers = {ModelLayer.TANKS: t, ModelLayer.JUNCTIONS: pd.DataFrame([j_row]), ModelLayer.PIPES: p}
     with pytest.raises(CurveError):
@@ -548,7 +663,16 @@ def test_verify_model_tank_invalid_vol_curve_raises_curve_error():
 def test_verify_model_valve_gpv_invalid_curve_raises_curve_error():
     # GPV with invalid headloss_curve string should raise CurveError
     v = pd.DataFrame(
-        [{Field.NAME: "V1", Field.VALVE_TYPE: "GPV", Field.HEADLOSS_CURVE: "(not,a),(b,c)", Field.DIAMETER: 50.0}]
+        [
+            {
+                Field.NAME: "V1",
+                Field.VALVE_TYPE: "GPV",
+                Field.HEADLOSS_CURVE: "(not,a),(b,c)",
+                Field.DIAMETER: 50.0,
+                "start_node_name": "J1",
+                "end_node_name": "R1",
+            }
+        ]
     )
     j_row = make_row(ModelLayer.JUNCTIONS, {Field.NAME: "J1", Field.ELEVATION: 1.0})
     r = pd.DataFrame([make_row(ModelLayer.RESERVOIRS, {Field.NAME: "R1", Field.BASE_HEAD: 10.0})])
@@ -556,7 +680,16 @@ def test_verify_model_valve_gpv_invalid_curve_raises_curve_error():
         ModelLayer.VALVES: v,
         ModelLayer.JUNCTIONS: pd.DataFrame([j_row]),
         ModelLayer.PIPES: pd.DataFrame(
-            [{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}]
+            [
+                {
+                    Field.NAME: "P1",
+                    Field.DIAMETER: 100.0,
+                    Field.ROUGHNESS: 0.01,
+                    Field.LENGTH: 100.0,
+                    "start_node_name": "J1",
+                    "end_node_name": "R1",
+                }
+            ]
         ),
         ModelLayer.RESERVOIRS: r,
     }
@@ -566,14 +699,34 @@ def test_verify_model_valve_gpv_invalid_curve_raises_curve_error():
 
 def test_verify_model_valve_gpv_empty_curve_raises_valve_setting_error():
     # GPV with empty curve should be treated as missing and raise ValveSettingError
-    v = pd.DataFrame([{Field.NAME: "V1", Field.VALVE_TYPE: "GPV", Field.HEADLOSS_CURVE: "", Field.DIAMETER: 50.0}])
+    v = pd.DataFrame(
+        [
+            {
+                Field.NAME: "V1",
+                Field.VALVE_TYPE: "GPV",
+                Field.HEADLOSS_CURVE: "",
+                Field.DIAMETER: 50.0,
+                "start_node_name": "J1",
+                "end_node_name": "R1",
+            }
+        ]
+    )
     j_row = make_row(ModelLayer.JUNCTIONS, {Field.NAME: "J1", Field.ELEVATION: 1.0})
     r = pd.DataFrame([make_row(ModelLayer.RESERVOIRS, {Field.NAME: "R1", Field.BASE_HEAD: 10.0})])
     layers = {
         ModelLayer.VALVES: v,
         ModelLayer.JUNCTIONS: pd.DataFrame([j_row]),
         ModelLayer.PIPES: pd.DataFrame(
-            [{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}]
+            [
+                {
+                    Field.NAME: "P1",
+                    Field.DIAMETER: 100.0,
+                    Field.ROUGHNESS: 0.01,
+                    Field.LENGTH: 100.0,
+                    "start_node_name": "J1",
+                    "end_node_name": "R1",
+                }
+            ]
         ),
         ModelLayer.RESERVOIRS: r,
     }
@@ -593,7 +746,16 @@ def test_verify_model_pump_head_curve_invalid_raises_curve_error():
         ModelLayer.PUMPS: pu,
         ModelLayer.JUNCTIONS: pd.DataFrame([j_row]),
         ModelLayer.PIPES: pd.DataFrame(
-            [{Field.NAME: "P1", Field.DIAMETER: 100.0, Field.ROUGHNESS: 0.01, Field.LENGTH: 100.0}]
+            [
+                {
+                    Field.NAME: "P1",
+                    Field.DIAMETER: 100.0,
+                    Field.ROUGHNESS: 0.01,
+                    Field.LENGTH: 100.0,
+                    "start_node_name": "R1",
+                    "end_node_name": "J1",
+                }
+            ]
         ),
         ModelLayer.RESERVOIRS: r,
     }
@@ -829,7 +991,7 @@ def test_check_names_non_string_values():
 
 def test_check_collect_names_for_layers_handles_missing_name_column():
     # If a layer exists but lacks Field.NAME, the collector should return empty list
-    layers = {ModelLayer.PIPES: pd.DataFrame([{Field.DIAMETER: 10.0}])}
+    layers = {ModelLayer.PIPES: pd.DataFrame([{Field.DIAMETER: 10.0, "start_node_name": "J1", "end_node_name": "J2"}])}
     names = _collect_names_for_layers(layers, [ModelLayer.PIPES])
     assert names == []
 
@@ -1022,7 +1184,17 @@ def test_verify_power_pump_power_non_numeric_raises_numeric_field_error():
             }
         ]
     )
-    pump = pd.DataFrame([{Field.NAME: "PU1", Field.PUMP_TYPE: PumpTypes.POWER.value, Field.POWER: "not-a-number"}])
+    pump = pd.DataFrame(
+        [
+            {
+                Field.NAME: "PU1",
+                Field.PUMP_TYPE: PumpTypes.POWER.value,
+                Field.POWER: "not-a-number",
+                "start_node_name": "R1",
+                "end_node_name": "J1",
+            }
+        ]
+    )
     r = pd.DataFrame([{Field.NAME: "R1", Field.BASE_HEAD: 10.0}])
     layers = {ModelLayer.JUNCTIONS: j, ModelLayer.PIPES: p, ModelLayer.PUMPS: pump, ModelLayer.RESERVOIRS: r}
 

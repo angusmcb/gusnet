@@ -16,7 +16,7 @@ from qgis.core import (
 )
 
 import gusnet
-from gusnet.feature_reader import GeometryError, PipeMeasuringError, ReadFeatureError
+from gusnet.feature_reader import GeometryError, PipeMeasuringError
 from gusnet.interface import WntrError
 from gusnet.verify_model import (
     CurveError,
@@ -367,7 +367,7 @@ def test_from_qgis_invalid_headloss_with_wn(simple_layers):
     wn = wntr.network.WaterNetworkModel()
     with pytest.raises(
         ValueError,
-        match="Cannot set headloss when wn is set. Set the headloss in the wn.options.hydraulic.headloss instead",
+        match=r"Cannot set headloss when wn is set\. Set the headloss in the wn\.options\.hydraulic\.headloss instead",
     ):
         gusnet.to_wntr(simple_layers, "LPS", headloss="INVALID", wn=wn)
 
@@ -442,7 +442,7 @@ def test_unit_conversion_demand(simple_layers, unit, expected_demand):
 def test_bad_units(simple_layers):
     with pytest.raises(
         ValueError,
-        match="'NON-EXISTANT' is not a known set of units. Possible units are: LPS, LPM, MLD, CMH, CMD, CFS, GPM, MGD, IMGD, AFD",  # noqa: E501
+        match=r"'NON-EXISTANT' is not a known set of units\. Possible units are: LPS, LPM, MLD, CMH, CMD, CFS, GPM, MGD, IMGD, AFD",  # noqa: E501
     ):
         gusnet.to_wntr(simple_layers, units="Non-existant", headloss="H-W")
 
@@ -558,12 +558,13 @@ def test_snap_length(layers_that_snap):
 def test_too_far_to_snap():
     junction_layer = layer("point", [("name", str), ("elevation", float)])
     add_point(junction_layer, (1, 1), ["J1", 1])
-    add_point(junction_layer, (1000, 1000), ["J2", 1])
+    reservoir_layer = layer("point", [("name", str), ("base_head", float)])
+    add_point(reservoir_layer, (1000, 1000), ["R1", 1])
     pipe_layer = layer("linestring", [("name", str), ("diameter", float), ("roughness", float)])
-    add_line(pipe_layer, [(1, 1), (900, 900)], ["P1", 100, 100])
-    layers = {"JUNCTIONS": junction_layer, "PIPES": pipe_layer}
+    add_line(pipe_layer, [(1, 1), (800, 800)], ["P1", 100, 100])
+    layers = {"JUNCTIONS": junction_layer, "PIPES": pipe_layer, "RESERVOIRS": reservoir_layer}
 
-    with pytest.raises(ReadFeatureError, match="too far away to snap to"):
+    with pytest.raises(VerificationError, match="do not connect to a node"):
         gusnet.to_wntr(layers, "LPS", "H-W")
 
 

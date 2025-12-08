@@ -20,7 +20,7 @@ from qgis.core import (
 
 from gusnet.elements import Field, FlowUnit, ModelLayer, Parameter, SimpleFieldType
 from gusnet.i18n import tr
-from gusnet.spatial_index import SnapError, SpatialIndex
+from gusnet.spatial_index2 import SpatialIndex
 
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
@@ -260,17 +260,17 @@ def _snap_links_to_nodes(
     spatial_index = SpatialIndex()
 
     for node_df in node_dfs.values():
-        spatial_index.add_nodes(node_df["geometry"], node_df["name"])
+        spatial_index.add_nodes([[*point] for point in node_df["coordinates"]], node_df["name"])
 
     output_link_df = {}
 
     for layer, link_df in link_dfs.items():
-        try:
-            snapped_links = spatial_index.snap_links(link_df["geometry"], link_df["name"])
-        except SnapError as e:
-            raise ReadFeatureError(e) from e
+        geometry, start_node, end_node = spatial_index.snap_links(link_df["geometry"])
 
-        link_df[["geometry", "start_node_name", "end_node_name"]] = snapped_links
+        link_df["geometry"] = geometry
+        link_df["start_node_name"] = start_node
+        link_df["end_node_name"] = end_node
+
         output_link_df[layer] = link_df
 
     return output_link_df

@@ -31,13 +31,17 @@ class SpatialIndex:
         for parts in zip(geometries, names):
             self.add_node(*parts)
 
-    def snap_links(self, geometries: pd.Series, names: pd.Series) -> list[tuple[QgsGeometry, str, str]]:
+    def snap_links(self, geometries: pd.Series, names: pd.Series) -> tuple[list, list, list]:
         """Snap the start and end points of links to the nearest nodes in the spatial index.
 
         Returns:
-            list: A list of tuples containing the snapped geometry, start node name, and end node name.
+            tuple: (snapped_geometries, start_node_names, end_node_names) as separate lists.
         """
-        return [self.snap_link(*data) for data in zip(geometries, names)]
+        results = [self.snap_link(*data) for data in zip(geometries, names)]
+        snapped_geoms = [r[0] for r in results]
+        start_names = [r[1] for r in results]
+        end_names = [r[2] for r in results]
+        return snapped_geoms, start_names, end_names
 
     def snap_link(self, geometry: QgsGeometry, link_name: str = "") -> tuple[QgsGeometry, str, str]:
         """Snap the start and end points of a link to the nearest node in the spatial index.

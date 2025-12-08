@@ -119,6 +119,11 @@ def verify_model(layers: dict[ModelLayer, pd.DataFrame]) -> None:
     for link_layer in [ModelLayer.PIPES, ModelLayer.PUMPS, ModelLayer.VALVES]:
         if link_layer in layers:
             try:
+                _check_link_connects_to_nodes(link_layer, layers[link_layer])
+            except VerificationError as e:
+                errors.append(e)
+
+            try:
                 _check_link_ends_not_same_node(link_layer, layers[link_layer])
             except VerificationError as e:
                 errors.append(e)
@@ -424,6 +429,18 @@ def _check_pump_parameters(df: pd.DataFrame) -> None:
             raise PumpCurveMissingError
 
 
+def _check_link_connects_to_nodes(layer: ModelLayer, df: pd.DataFrame) -> None:
+    # Check that link is connected to two nodes.
+    if "start_node_name" not in df.columns or "end_node_name" not in df.columns:
+        link_names = df[Field.NAME].astype(str).tolist() if Field.NAME in df.columns else []
+        raise LinkNotConnectedToNodesError(layer, link_names)
+
+    missing_nodes = df["end_node_name"].isna() | df["start_node_name"].isna()
+
+    if missing_nodes.any():
+        raise LinkNotConnectedToNodesError(layer, df.loc[missing_nodes, Field.NAME].astype(str).tolist())
+
+
 def _check_link_ends_not_same_node(layer: ModelLayer, df: pd.DataFrame) -> None:
     # Only accept explicit `start_node_name` and `end_node_name` columns.
     if "start_node_name" not in df.columns or "end_node_name" not in df.columns:
@@ -500,6 +517,15 @@ class OrphanJunctionsError(VerificationError):
     def __init__(self, orphan_nodes: list[str]):
         super().__init__(
             tr("The following junctions are not connected to any links: {nodes}").format(nodes=", ".join(orphan_nodes))
+        )
+
+
+class LinkNotConnectedToNodesError(VerificationError):
+    def __init__(self, layer: ModelLayer, links: list[str]):
+        super().__init__(
+            tr("In {layer_name}, some the following links do not connect to a node at each end: {links}").format(
+                layer_name=layer.friendly_name, links=", ".join(links)
+            )
         )
 
 
