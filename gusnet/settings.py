@@ -114,10 +114,14 @@ class ProjectSettings:
 
         data = {}
 
+        expression_context = QgsExpressionContextUtils.projectScope(self._project)
+        if not expression_context:
+            raise RuntimeError
+
         option_types = typing.get_type_hints(ModelOptions)
 
         for field in dataclasses.fields(ModelOptions):
-            value = QgsExpressionContextUtils.projectScope(self._project).variable(self.SETTING_PREFIX + field.name)
+            value = expression_context.variable(self.SETTING_PREFIX + field.name)
 
             if value is None:
                 continue

@@ -80,6 +80,9 @@ def from_wntr(
         layer.setCrs(crs_object)
         data_provider = layer.dataProvider()
 
+        if not data_provider:
+            raise RuntimeError
+
         gusnet_fields = network.suggested_fields(model_layer)
 
         attribute_df = (
@@ -102,7 +105,8 @@ def from_wntr(
 
         style(layer, model_layer, "extended" if results and network.options.simulation_duration else None, unit_names)
 
-        QgsProject.instance().addMapLayer(layer)
+        if project := QgsProject.instance():
+            project.addMapLayer(layer)
 
         map_layers[model_layer.name] = layer
 
@@ -190,6 +194,9 @@ def to_wntr(
     crs = QgsCoordinateReferenceSystem(all_crs[0]) if all_crs else None
 
     project = QgsProject.instance()
+    if not project:
+        raise RuntimeError
+
     transform_context = project.transformContext()
     ellipsoid = project.ellipsoid()
 

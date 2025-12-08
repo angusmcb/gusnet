@@ -62,11 +62,11 @@ class TemplateLayers(CommonProcessingBase):
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        feedback: QgsProcessingFeedback,  # noqa: ARG002
+        feedback: QgsProcessingFeedback | None,  # noqa: ARG002
     ) -> dict:
         analysis_types_to_use = FieldGroup.BASE
         for analysis_type in FieldGroup:
-            if self.parameterAsBoolean(parameters, analysis_type.name, context):
+            if self.parameterAsBoolean(parameters, str(analysis_type.name), context):
                 analysis_types_to_use = analysis_types_to_use | analysis_type
 
         crs = self.parameterAsCrs(parameters, self.CRS, context)
