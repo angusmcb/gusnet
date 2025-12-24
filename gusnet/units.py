@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from typing import TYPE_CHECKING, TypeVar
 
 from gusnet.elements import FlowUnit, HeadlossFormula, MassUnit, ModelOptions, Parameter, WallReactionOrder
@@ -12,7 +13,25 @@ if TYPE_CHECKING:  # pragma: no cover
     NumberType = TypeVar("NumberType", float, np.ndarray, pd.Series, pd.DataFrame)
 
 
-class Converter:
+@dataclasses.dataclass()
+class _UnitBase:
+    flow_units: FlowUnit
+    headloss_formula: HeadlossFormula
+    mass_unit: MassUnit | None = MassUnit.MG
+    wall_reaction_order: WallReactionOrder | None = WallReactionOrder.ONE
+
+    traditional: bool = dataclasses.field(init=False)
+
+    def __post_init__(self):
+        self.traditional = self.flow_units.is_traditional
+
+    @classmethod
+    def from_options(cls, options: ModelOptions):
+        return cls(options.flow_unit, options.headloss_formula, options.mass_unit, options.wall_reaction_order)
+
+
+@dataclasses.dataclass()
+class Converter(_UnitBase):
     """Manages conversion to and from SI units
 
     Args:
@@ -20,25 +39,13 @@ class Converter:
         headloss_formula: Used to determine how to handle conversion of the roughness coefficient
     """
 
-    def __init__(
-        self,
-        flow_units: FlowUnit,
-        headloss_formula: HeadlossFormula,
-        mass_unit: MassUnit | None = MassUnit.MG,
-        wall_reaction_order: WallReactionOrder | None = WallReactionOrder.ONE,
-    ):
-        self.flow_units = flow_units
-        self.headloss_formula = headloss_formula
-        self.mass_unit = mass_unit
-        self.wall_reaction_order = wall_reaction_order
+    flow_unit_factor: float = dataclasses.field(init=False)
+    mass_unit_factor: float = dataclasses.field(init=False)
 
-        self.traditional = self.flow_units.is_traditional
+    def __post_init__(self):
+        super().__post_init__()
         self.flow_unit_factor = self._flow_unit_factor()
         self.mass_unit_factor = self._mass_unit_factor()
-
-    @classmethod
-    def from_options(cls, options: ModelOptions):
-        return cls(options.flow_unit, options.headloss_formula, options.mass_unit, options.wall_reaction_order)
 
     def to_si(self, value: NumberType, parameter: Parameter) -> NumberType:
         factor = self._factor(parameter)
@@ -241,7 +248,7 @@ class UnitNames:
         raise ValueError(parameter)  # pragma: no cover
 
 
-class SpecificUnitNames(Converter, UnitNames):
+class SpecificUnitNames(_UnitBase, UnitNames):
     def flow_unit_name(self) -> str:
         """str: The name of the flow unit"""
 
