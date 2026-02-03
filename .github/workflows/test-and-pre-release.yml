@@ -38,6 +38,33 @@ jobs:
 
 
 
+  linux_docker_no_deps_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # 'latest' seems to be nightly build, 'stable' is latest real release
+        docker_tags: ['final-3_34_0','3.34-jammy','3.34-bookworm','final-3_36_0','3.38.0','3.40.0','3.40-jammy','3.40-bookworm','ltr', 'stable', 'latest']
+      fail-fast: false
+
+    container:
+      image: qgis/qgis:${{ matrix.docker_tags }}
+      env:
+        QGIS_PLUGIN_IN_CI: 1
+        PIP_BREAK_SYSTEM_PACKAGES: 1
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        run: |
+          apt-get update
+          pip3 install -r requirements-ci-tests.txt
+
+      - name: Run Tests
+        run: xvfb-run -s '+extension GLX -screen 0 1024x768x24' python3 -m pytest -v --doctest-glob='' -m "not needs_wntr and not needs_pandas"
+
+
   # linux_tests:
   #   # The type of runner that the job will run on
   #   runs-on: ${{ matrix.os }}

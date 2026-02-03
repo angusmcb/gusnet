@@ -2,6 +2,8 @@ import pytest
 
 from gusnet.wntr_wrapper import WntrWrapper
 
+pytestmark = [pytest.mark.needs_wntr]
+
 
 def test_describe_network_counts():
     from wntr.network import WaterNetworkModel

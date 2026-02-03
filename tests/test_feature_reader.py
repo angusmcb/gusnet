@@ -2,7 +2,6 @@ import functools
 import math
 from unittest.mock import patch
 
-import pandas as pd
 import pytest
 from qgis.core import (
     NULL,
@@ -133,7 +132,10 @@ def test_fill_names_with_no_name_field():
     assert layers_with_names[ModelLayer.TANKS]["name"] == ["4", "5"]
 
 
+@pytest.mark.needs_pandas
 def test_source_to_df_basic_handling():
+    import pandas as pd
+
     # create a memory point layer with two fields: name (string) and value (double)
     uri = "Point?field=name:string(20)&field=value:double"
     layer = QgsVectorLayer(uri, "test_points", "memory")

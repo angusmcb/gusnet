@@ -1,11 +1,12 @@
 import types
 
-import pandas as pd
 import pytest
 
 from gusnet.elements import Field
 from gusnet.units import Converter
 from gusnet.wntr_wrapper import WntrWrapper
+
+pytestmark = [pytest.mark.needs_wntr, pytest.mark.needs_pandas]
 
 
 # Add a tiny mock converter used by tests that want an identity conversion.
@@ -47,6 +48,8 @@ def make_wn_with_pipe(use_dummy_converter: bool = True) -> WntrWrapper:
 
 
 def test_get_results_single_period_headloss_simple():
+    import pandas as pd
+
     model = make_wn_with_pipe()
 
     # Build headloss DataFrame: single timestep with a pump and a pipe
@@ -72,6 +75,8 @@ def test_get_results_single_period_headloss_simple():
 
 
 def test_get_results_multi_period_lists():
+    import pandas as pd
+
     model = make_wn_with_pipe()
 
     # Two timesteps
@@ -98,6 +103,8 @@ def test_get_results_multi_period_lists():
 
 
 def test_zero_length_pipe_handled_gracefully():
+    import pandas as pd
+
     # Create a pipe with zero length — total headloss should become zero for pipe entries
     model = make_wn_with_pipe()
     # set the pipe length to zero for this test
@@ -123,6 +130,8 @@ def test_zero_length_pipe_handled_gracefully():
 
 
 def test_missing_pipe_length_column_results_in_no_unit_headloss():
+    import pandas as pd
+
     # If a headloss DataFrame contains a link not present in wn.pipes(), unit_headloss will not include it
     model = make_wn_with_pipe()
     # Mock get_converter to return dummy converter
@@ -146,6 +155,8 @@ def test_missing_pipe_length_column_results_in_no_unit_headloss():
 
 
 def test_links_all_fields_handled():
+    import pandas as pd
+
     # Setup model with one pipe (length 10)
     model = make_wn_with_pipe()
     # Mock get_converter to return dummy converter
@@ -212,6 +223,8 @@ def test_links_all_fields_handled():
 def test_real_converter_flow_conversion_single_period():
     """Verify that when using the real Converter with FlowUnit.GPM, flow values
     returned by `get_results` are converted from SI to GPM."""
+    import pandas as pd
+
     from gusnet.elements import FlowUnit
     from gusnet.units import Converter
 
@@ -249,6 +262,8 @@ def test_real_converter_flow_conversion_single_period():
 
 def test_real_converter_flow_conversion_multi_period():
     """Verify multi-period (lists) flow conversion with the real GPM converter."""
+    import pandas as pd
+
     from gusnet.elements import FlowUnit
     from gusnet.units import Converter
 

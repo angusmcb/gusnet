@@ -1,8 +1,9 @@
-import pandas as pd
 import pytest
 from qgis.core import QgsVectorLayer
 
 import gusnet
+
+pytestmark = [pytest.mark.needs_wntr]
 
 
 @pytest.fixture(params=gusnet.examples.values())
@@ -13,7 +14,9 @@ def example_wn(request):
 
 
 @pytest.mark.parametrize("example", gusnet.examples.values())
+@pytest.mark.needs_pandas
 def test_examples(example):
+    import pandas as pd
     import wntr
 
     assert example.endswith(".inp")

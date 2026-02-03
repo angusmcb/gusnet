@@ -32,6 +32,8 @@ from gusnet.verify_model import (
 )
 from gusnet.wntr_wrapper import WntrError
 
+pytestmark = pytest.mark.needs_wntr
+
 
 def layer(
     layer_type: str, fields: list[tuple[str, type | str]] | None = None, crs: str | None = None

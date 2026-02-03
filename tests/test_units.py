@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import pytest
 
 from gusnet.elements import DEFAULT_OPTIONS, FlowUnit, HeadlossFormula, Parameter
@@ -93,28 +92,40 @@ def test_from_si_numpy_array(converter):
     np.testing.assert_array_almost_equal(result, expected)
 
 
+@pytest.mark.needs_pandas
 def test_to_si_pandas_series(converter):
+    import pandas as pd
+
     value = pd.Series([1.0, 2.0, 3.0])
     expected = pd.Series([0.001, 0.002, 0.003])
     result = converter.to_si(value, Parameter.FLOW)
     pd.testing.assert_series_equal(result, expected)
 
 
+@pytest.mark.needs_pandas
 def test_from_si_pandas_series(converter):
+    import pandas as pd
+
     value = pd.Series([1.0, 2.0, 3.0])
     expected = pd.Series([1000.0, 2000.0, 3000.0])
     result = converter.from_si(value, Parameter.FLOW)
     pd.testing.assert_series_equal(result, expected)
 
 
+@pytest.mark.needs_pandas
 def test_to_si_pandas_dataframe(converter):
+    import pandas as pd
+
     value = pd.DataFrame({"a": [1.0, 2.0], "b": [3.0, 4.0]})
     expected = pd.DataFrame({"a": [0.001, 0.002], "b": [0.003, 0.004]})
     result = converter.to_si(value, Parameter.FLOW)
     pd.testing.assert_frame_equal(result, expected)
 
 
+@pytest.mark.needs_pandas
 def test_from_si_pandas_dataframe(converter):
+    import pandas as pd
+
     value = pd.DataFrame({"a": [1.0, 2.0], "b": [3.0, 4.0]})
     expected = pd.DataFrame({"a": [1000.0, 2000.0], "b": [3000.0, 4000.0]})
     result = converter.from_si(value, Parameter.FLOW)

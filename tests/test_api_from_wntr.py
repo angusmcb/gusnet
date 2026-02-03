@@ -10,6 +10,8 @@ import gusnet
 if TYPE_CHECKING:
     import wntr
 
+pytestmark = pytest.mark.needs_wntr
+
 
 @pytest.fixture
 def wn():

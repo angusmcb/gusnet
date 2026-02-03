@@ -4,6 +4,8 @@ from qgis.core import QgsVectorLayer
 from gusnet.elements import DEFAULT_OPTIONS, FieldGroup
 from gusnet.wntr_wrapper import WntrWrapper, _get_field_groups
 
+pytestmark = [pytest.mark.needs_wntr]
+
 
 @pytest.fixture
 def wn():

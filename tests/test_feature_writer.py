@@ -3,7 +3,6 @@
 import math
 from unittest.mock import Mock
 
-import pandas as pd
 import pytest
 from qgis.core import NULL, Qgis, QgsField, QgsFields, QgsGeometry, QgsPointXY, QgsVectorLayer
 from qgis.PyQt.QtCore import QMetaType, QVariant
@@ -64,53 +63,70 @@ class TestConstants:
         assert QVariant.Bool == feature_writer.BOOL_TYPE
 
 
+@pytest.mark.needs_pandas
 class TestQgsFieldTypeFromPandas:
     """Test the _qgs_field_type_from_pandas function."""
 
     def test_string_dtype(self):
         """Test string dtype conversion."""
+        import pandas as pd
+
         dtype = pd.StringDtype()
         result = _qgs_field_type_from_pandas(dtype)
         assert result == STRING_TYPE
 
     def test_object_dtype_with_strings(self):
         """Test object dtype that contains strings."""
+        import pandas as pd
+
         series = pd.Series(["a", "b", "c"])
         result = _qgs_field_type_from_pandas(series.dtype)
         assert result == STRING_TYPE
 
     def test_float_dtype(self):
         """Test float dtype conversion."""
+        import pandas as pd
+
         dtype = pd.Float64Dtype()
         result = _qgs_field_type_from_pandas(dtype)
         assert result == DOUBLE_TYPE
 
     def test_numpy_float_dtype(self):
         """Test numpy float dtype conversion."""
+        import pandas as pd
+
         series = pd.Series([1.0, 2.0, 3.0])
         result = _qgs_field_type_from_pandas(series.dtype)
         assert result == DOUBLE_TYPE
 
     def test_bool_dtype(self):
         """Test bool dtype conversion."""
+        import pandas as pd
+
         dtype = pd.BooleanDtype()
         result = _qgs_field_type_from_pandas(dtype)
         assert result == BOOL_TYPE
 
     def test_numpy_bool_dtype(self):
         """Test numpy bool dtype conversion."""
+        import pandas as pd
+
         series = pd.Series([True, False, True])
         result = _qgs_field_type_from_pandas(series.dtype)
         assert result == BOOL_TYPE
 
     def test_int_dtype(self):
         """Test int dtype conversion."""
+        import pandas as pd
+
         dtype = pd.Int64Dtype()
         result = _qgs_field_type_from_pandas(dtype)
         assert result == INT_TYPE
 
     def test_numpy_int_dtype(self):
         """Test numpy int dtype conversion."""
+        import pandas as pd
+
         series = pd.Series([1, 2, 3])
         result = _qgs_field_type_from_pandas(series.dtype)
         assert result == INT_TYPE
@@ -118,6 +134,8 @@ class TestQgsFieldTypeFromPandas:
     def test_unsupported_dtype(self):
         """Test that unsupported dtypes raise KeyError."""
         # Create a complex dtype that should not be supported
+        import pandas as pd
+
         series = pd.Series([1 + 2j, 3 + 4j])
         with pytest.raises(KeyError, match="Couldn't get qgs field type for"):
             _qgs_field_type_from_pandas(series.dtype)
@@ -176,10 +194,13 @@ class TestQgsFieldTypeFromField:
             _qgs_field_type_from_field(field)
 
 
+@pytest.mark.needs_pandas
 class TestGetQgsFields:
     """Test the get_qgs_fields function."""
 
     def test_basic_fields_creation(self):
+        import pandas as pd
+
         """Test basic QgsFields creation with simple fields."""
         # Create mock fields
         field1 = Mock()
@@ -214,6 +235,8 @@ class TestGetQgsFields:
 
     def test_list_type_fields(self):
         """Test QgsFields creation with list type fields."""
+        import pandas as pd
+
         # Create a field that should become a list type
         field1 = Mock()
         field1.value = "list_field"
@@ -239,6 +262,8 @@ class TestGetQgsFields:
 
     def test_duplicate_field_names(self):
         """Test that duplicate field names from DataFrame are not added twice."""
+        import pandas as pd
+
         # Create a field with the same name as a DataFrame column
         field1 = Mock()
         field1.value = "duplicate_col"
@@ -258,6 +283,8 @@ class TestGetQgsFields:
 
     def test_empty_fields_and_dataframe(self):
         """Test with empty fields and DataFrame."""
+        import pandas as pd
+
         fields = []
         df = pd.DataFrame()
 
@@ -361,8 +388,11 @@ class TestWrite:
         assert feat2.attribute(idx) in [NULL, None]
 
     @pytest.mark.skip(reason="Doesn't work in all versions - but not sure of utility of test")
+    @pytest.mark.needs_pandas
     def test_pd_na_values_converted_to_null(self):
         """Test that pandas `pd.NA` values are converted to NULL when written."""
+        import pandas as pd
+
         layer = QgsVectorLayer("Point?field=val:double", "test_pd_na", "memory")
         provider = layer.dataProvider()
 
@@ -467,8 +497,11 @@ class TestWrite:
 class TestIntegration:
     """Integration tests combining multiple functions."""
 
+    @pytest.mark.needs_pandas
     def test_full_workflow_with_real_field_enum(self):
         """Test the full workflow using actual Field enum values."""
+        import pandas as pd
+
         # Use real Field enum values
         fields = [Field.NAME, Field.ELEVATION, Field.BASE_DEMAND]
 
@@ -518,8 +551,11 @@ class TestIntegration:
         features = list(layer.getFeatures())
         assert len(features) == 2
 
+    @pytest.mark.needs_pandas
     def test_list_type_integration(self):
         """Test integration with list-type fields."""
+        import pandas as pd
+
         # Create a mock field that should become a list type
         list_field = Mock()
         list_field.value = "time_series_data"

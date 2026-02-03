@@ -28,7 +28,10 @@ if TYPE_CHECKING:  # pragma: no cover
 # headloss formula (message starts with "Changing the headloss formula from ...").
 # This silences the warning for tests in this module without using the warnings
 # module directly.
-pytestmark = [pytest.mark.filterwarnings("ignore:Changing the headloss formula from .*:UserWarning")]
+pytestmark = [
+    pytest.mark.needs_wntr,
+    pytest.mark.filterwarnings("ignore:Changing the headloss formula from .*:UserWarning"),
+]
 
 
 @pytest.fixture

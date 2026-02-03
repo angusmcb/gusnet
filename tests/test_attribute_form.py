@@ -5,6 +5,8 @@ from qgis.core import QgsGeometry
 import gusnet.expressions  # noqa: F401
 from gusnet import from_wntr, to_wntr
 
+pytestmark = [pytest.mark.needs_wntr]
+
 
 @pytest.fixture(scope="class")
 def template_layers():
