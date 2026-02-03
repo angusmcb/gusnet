@@ -20,8 +20,8 @@ def test_spatial_index_snap_link():
     index.add_nodes(points, node_names)
     links = [QgsGeometry.fromPolyline([QgsPoint(1, 1), QgsPoint(2, 2)])]
     results = index.snap_links(links)
-    assert results[1][0] == "node1"
-    assert results[2][0] == "node2"
+    assert results[0][0] == "node1"
+    assert results[1][0] == "node2"
 
 
 def test_spatial_index_snap_link_nearby():
@@ -29,15 +29,15 @@ def test_spatial_index_snap_link_nearby():
     points = [[1, 1], [2, 2]]
     node_names = ["node1", "node2"]
     index.add_nodes(points, node_names)
-    links = [QgsGeometry.fromPolyline([QgsPoint(1.01, 1.01), QgsPoint(1.92, 1.92)])]
+    geometry = QgsGeometry.fromPolyline([QgsPoint(1.01, 1.01), QgsPoint(1.92, 1.92)])
+    links = [geometry]
 
     results = index.snap_links(links)
-    snapped_geometry = results[0][0]
-    start_node = results[1][0]
-    end_node = results[2][0]
+    start_node = results[0][0]
+    end_node = results[1][0]
     assert start_node == "node1"
     assert end_node == "node2"
-    assert snapped_geometry.asPolyline() == [QgsPointXY(1, 1), QgsPointXY(2, 2)]
+    assert geometry.asPolyline() == [QgsPointXY(1, 1), QgsPointXY(2, 2)]
 
 
 def test_spatial_index_snap_link_far_apart():
@@ -49,8 +49,8 @@ def test_spatial_index_snap_link_far_apart():
 
     results = index.snap_links(links)
     # snap_links doesn't raise errors - it returns None for unmatched nodes
-    start_node = results[1][0]
-    end_node = results[2][0]
+    start_node = results[0][0]
+    end_node = results[1][0]
     # Both endpoints are too far from any node
     assert start_node is None
     assert end_node is None
@@ -68,7 +68,7 @@ def test_spatial_index_snap_links():
 
     results = index.snap_links(links)
     assert len(results[0]) == 2
-    for snapped_geometry, start_node, end_node in zip(*results):  # noqa: B007
+    for start_node, end_node in zip(*results):
         assert start_node == "node1"
         assert end_node == "node2"
 
@@ -89,8 +89,8 @@ def test_spatial_index_snap_tolerance_short_link():
     results = index.snap_links(links)
 
     # Both endpoints should be None (too far to snap)
+    assert results[0][0] is None
     assert results[1][0] is None
-    assert results[2][0] is None
 
 
 def test_spatial_index_snap_tolerance_long_link():
@@ -107,8 +107,8 @@ def test_spatial_index_snap_tolerance_long_link():
     results = index.snap_links(links)
 
     # Both endpoints should snap successfully
-    assert results[1][0] == "node1"
-    assert results[2][0] == "node2"
+    assert results[0][0] == "node1"
+    assert results[1][0] == "node2"
 
 
 def test_spatial_index_snap_tolerance_one_end_too_far():
@@ -123,8 +123,8 @@ def test_spatial_index_snap_tolerance_one_end_too_far():
     results = index.snap_links(links)
 
     # Start should snap to node1, end should not snap to any node
-    assert results[1][0] == "node1"
-    assert results[2][0] is None
+    assert results[0][0] == "node1"
+    assert results[1][0] is None
 
 
 def test_spatial_index_snap_with_intermediate_vertices():
@@ -136,25 +136,24 @@ def test_spatial_index_snap_with_intermediate_vertices():
 
     # Create a link with intermediate vertices (zigzag pattern)
     # Total length is longer due to zigzag, so snap tolerance is higher
-    links = [
-        QgsGeometry.fromPolyline(
-            [
-                QgsPoint(0.1, 0),  # Near node1
-                QgsPoint(3, 2),  # Intermediate
-                QgsPoint(5, -1),  # Intermediate
-                QgsPoint(7, 2),  # Intermediate
-                QgsPoint(9.9, 0),  # Near node2
-            ]
-        )
-    ]
+    geom = QgsGeometry.fromPolyline(
+        [
+            QgsPoint(0.1, 0),  # Near node1
+            QgsPoint(3, 2),  # Intermediate
+            QgsPoint(5, -1),  # Intermediate
+            QgsPoint(7, 2),  # Intermediate
+            QgsPoint(9.9, 0),  # Near node2
+        ]
+    )
+    links = [geom]
     results = index.snap_links(links)
 
     # Both endpoints should snap
-    assert results[1][0] == "node1"
-    assert results[2][0] == "node2"
+    assert results[0][0] == "node1"
+    assert results[1][0] == "node2"
 
     # Check that intermediate vertices are preserved
-    snapped_polyline = results[0][0].asPolyline()
+    snapped_polyline = geom.asPolyline()
     assert len(snapped_polyline) == 5
     # First and last should be snapped to nodes
     assert snapped_polyline[0] == QgsPointXY(0, 0)

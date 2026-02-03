@@ -17,22 +17,12 @@ class TestPattern:
     )
     def test_pattern_roundtrip(self, input_val, expected_list, expected_str):
         p = Pattern(input_val)
-        assert list(p) == expected_list
+        assert list(p.multipliers) == expected_list
         assert str(p) == expected_str
 
     def test_pattern_invalid(self):
         with pytest.raises(PatternReadError):
             Pattern("a b c")
-
-    def test_pattern_factory_behaviour(self):
-        # factory returns a Pattern instance for non-empty patterns
-        p = Pattern.factory([1, 2])
-        assert isinstance(p, Pattern)
-        assert list(p) == [1.0, 2.0]
-
-        # empty inputs produce an empty Pattern which is falsy, so factory returns None
-        assert Pattern.factory(None) is None
-        assert Pattern.factory([]) is None
 
 
 class TestCurve:

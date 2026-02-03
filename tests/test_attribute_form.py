@@ -78,7 +78,7 @@ def test_creates_valid_model(qgis_bot: QgisBot, template_layers):
         template_layers["PUMPS"], QgsGeometry.fromWkt("LINESTRING (0 2, 0 3)")
     )
 
-    wn2 = to_wntr(template_layers, units="LPS", headloss="H-W")
+    wn2 = to_wntr(template_layers, units="LPS", headloss_formula="H-W")
 
     assert wn2.num_nodes == 4
     assert wn2.num_links == 3

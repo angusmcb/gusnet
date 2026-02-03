@@ -48,9 +48,17 @@ def test_pattern_wrong():
     assert expr.hasEvalError() is False
 
 
-@pytest.mark.parametrize("none_value", ["NULL", "''", "'  '"])
+@pytest.mark.parametrize("none_value", ["NULL"])
 def test_pattern_null(none_value):
     expr = QgsExpression(f"gusnet_check_pattern({none_value})")
+    assert expr.hasParserError() is False
+    assert expr.evaluate() is None
+    assert expr.hasEvalError() is False
+
+
+@pytest.mark.parametrize("empty_value", ["''", "'  '"])
+def test_pattern_empty(empty_value):
+    expr = QgsExpression(f"gusnet_check_pattern({empty_value})")
     assert expr.hasParserError() is False
     assert expr.evaluate() is None
     assert expr.hasEvalError() is False

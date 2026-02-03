@@ -3,7 +3,6 @@
 import math
 from unittest.mock import Mock
 
-import numpy as np
 import pandas as pd
 import pytest
 from qgis.core import NULL, Qgis, QgsField, QgsFields, QgsGeometry, QgsPointXY, QgsVectorLayer
@@ -282,13 +281,12 @@ class TestWrite:
         layer = QgsVectorLayer("Point?field=name:string&field=value:double", "test", "memory")
         provider = layer.dataProvider()
 
-        # Create DataFrame with test data
-        attributes = pd.DataFrame({"name": ["feature1", "feature2"], "value": [10.5, 20.3]}, index=["id1", "id2"])
+        attributes = {"name": ["feature1", "feature2"], "value": [10.5, 20.3]}
 
         # Create geometries
         geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
         geom2 = QgsGeometry.fromPointXY(QgsPointXY(1, 1))
-        geometries = {"id1": geom1, "id2": geom2}
+        geometries = {"feature1": geom1, "feature2": geom2}
 
         write(provider, fields, attributes, geometries)
 
@@ -323,10 +321,10 @@ class TestWrite:
         fields.append(QgsField("missing_col", DOUBLE_TYPE))
 
         # DataFrame only has 'name' column, missing 'missing_col'
-        attributes = pd.DataFrame({"name": ["feature1"]}, index=["id1"])
+        attributes = {"name": ["feature1"]}
 
         geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
-        geometries = {"id1": geom1}
+        geometries = {"feature1": geom1}
 
         write(provider, fields, attributes, geometries)
 
@@ -338,7 +336,7 @@ class TestWrite:
         assert feat[0] == "feature1"
         assert feat.attribute(idx) in [NULL, None]
 
-    def test_nan_values_converted_to_null(self):
+    def test_none_values_converted_to_null(self):
         """Test that NaN values are converted to NULL."""
         layer = QgsVectorLayer("Point?field=name:string&field=value:double", "test_nan", "memory")
         provider = layer.dataProvider()
@@ -348,12 +346,11 @@ class TestWrite:
         fields.append(QgsField("value", DOUBLE_TYPE))
 
         # Include NaN values
-        attributes = pd.DataFrame({"name": ["feature1", "feature2"], "value": [10.5, np.nan]}, index=["id1", "id2"])
+        attributes = {"name": ["feature1", "feature2"], "value": [10.5, None]}
 
         geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
         geom2 = QgsGeometry.fromPointXY(QgsPointXY(1, 1))
-        geometries = {"id1": geom1, "id2": geom2}
-
+        geometries = {"feature1": geom1, "feature2": geom2}
         write(provider, fields, attributes, geometries)
 
         features = list(layer.getFeatures())
@@ -362,28 +359,6 @@ class TestWrite:
         feat2 = next(f for f in features if f[0] == "feature2")
         idx = layer.fields().indexFromName("value")
         assert feat2.attribute(idx) in [NULL, None]
-
-    def test_integer_nan_values_converted_to_null(self):
-        """Test that integer NaN values are converted to NULL."""
-        layer = QgsVectorLayer("Point?field=int_value:int", "test_int_nan", "memory")
-        provider = layer.dataProvider()
-
-        fields = QgsFields()
-        fields.append(QgsField("int_value", INT_TYPE))
-
-        # Include integer NaN (which is actually float NaN)
-        attributes = pd.DataFrame({"int_value": [float("nan")]}, index=["id1"])
-
-        geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
-        geometries = {"id1": geom1}
-
-        write(provider, fields, attributes, geometries)
-
-        features = list(layer.getFeatures())
-        assert len(features) == 1
-        feat = features[0]
-        idx = layer.fields().indexFromName("int_value")
-        assert feat.attribute(idx) in [NULL, None]
 
     @pytest.mark.skip(reason="Doesn't work in all versions - but not sure of utility of test")
     def test_pd_na_values_converted_to_null(self):
@@ -408,39 +383,18 @@ class TestWrite:
         idx = layer.fields().indexFromName("val")
         assert feat.attribute(idx) in [NULL, None]
 
-    def test_none_values_converted_to_null(self):
-        """Test that Python `None` values are converted to NULL when written."""
-        layer = QgsVectorLayer("Point?field=val:double", "test_none", "memory")
-        provider = layer.dataProvider()
-
-        fields = QgsFields()
-        fields.append(QgsField("val", DOUBLE_TYPE))
-
-        # Use Python None in DataFrame
-        attributes = pd.DataFrame({"val": [None]}, index=["id1"])
-
-        geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
-        geometries = {"id1": geom1}
-
-        write(provider, fields, attributes, geometries)
-
-        features = list(layer.getFeatures())
-        assert len(features) == 1
-        feat = features[0]
-        idx = layer.fields().indexFromName("val")
-        assert feat.attribute(idx) in [NULL, None]
-
     def test_column_ordering_matches_fields(self):
         """Test that DataFrame columns are reordered to match fields."""
-        layer = QgsVectorLayer("Point?field=col2:string&field=col1:double", "test_order", "memory")
+        layer = QgsVectorLayer("Point?field=name:string&field=col2:string&field=col1:double", "test_order", "memory")
         provider = layer.dataProvider()
 
         fields = QgsFields()
+        fields.append(QgsField("name", STRING_TYPE))
         fields.append(QgsField("col2", STRING_TYPE))
         fields.append(QgsField("col1", DOUBLE_TYPE))
 
-        # DataFrame has columns in different order
-        attributes = pd.DataFrame({"col1": [10.5], "col2": ["test"]}, index=["id1"])
+        # dict has columns in different order
+        attributes = {"name": ["id1"], "col1": [10.5], "col2": ["test"]}
 
         geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
         geometries = {"id1": geom1}
@@ -454,7 +408,7 @@ class TestWrite:
         assert feat["col2"] == "test"
         assert feat["col1"] == 10.5
 
-    def test_empty_dataframe(self):
+    def test_empty_attributes(self):
         """Test writing with an empty DataFrame."""
         # Use a real in-memory layer as the sink
         layer = QgsVectorLayer("Point?field=name:string", "empty_df", "memory")
@@ -463,7 +417,7 @@ class TestWrite:
         fields = QgsFields()
         fields.append(QgsField("name", STRING_TYPE))
 
-        attributes = pd.DataFrame(columns=["name"])
+        attributes = {"name": []}
         geometries = {}
 
         write(provider, fields, attributes, geometries)
@@ -488,15 +442,13 @@ class TestWrite:
         fields.append(QgsField("float_col", DOUBLE_TYPE))
         fields.append(QgsField("bool_col", BOOL_TYPE))
 
-        attributes = pd.DataFrame(
-            {
-                "str_col": ["test"],
-                "int_col": [42],
-                "float_col": [3.14],
-                "bool_col": [True],
-            },
-            index=["id1"],
-        )
+        attributes = {
+            "name": ["id1"],
+            "str_col": ["test"],
+            "int_col": [42],
+            "float_col": [3.14],
+            "bool_col": [True],
+        }
 
         geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
         geometries = {"id1": geom1}
@@ -542,19 +494,16 @@ class TestIntegration:
         assert "extra_data" in field_names
 
         # Test writing (prepare data for write function)
-        attributes = pd.DataFrame(
-            {
-                "name": ["junction1", "junction2"],
-                "elevation": [100.0, 110.0],
-                "base_demand": [10.0, 15.0],
-                "extra_data": [1, 2],
-            },
-            index=["j1", "j2"],
-        )
+        attributes = {
+            "name": ["junction1", "junction2"],
+            "elevation": [100.0, 110.0],
+            "base_demand": [10.0, 15.0],
+            "extra_data": [1, 2],
+        }
 
         geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
         geom2 = QgsGeometry.fromPointXY(QgsPointXY(1, 1))
-        geometries = {"j1": geom1, "j2": geom2}
+        geometries = {"junction1": geom1, "junction2": geom2}
 
         # Create a layer matching the qgs_fields and use its provider
         layer = QgsVectorLayer("Point?", "full_workflow", "memory")
@@ -614,7 +563,7 @@ class TestErrorHandling:
         fields.append(QgsField("value", DOUBLE_TYPE))
 
         # Use math.nan specifically
-        attributes = pd.DataFrame({"value": [math.nan]}, index=["id1"])
+        attributes = {"name": ["id1"], "value": [math.nan]}
 
         geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
         geometries = {"id1": geom1}
@@ -636,7 +585,7 @@ class TestErrorHandling:
         fields.append(QgsField("value", DOUBLE_TYPE))
 
         # Use positive infinity
-        attributes = pd.DataFrame({"value": [float("inf")]}, index=["id1"])
+        attributes = {"name": ["id1"], "value": [float("inf")]}
 
         geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
         geometries = {"id1": geom1}
@@ -658,7 +607,7 @@ class TestErrorHandling:
         fields.append(QgsField("text", STRING_TYPE))
 
         # String 'nan' should not be converted
-        attributes = pd.DataFrame({"text": ["nan"]}, index=["id1"])
+        attributes = {"name": ["id1"], "text": ["nan"]}
 
         geom1 = QgsGeometry.fromPointXY(QgsPointXY(0, 0))
         geometries = {"id1": geom1}

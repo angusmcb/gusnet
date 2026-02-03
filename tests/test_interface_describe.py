@@ -1,11 +1,8 @@
-from unittest.mock import patch
-
 import pytest
 
-from gusnet.interface import WntrModel
+from gusnet.wntr_wrapper import WntrWrapper
 
 
-@patch("gusnet.interface.tr", lambda x: x)
 def test_describe_network_counts():
     from wntr.network import WaterNetworkModel
 
@@ -22,7 +19,7 @@ def test_describe_network_counts():
     wn.add_pump("p1", "j1", "j2", pump_type="POWER", pump_parameter=10)
     wn.add_pump("p2", "j2", "j1", pump_type="POWER", pump_parameter=10)
 
-    html, text = WntrModel(wn).describe_network()
+    html, text = WntrWrapper(wn).describe_network()
     # Should only include nonzero counts
     assert "2 Junctions" in text
     assert "1 Tanks" in text
@@ -34,18 +31,16 @@ def test_describe_network_counts():
     assert isinstance(html, str)
 
 
-@patch("gusnet.interface.tr", lambda x: x)
 def test_describe_network_all_zero():
     from wntr.network import WaterNetworkModel
 
     wn = WaterNetworkModel()
-    html, text = WntrModel(wn).describe_network()
+    html, text = WntrWrapper(wn).describe_network()
     # Should be empty string if all counts are zero
     assert "Network Summary" in text
     assert isinstance(html, str)
 
 
-@patch("gusnet.interface.tr", lambda x: x)
 def test_describe_network_all_types():
     from wntr.network import WaterNetworkModel
 
@@ -65,7 +60,7 @@ def test_describe_network_all_types():
     wn.add_pump("p1", "j1", "t1", pump_type="POWER", pump_parameter=10)
     wn.add_pump("p2", "t1", "j1", pump_type="HEAD", pump_parameter="")
 
-    html, text = WntrModel(wn).describe_network()
+    html, text = WntrWrapper(wn).describe_network()
     # All types should be present
     assert "2 Junctions" in text
     assert "1 Tanks" in text
@@ -83,7 +78,6 @@ def test_describe_network_all_types():
     assert isinstance(html, str)
 
 
-@patch("gusnet.interface.tr", lambda x: x)
 def test_describe_pipes_basic():
     from wntr.network import WaterNetworkModel
 
@@ -95,7 +89,7 @@ def test_describe_pipes_basic():
     wn.add_pipe("p2", "j2", "j1", length=200, diameter=10, roughness=110, minor_loss=0)
     wn.add_pipe("p3", "j1", "j2", length=300, diameter=20, roughness=120, minor_loss=0)
 
-    html, text = WntrModel(wn).describe_pipes()
+    html, text = WntrWrapper(wn).describe_pipes()
     # Check that the text alternative includes the total pipe length
     assert "Total pipe length" in text
     assert "600" in text  # Should match total length
@@ -106,7 +100,6 @@ def test_describe_pipes_basic():
 
 
 @pytest.mark.filterwarnings("ignore:Changing the headloss formula")
-@patch("gusnet.interface.tr", lambda x: x)
 def test_describe_pipes_conv():
     import wntr
 
@@ -119,7 +112,7 @@ def test_describe_pipes_conv():
     wn.add_pipe("p2", "j2", "j1", length=200, diameter=10, roughness=1, minor_loss=0)
     wn.add_pipe("p3", "j1", "j2", length=300, diameter=20, roughness=1, minor_loss=0)
 
-    html, text = WntrModel(wn).describe_pipes()
+    html, text = WntrWrapper(wn).describe_pipes()
     # Check that the text alternative includes the total pipe length
     assert "Total pipe length" in text
     assert "1 968.50" in text  # Should match total length
@@ -133,12 +126,11 @@ def test_describe_pipes_conv():
     assert "3 281" in html  # roughness in 1/1000 feeet - doesn't work in wntr 1.2.0
 
 
-@patch("gusnet.interface.tr", lambda x: x)
 def test_describe_pipes_empty():
     from wntr.network import WaterNetworkModel
 
     wn = WaterNetworkModel()
-    html, text = WntrModel(wn).describe_pipes()
+    html, text = WntrWrapper(wn).describe_pipes()
     assert "Total pipe length" in text
     assert "0.00" in text or "0" in text
     assert "<table" in html

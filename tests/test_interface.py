@@ -2,7 +2,7 @@ import pytest
 from qgis.core import QgsVectorLayer
 
 from gusnet.elements import DEFAULT_OPTIONS, FieldGroup
-from gusnet.interface import WntrModel, _get_field_groups
+from gusnet.wntr_wrapper import WntrWrapper, _get_field_groups
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def test_get_field_groups(wn):
     wn.options.quality.parameter = "CHEMICAL"
     wn.options.report.energy = "YES"
 
-    options = WntrModel(wn).options
+    options = WntrWrapper(wn).options
 
     field_groups = _get_field_groups(options)
 

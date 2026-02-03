@@ -123,10 +123,7 @@ def test_load_inp_file_bad_inp(qgis_iface, mocker, bad_inp, qgis_new_project, cl
     action.trigger()
     action.task.waitForFinished()
 
-    assert (
-        qgis_iface.messageBar().currentItem().text()
-        == "error reading .inp file: (Error 201) syntax error (%s), at line 330:\n   [FOO]"
-    )
+    assert "Error reading input file" in qgis_iface.messageBar().currentItem().text()
 
     assert len(QgsProject.instance().mapLayers()) == 0
 
