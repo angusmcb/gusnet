@@ -1,3 +1,6 @@
+import contextlib
+from unittest.mock import patch
+
 import pytest
 from qgis.core import (
     QgsCoordinateReferenceSystem,
@@ -66,13 +69,12 @@ def list_layers_in_geopackage(geopackage_path):
     return layer_names
 
 
-def test_create_template_geopackage(mocker, tmp_path):
+def test_create_template_geopackage(tmp_path):
     geopackage_path = str(tmp_path / "template.gpkg")
-    mocker.patch("gusnet.plugin.QFileDialog.getSaveFileName", return_value=(geopackage_path, ""))
-
-    action = LoadTemplateToGeopackageAction()
-    action.trigger()
-    action.task.waitForFinished()
+    with patch("gusnet.plugin.QFileDialog.getSaveFileName", return_value=(geopackage_path, "")):
+        action = LoadTemplateToGeopackageAction()
+        action.trigger()
+        action.task.waitForFinished()
 
     assert (tmp_path / "template.gpkg").exists()
 
@@ -82,66 +84,74 @@ def test_create_template_geopackage(mocker, tmp_path):
         assert layer in layers_in_geopackage
 
 
-def patch_dialogs(mocker, file, crs):
-    mocker.patch("gusnet.plugin.QFileDialog", autospec=True).getOpenFileName.return_value = (file, "")
+@contextlib.contextmanager
+def patch_dialogs(file, crs):
+    with (
+        patch(
+            "gusnet.plugin.QFileDialog",
+            autospec=True,
+        ) as q_file_dialog_mock,
+        patch(
+            "gusnet.plugin.QgsProjectionSelectionDialog",
+            autospec=True,
+        ) as q_psd_mock,
+    ):
+        q_file_dialog_mock.getOpenFileName.return_value = (file, "")
 
-    qpsd = mocker.patch("gusnet.plugin.QgsProjectionSelectionDialog", autospec=True)
-    qpsd.return_value.exec.return_value = bool(crs)
-    qpsd.return_value.crs.return_value = QgsCoordinateReferenceSystem(crs)
+        qpsd = q_psd_mock.return_value
+        qpsd.exec.return_value = bool(crs)
+        qpsd.crs.return_value = QgsCoordinateReferenceSystem(crs)
+
+        yield
 
 
 @pytest.mark.skipif(
     not hasattr(QtWidgets.QMessageBox, "Close"), reason="QMessageBox.Close in pytest-qgis will error in qt6"
 )
 @pytest.mark.qgis_show_map(timeout=3, zoom_to_common_extent=True)
-def test_load_inp_file_visual_check(qgis_iface, mocker, qgis_new_project, clean_message_bar):
-    patch_dialogs(mocker, gusnet.examples["KY10"], "EPSG:32629")
-
-    action = LoadInpAction()
-    action.trigger()
-    action.task.waitForFinished()
+def test_load_inp_file_visual_check(qgis_iface, qgis_new_project, clean_message_bar):
+    with patch_dialogs(gusnet.examples["KY10"], "EPSG:32629"):
+        action = LoadInpAction()
+        action.trigger()
+        action.task.waitForFinished()
 
     assert len(QgsProject.instance().mapLayers()) == 6
 
 
-def test_load_inp_file(qgis_iface, mocker, qgis_new_project, clean_message_bar):
-    patch_dialogs(mocker, gusnet.examples["KY10"], "EPSG:32629")
-
-    action = LoadInpAction()
-    action.trigger()
-    action.task.waitForFinished()
+def test_load_inp_file(qgis_iface, qgis_new_project, clean_message_bar):
+    with patch_dialogs(gusnet.examples["KY10"], "EPSG:32629"):
+        action = LoadInpAction()
+        action.trigger()
+        action.task.waitForFinished()
 
     assert len(QgsProject.instance().mapLayers()) == 6
 
     assert qgis_iface.messageBar().currentItem().text() == "Loaded .inp file"
 
 
-def test_load_inp_file_bad_inp(qgis_iface, mocker, bad_inp, qgis_new_project, clean_message_bar):
-    patch_dialogs(mocker, bad_inp, "EPSG:4326")
-
-    action = LoadInpAction()
-    action.trigger()
-    action.task.waitForFinished()
+def test_load_inp_file_bad_inp(qgis_iface, bad_inp, qgis_new_project, clean_message_bar):
+    with patch_dialogs(bad_inp, "EPSG:4326"):
+        action = LoadInpAction()
+        action.trigger()
+        action.task.waitForFinished()
 
     assert "Error reading input file" in qgis_iface.messageBar().currentItem().text()
 
     assert len(QgsProject.instance().mapLayers()) == 0
 
 
-def test_load_inp_file_no_file_selected(mocker, qgis_new_project):
-    patch_dialogs(mocker, "", "EPSG:4326")
-
-    action = LoadInpAction()
-    action.trigger()
+def test_load_inp_file_no_file_selected(qgis_new_project):
+    with patch_dialogs("", "EPSG:4326"):
+        action = LoadInpAction()
+        action.trigger()
 
     assert len(QgsProject.instance().mapLayers()) == 0
 
 
-def test_load_inp_file_no_crs_selected(mocker, qgis_new_project):
-    patch_dialogs(mocker, gusnet.examples["KY10"], "")
-
-    action = LoadInpAction()
-    action.trigger()
+def test_load_inp_file_no_crs_selected(qgis_new_project):
+    with patch_dialogs(gusnet.examples["KY10"], ""):
+        action = LoadInpAction()
+        action.trigger()
 
     assert len(QgsProject.instance().mapLayers()) == 0
 
