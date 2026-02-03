@@ -11,8 +11,6 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from gusnet.elements import CurveType
-
 sys.path.insert(0, str(Path("..").resolve()))
 
 import gusnet
@@ -147,7 +145,7 @@ def generate_attributes_table(_):
 
 
 def field_type_str(field_type: FieldType) -> str:
-    from gusnet.elements import MapFieldType, Parameter, SimpleFieldType
+    from gusnet.elements import CurveType, MapFieldType, Parameter, SimpleFieldType
 
     if field_type is SimpleFieldType.PATTERN:
         return "Text (string) *or* Decimal list"
@@ -162,7 +160,7 @@ def field_type_str(field_type: FieldType) -> str:
 
 
 def field_value(field: Field) -> str:
-    from gusnet.elements import Field, MapFieldType, SimpleFieldType
+    from gusnet.elements import CurveType, Field, MapFieldType, SimpleFieldType
 
     if isinstance(field.type, MapFieldType):
         return ", ".join(["`" + enum.value + "`" for enum in field.type.value])
