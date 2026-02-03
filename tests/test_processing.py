@@ -444,7 +444,7 @@ def test_pipe_length_warning(run_result, feedback):
 @pytest.mark.needs_pandas
 def test_inp_results_match(processing, run_alg_params, inp_file, default_pattern):
     import wntr
-    from pandas import assert_frame_equal
+    from pandas.testing import assert_frame_equal
 
     if wntr.__version__ in ("1.2.0", "1.3.2") and inp_file.endswith("valves.inp"):
         pytest.skip("WNTR 1.2.0 and 1.3.2 have a bug with valves that affects results")
