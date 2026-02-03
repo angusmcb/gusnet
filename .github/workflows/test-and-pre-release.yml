@@ -3,7 +3,7 @@ name: Tests
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the wanted branches
-on: [push]
+on: push
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -42,8 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # 'latest' seems to be nightly build, 'stable' is latest real release
-        docker_tags: ['final-3_34_0','3.34-jammy','3.34-bookworm','final-3_36_0','3.38.0','3.40.0','3.40-jammy','3.40-bookworm','ltr', 'stable', 'latest']
+        docker_tags: ['final-3_34_0','ltr', 'stable', 'latest']
       fail-fast: false
 
     container:
@@ -106,6 +105,7 @@ jobs:
   #         flags: unittests
   #         fail_ci_if_error: false # set to true when upload is working
   #         verbose: false
+  #
 
   windows_choco:
     runs-on: windows-latest

@@ -2,6 +2,10 @@ name: Conda
 
 on: [push]
 
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   conda-tests:
     name: '${{ matrix.python-version }}, ${{ matrix.os }}, ${{matrix.wntr-version}}, ${{matrix.qgis}}'
