@@ -6,7 +6,7 @@ import os
 import tempfile
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING
 
 from gusnet.elements import (
     Field,
@@ -28,6 +28,7 @@ from gusnet.wntr_wrapper import WntrWrapper
 if TYPE_CHECKING:  # pragma: no cover
     with contextlib.suppress(ImportError):
         import wntr
+    from typing import Self
 
 logger = logging.getLogger(__name__)
 
