@@ -102,7 +102,7 @@ def fetch_epanet() -> None:
                 "--target=" + str(PACKAGE_DIRECTORY),
                 "--no-deps",
                 # "--find-links=" + cls.wheels_directory(),
-                "gusnet_epanet",
+                "gusnet_epanet==2.2.1",
             ],
             check=False,
             text=True,
