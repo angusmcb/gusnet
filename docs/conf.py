@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import pandas as pd
+from gusnet.elements import CurveType
 
 sys.path.insert(0, str(Path("..").resolve()))
 
@@ -123,6 +123,8 @@ googleanalytics_id = "G-EXG3JYMMHK"
 
 
 def generate_attributes_table(_):
+    import pandas as pd
+
     from gusnet.elements import FieldGroup, ModelLayer
 
     output_dir = Path(__file__).parent / "_build" / "autogen-includes"
@@ -149,7 +151,7 @@ def field_type_str(field_type: FieldType) -> str:
 
     if field_type is SimpleFieldType.PATTERN:
         return "Text (string) *or* Decimal list"
-    if field_type in [SimpleFieldType.CURVE, SimpleFieldType.STR] or field_type in MapFieldType:
+    if field_type in [SimpleFieldType.STR] or field_type in CurveType or field_type in MapFieldType:
         return "Text (string)"
     if isinstance(field_type, Parameter):
         return "Decimal (double)"
@@ -166,7 +168,7 @@ def field_value(field: Field) -> str:
         return ", ".join(["`" + enum.value + "`" for enum in field.type.value])
     if field.type is SimpleFieldType.PATTERN:
         return "Pattern"
-    if field.type is SimpleFieldType.CURVE:
+    if field.type in CurveType:
         return "Curve"
     if field is Field.NAME:
         return "Will generate automatically if blank"
@@ -180,7 +182,6 @@ def field_analysis_type(field: Field) -> str:
     from gusnet.elements import FieldGroup
 
     analysis_types_of_interest = [
-        FieldGroup.PRESSURE_DEPENDENT_DEMAND,
         FieldGroup.ENERGY,
         FieldGroup.WATER_QUALITY_ANALYSIS,
     ]
