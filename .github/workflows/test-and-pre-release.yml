@@ -126,13 +126,25 @@ jobs:
         with:
           args: install qgis --version=${{ matrix.qgis_version }} -y
 
-      - name: Setup Environmment
+      - name: Setup Pytest-QGIS
         shell: pwsh
         run: |
           $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
-          python-qgis.bat -m pip install -r requirements-ci-tests.txt
+          python-qgis.bat -m pip install pytest-qgis
 
-      - name: Run Tests
+      - name: Run Tests Without Wntr
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
+          python-qgis.bat -m pytest -v -m "not needs_wntr and not needs_pandas"
+
+      - name: Setup Wntr
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
+          python-qgis.bat -m pip install wntr
+
+      - name: Run Tests With Wntr
         shell: pwsh
         run: |
           $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
