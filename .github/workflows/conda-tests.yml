@@ -19,7 +19,7 @@ jobs:
         os: ["ubuntu-latest", "macos-13"]
         python-version: ["3.9", "3.10","3.11", "3.12"]
         wntr-version: ["wntr=v1.2.0","wntr"] # don't test no-wntr then versions
-        #can optinally add a test for wntr install by installing dependencies geopandas, networkx
+        # can optinally add a test for wntr install by installing dependencies geopandas, networkx
         qgis: ["qgis","conda-forge/label/qgis_ltr::qgis"]
         exclude:
           - os: "ubuntu-latest"
