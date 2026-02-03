@@ -8,16 +8,15 @@ from typing import TYPE_CHECKING
 
 from qgis.PyQt import QtCore
 
-import gusnet.dependencies
 from gusnet.api import from_inp, from_wntr, to_wntr
-
-_packages_path = gusnet.dependencies.WntrInstaller.package_directory()
-if _packages_path not in sys.path:
-    sys.path.append(_packages_path)
-
+from gusnet.dependencies import PACKAGE_DIRECTORY
 
 if TYPE_CHECKING:  # pragma: no cover
     from qgis.gui import QgisInterface
+
+
+if PACKAGE_DIRECTORY not in sys.path:
+    sys.path.append(str(PACKAGE_DIRECTORY))
 
 
 _cp = configparser.ConfigParser()

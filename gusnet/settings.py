@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import ast
 import dataclasses
+import datetime
+import logging
 import typing
 from enum import Enum
 from typing import Any
@@ -10,6 +12,8 @@ from qgis.core import QgsExpressionContextUtils, QgsProject
 
 from gusnet.elements import DEFAULT_OPTIONS, DemandType, FlowUnit, HeadlossFormula, ModelOptions
 from gusnet.pattern_curve import Pattern
+
+logger = logging.getLogger(__name__)
 
 
 class SettingKey(str, Enum):
@@ -128,7 +132,17 @@ class ProjectSettings:
 
             required_type = option_types[field.name]
 
-            data[field.name] = required_type(value)
+            try:
+                if issubclass(required_type, datetime.timedelta):
+                    value = float(value)
+                    value = datetime.timedelta(hours=value)
+                else:
+                    value = required_type(value)
+            except (ValueError, TypeError):
+                value = DEFAULT_OPTIONS.__getattribute__(field.name)
+                logger.warning(f"Could not read setting for {field.name}, using default value {value}")
+
+            data[field.name] = value
 
         return dataclasses.replace(DEFAULT_OPTIONS, **data)
 
@@ -143,5 +157,8 @@ class ProjectSettings:
 
             if isinstance(value, Pattern):
                 value = str(value)
+
+            if isinstance(value, datetime.timedelta):
+                value = value.total_seconds() / 3600.0  # store as hours
 
             QgsExpressionContextUtils.setProjectVariable(self._project, self.SETTING_PREFIX + field.name, value)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+import math
+from collections.abc import Iterable, Sequence
 from typing import cast
 
 import numpy as np
@@ -52,37 +53,6 @@ class NearestNeighborIndex:
         # Internal integer indices for lookups
         self._indices = np.arange(self.num_items, dtype=self.index_dtype)
 
-    def nearest(self, qx: float, qy: float, max_distance: float | None = None) -> tuple:
-        """
-        Find the nearest point using brute-force vectorized NumPy operations.
-
-        Args:
-            qx, qy: Query point coordinates
-            max_distance: Optional maximum search distance (None = unlimited)
-
-        Returns:
-            tuple of (id, distance, x, y) or (None, None, None, None) if not found
-            id is a string if IDs were provided during initialization, otherwise an integer
-        """
-        # Direct computation for single query (more efficient than batching)
-        dx = self.coords[:, 0] - qx
-        dy = self.coords[:, 1] - qy
-        dist_sq = dx**2 + dy**2
-
-        min_idx = int(np.argmin(dist_sq))
-        min_dist_sq = dist_sq[min_idx]
-
-        # Check distance constraint if specified
-        if max_distance is not None and min_dist_sq > max_distance**2:
-            return (None, None, None, None)
-
-        # Get the ID, distance, and coordinates
-        result_id = self.ids[min_idx]
-        dist = float(np.sqrt(min_dist_sq))
-        result_id_converted = result_id if self.has_string_ids else int(result_id)
-        x, y = float(self.coords[min_idx, 0]), float(self.coords[min_idx, 1])
-        return (result_id_converted, dist, x, y)
-
     def nearest_batch(
         self,
         query_points: npt.ArrayLike,
@@ -101,6 +71,8 @@ class NearestNeighborIndex:
                 ids: array of IDs (strings if provided, otherwise integers). None for not found.
                 coords: Nx2 float64 array of matched coordinates, [nan, nan] for not found
         """
+
+        max_distance_sq = np.asarray(max_distance_sq, dtype=self.dtype)
         query_points = np.asarray(query_points, dtype=self.dtype)
         if query_points.ndim != 2 or query_points.shape[1] != 2:
             msg = "query_points must be Nx2 array"
@@ -120,7 +92,7 @@ class NearestNeighborIndex:
             dist_sq = (query_points[:, 0:1] - self.coords[:, 0]) ** 2 + (query_points[:, 1:2] - self.coords[:, 1]) ** 2
 
             # Find minimum index for each query
-            min_indices = np.argmin(dist_sq, axis=1)
+            min_indices = np.nanargmin(dist_sq, axis=1)
 
             # Get minimum squared distances
             min_dist_sq = dist_sq[np.arange(n_queries), min_indices]
@@ -171,29 +143,28 @@ class SpatialIndex:
 
     snap_tolerance = 0.1
 
-    def __init__(self) -> None:
-        self._index: NearestNeighborIndex | None = None
-        self._points: list[Sequence] = []
-        self._point_names: list[Sequence[str]] = []
+    _index: NearestNeighborIndex | None = None
+    _points: tuple[tuple[float, float], ...] = ()
+    _point_names: tuple[str, ...] = ()
 
-    def add_nodes(self, geometries, names) -> None:
+    def add_nodes(self, geometries: Iterable[tuple[float, float]], names: Iterable[str]) -> None:
         """Add nodes from pandas series to the spatial index.
 
         Args:
-            geometries: Series of QgsGeometry objects
             names: Series of node names/IDs
+            geometries: Series of QgsGeometry objects
         """
 
-        self._points.append(geometries)
+        self._points += tuple(geometries)
 
-        self._point_names.append(names)
+        self._point_names += tuple(names)
 
         self._index = None
 
     def _init_index(self):
-        self._index = NearestNeighborIndex(np.concatenate(self._points), np.concatenate(self._point_names))
+        self._index = NearestNeighborIndex(self._points, self._point_names)
 
-    def snap_links(self, geometries) -> tuple[list, npt.NDArray[np.object_], npt.NDArray[np.object_]]:
+    def snap_links(self, geometries) -> tuple[npt.NDArray[np.object_], npt.NDArray[np.object_]]:
         """Snap the start and end points of links to the nearest nodes in the spatial index.
 
         Vectorized implementation that batches all endpoint queries together for efficiency.
@@ -204,30 +175,25 @@ class SpatialIndex:
             names: Series of link names/IDs
 
         Returns:
-            tuple: (snapped_geometries, start_node_names, end_node_names) where geometries is a list
+            tuple: ( start_node_names, end_node_names) where geometries is a list
                    and node names are NumPy object arrays.
         """
-        from qgis.core import QgsGeometry, QgsPointXY
 
         if not self._index:
             self._init_index()
 
         self._index = cast(NearestNeighborIndex, self._index)
 
-        # Extract all start and end points and metadata
+        linestrings = [geom.constGet() for geom in geometries]
         start_points = []
         end_points = []
-        middle_vertices = []
-
-        for geom in geometries:
-            vertices = geom.asPolyline()
-            start = vertices[0]
-            end = vertices[-1]
-            middle = vertices[1:-1]
-
-            start_points.append([start.x(), start.y()])
-            end_points.append([end.x(), end.y()])
-            middle_vertices.append(middle)
+        for ls in linestrings:
+            try:
+                start_points.append((ls.xAt(0), ls.yAt(0)))
+                end_points.append((ls.xAt(-1), ls.yAt(-1)))
+            except AttributeError:
+                start_points.append((math.nan, math.nan))
+                end_points.append((math.nan, math.nan))
 
         # Convert to numpy arrays for vectorized operations
         start_points_array = np.array(start_points, dtype=np.float64)
@@ -242,25 +208,11 @@ class SpatialIndex:
         start_node_names, start_coords = self._index.nearest_batch(start_points_array, max_distances_sq)
         end_node_names, end_coords = self._index.nearest_batch(end_points_array, max_distances_sq)
 
-        # Build result arrays
-        snapped_geoms = []
+        for start_coord, end_coord, linestring in zip(start_coords, end_coords, linestrings):
+            if not math.isnan(start_coord[0]) and not math.isnan(end_coord[0]):
+                linestring.setXAt(0, start_coord[0])
+                linestring.setYAt(0, start_coord[1])
+                linestring.setXAt(-1, end_coord[0])
+                linestring.setYAt(-1, end_coord[1])
 
-        for start_coord, end_coord, start_pt, end_pt, middle_verts in zip(
-            start_coords, end_coords, start_points, end_points, middle_vertices
-        ):
-            # Get snapped coordinates (use matched coords if valid, otherwise use original)
-            if not np.isnan(start_coord[0]):
-                new_start = QgsPointXY(float(start_coord[0]), float(start_coord[1]))
-            else:
-                new_start = QgsPointXY(start_pt[0], start_pt[1])
-
-            if not np.isnan(end_coord[0]):
-                new_end = QgsPointXY(float(end_coord[0]), float(end_coord[1]))
-            else:
-                new_end = QgsPointXY(end_pt[0], end_pt[1])
-
-            # Reconstruct geometry
-            snapped_geometry = QgsGeometry.fromPolylineXY([new_start, *middle_verts, new_end])
-            snapped_geoms.append(snapped_geometry)
-
-        return snapped_geoms, start_node_names, end_node_names
+        return start_node_names, end_node_names

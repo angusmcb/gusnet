@@ -2,12 +2,24 @@ from __future__ import annotations
 
 import itertools
 import math
+from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Any, cast
 
 from qgis.core import NULL, Qgis, QgsFeature, QgsFeatureSink, QgsField, QgsFields, QgsGeometry
 from qgis.PyQt.QtCore import QMetaType, QVariant
 
-from gusnet.elements import CurveType, Field, FieldGroup, MapFieldType, Parameter, SimpleFieldType
+from gusnet.elements import (
+    CurveType,
+    Field,
+    FieldGroup,
+    MapFieldType,
+    ModelLayer,
+    ModelOptions,
+    Parameter,
+    QualityParameter,
+    ResultLayer,
+    SimpleFieldType,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
@@ -72,11 +84,28 @@ def get_qgs_fields(fields: list[Field], df: pd.DataFrame | None = None, use_list
     return qgs_fields
 
 
+def get_qgs_fields_from_options(options: ModelOptions, layer: ModelLayer | ResultLayer | None = None) -> QgsFields:
+    field_groups = FieldGroup.BASE
+
+    if options.quality_parameter is not QualityParameter.NONE:
+        field_groups = field_groups | FieldGroup.WATER_QUALITY_ANALYSIS
+
+    if options.energy_report:
+        field_groups = field_groups | FieldGroup.ENERGY
+
+    if layer:
+        fields = [field for field in layer.wq_fields() if field.field_group & field_groups]
+    else:
+        fields = [field for field in Field if field.field_group & field_groups]
+
+    return get_qgs_fields(fields, use_list_types=bool(options.simulation_duration))
+
+
 def write(
     sink: QgsFeatureSink,
     fields: QgsFields,
-    attributes: pd.DataFrame,
-    geometries: dict[str, QgsGeometry] | pd.Series,
+    attributes: pd.DataFrame | Mapping[str, Iterable],
+    geometries: Mapping[str, QgsGeometry],
 ) -> None:
     """Write features to a QGIS feature sink (or provider).
 
@@ -90,15 +119,19 @@ def write(
         attributes: pandas DataFrame of attribute values indexed by feature id.
         geometries: mapping of index -> QgsGeometry for each feature.
     """
+    if not attributes:
+        return
+
     null_iterator = itertools.repeat(NULL)
 
     ordered_attributes = [attributes.get(field_name, null_iterator) for field_name in fields.names()]
 
-    for name, feature_attributes in zip(attributes.index, zip(*ordered_attributes)):
+    for name, feature_attributes in zip(attributes[Field.NAME], zip(*ordered_attributes)):
         f = QgsFeature()
         f.setGeometry(geometries[name])
         attributes_with_null = [
-            value if not (isinstance(value, float) and math.isnan(value)) else NULL for value in feature_attributes
+            NULL if isinstance(value, float) and math.isnan(value) else str(value) if isinstance(value, str) else value
+            for value in feature_attributes
         ]
         f.setAttributes(attributes_with_null)
         sink.addFeature(f, QgsFeatureSink.Flag.FastInsert)

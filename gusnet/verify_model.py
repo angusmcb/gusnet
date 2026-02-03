@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import itertools
+from collections.abc import Iterable, Mapping
 
 from gusnet.elements import (
     CurveType,
@@ -13,13 +14,11 @@ from gusnet.elements import (
     ValveType,
 )
 from gusnet.i18n import tr
+from gusnet.network import Network
 from gusnet.pattern_curve import Curve, Pattern
 
-if TYPE_CHECKING:  # pragma: no cover
-    import pandas as pd
 
-
-def verify_model(layers: dict[ModelLayer, pd.DataFrame]) -> None:
+def verify_model(layers: Mapping[ModelLayer, Mapping[str, Iterable]], network: Network) -> None:
     """Verify that the provided dataframes contain all required fields.
 
     Args:
@@ -59,42 +58,42 @@ def verify_model(layers: dict[ModelLayer, pd.DataFrame]) -> None:
         errors.append(e)
 
     for layer in ModelLayer:
-        df = layers.get(layer)
-        if df is None:
+        layer_dict = layers.get(layer)
+        if layer_dict is None:
             continue
 
         for field in layer.wq_fields():
             if field.field_group & FieldGroup.REQUIRED:
                 try:
-                    _check_required_field(df, layer, field)
+                    _check_required_field(layer_dict, layer, field)
                 except VerificationError as e:
                     errors.append(e)
 
         for field in layer.wq_fields():
-            if field not in df.columns:
+            if field not in layer_dict:
                 continue
 
             if isinstance(field.type, Parameter):
                 try:
-                    _check_numeric_field_type(df, layer, field)
+                    _check_numeric_field_type(layer_dict, layer, field)
                 except NumericFieldError as e:
                     errors.append(e)
 
             if field.type is SimpleFieldType.BOOL:
                 try:
-                    _check_boolean_field_type(df, layer, field)
+                    _check_boolean_field_type(layer_dict, layer, field)
                 except BooleanFieldError as e:
                     errors.append(e)
 
             if field.type is SimpleFieldType.PATTERN:
                 try:
-                    df[field].map(Pattern.factory, na_action="ignore")
+                    [Pattern(val) for val in layer_dict[field] if val is not None]
                 except ValueError as e:
                     errors.append(PatternError(e, layer, field))
 
             elif isinstance(field.type, CurveType) and field not in [Field.PUMP_CURVE, Field.HEADLOSS_CURVE]:
                 try:
-                    df[field].map(Curve.factory, na_action="ignore")
+                    [Curve(val) for val in layer_dict[field] if val is not None]
                 except ValueError as e:
                     errors.append(CurveError(layer, field, e))
 
@@ -116,397 +115,27 @@ def verify_model(layers: dict[ModelLayer, pd.DataFrame]) -> None:
         except VerificationError as e:
             errors.append(e)
 
-    for link_layer in [ModelLayer.PIPES, ModelLayer.PUMPS, ModelLayer.VALVES]:
-        if link_layer in layers:
-            try:
-                _check_link_connects_to_nodes(link_layer, layers[link_layer])
-            except VerificationError as e:
-                errors.append(e)
-
-            try:
-                _check_link_ends_not_same_node(link_layer, layers[link_layer])
-            except VerificationError as e:
-                errors.append(e)
+    try:
+        _check_link_connects_to_nodes(network)
+    except VerificationError as e:
+        errors.append(e)
 
     try:
-        _check_no_orphan_junctions(layers)
-    except OrphanJunctionsError as e:
+        _check_link_ends_not_same_node(network)
+    except VerificationError as e:
         errors.append(e)
+
+    if ModelLayer.JUNCTIONS in layers:
+        try:
+            _check_no_orphan_junctions(layers[ModelLayer.JUNCTIONS], network)
+        except OrphanJunctionsError as e:
+            errors.append(e)
 
     if errors:
         if len(errors) == 1:
             raise errors[0] from errors[0]
         else:
             raise MultipleVerificationError(errors)
-
-
-def _check_junction_layer(layers: dict[ModelLayer, pd.DataFrame]) -> None:
-    """Check that the junction layer exists and is not empty.
-
-    Args:
-        layers: Mapping of ModelLayer to DataFrame to check.
-
-    Raises:
-        NoJunctionError: If any required field is missing.
-    """
-    if ModelLayer.JUNCTIONS not in layers:
-        raise NoJunctionError
-
-    if layers[ModelLayer.JUNCTIONS].empty:
-        raise NoJunctionError
-
-
-def _check_link_layers(layers: dict[ModelLayer, pd.DataFrame]) -> None:
-    """Check that at least one link layer exists and is not empty.
-
-    Args:
-        layers: Mapping of ModelLayer to DataFrame to check.
-
-    Raises:
-        NoLinksError: If there are no links
-    """
-    link_layers = [ModelLayer.PIPES, ModelLayer.VALVES, ModelLayer.PUMPS]
-    if not any(layer in layers and not layers[layer].empty for layer in link_layers):
-        raise NoLinksError
-
-
-def _check_reservoir_or_tank_exists(layers: dict[ModelLayer, pd.DataFrame]) -> None:
-    """Check that at least one reservoir or tank layer exists and is not empty.
-
-    Args:
-        layers: Mapping of ModelLayer to DataFrame to check.
-
-    Raises:
-        NoReservoirOrTankError: If neither reservoirs nor tanks are present.
-    """
-    if not (
-        (ModelLayer.RESERVOIRS in layers and not layers[ModelLayer.RESERVOIRS].empty)
-        or (ModelLayer.TANKS in layers and not layers[ModelLayer.TANKS].empty)
-    ):
-        raise NoReservoirOrTankError
-
-
-def _collect_names_for_layers(layers: dict[ModelLayer, pd.DataFrame], layer_keys) -> list[str]:
-    """Collect non-null stringified `Field.NAME` values from the given layers."""
-    names: list[str] = []
-    for layer in layer_keys:
-        if layer in layers:
-            df = layers[layer]
-            if Field.NAME in df:
-                series = df[Field.NAME]
-                if series.hasnans:
-                    series = series.dropna()
-                names.extend([str(v) for v in series.tolist()])
-    return names
-
-
-def _find_duplicates(items: list[str]) -> list[str]:
-    seen: set[str] = set()
-    dupes: set[str] = set()
-    for it in items:
-        if it in seen:
-            dupes.add(it)
-        else:
-            seen.add(it)
-    return sorted(dupes)
-
-
-def _check_duplicate_node_names(layers: dict[ModelLayer, pd.DataFrame]) -> None:
-    node_layers = [ModelLayer.JUNCTIONS, ModelLayer.RESERVOIRS, ModelLayer.TANKS]
-    names = _collect_names_for_layers(layers, node_layers)
-    dupes = _find_duplicates(names)
-    if dupes:
-        raise DuplicateNodeNameError(dupes)
-
-
-def _check_duplicate_link_names(layers: dict[ModelLayer, pd.DataFrame]) -> None:
-    link_layers = [ModelLayer.PIPES, ModelLayer.PUMPS, ModelLayer.VALVES]
-    names = _collect_names_for_layers(layers, link_layers)
-    dupes = _find_duplicates(names)
-    if dupes:
-        raise DuplicateLinkNameError(dupes)
-
-
-def _check_required_field(df: pd.DataFrame, layer: ModelLayer, field: Field) -> None:
-    """Check if a required field is present in the dataframe.
-
-    Args:
-        df: DataFrame to check.
-        layer: ModelLayer to check against.
-        field: Field to check for.
-    Raises:
-        RequiredFieldError: If the required field is missing.
-    """
-
-    if field not in df:
-        raise RequiredFieldError(layer, field)
-
-    if df[field].hasnans:
-        raise RequiredFieldError(layer, field)
-
-
-def _check_pipe_length_exists(pipe_df: pd.DataFrame) -> None:
-    """Check that the LENGTH field exists and has no missing values.
-
-    Args:
-        df: DataFrame to check."""
-    if Field.LENGTH not in pipe_df:
-        raise PipeLengthMissingError
-
-    if pipe_df[Field.LENGTH].hasnans:
-        raise PipeLengthMissingError
-
-
-def _check_names(layers: dict[ModelLayer, pd.DataFrame]) -> None:
-    """Check name field constraints across provided layers.
-
-    Requirements:
-    - If present, name values must be non-empty strings
-    - No spaces allowed in names
-    - Names must be shorter than 32 characters
-    """
-    from pandas.api.types import is_string_dtype
-
-    for layer, df in layers.items():
-        if Field.NAME not in df.columns:
-            continue
-
-        series = df[Field.NAME]
-        if series.hasnans:
-            series = series.dropna()
-            if series.empty:
-                continue
-
-        if not is_string_dtype(series):
-            non_string_mask = ~series.map(lambda v: isinstance(v, str))
-            if non_string_mask.any():
-                bad_names = series[non_string_mask].astype(str).tolist()
-                raise NameFieldError(layer, bad_names)
-
-        # Check for spaces, empty strings, or too-long names
-        # Using .apply() with Python string ops is ~4x faster than pandas .str methods
-        def is_invalid_name(name: str) -> bool:
-            return " " in name or not (1 <= len(name) <= 31)
-
-        bad_mask = series.apply(is_invalid_name)
-
-        if bad_mask.any():
-            bad_names = series[bad_mask].tolist()
-            raise NameFieldError(layer, bad_names)
-
-
-def _check_numeric_field_type(df: pd.DataFrame, layer: ModelLayer, field: Field) -> None:
-    """Ensure the provided field contains numeric values when present.
-
-    If the column is missing or all values are NA, this check is skipped.
-    Raises `NumericFieldError` if the column exists and contains non-numeric values.
-    """
-
-    import pandas as pd
-
-    if field not in df:
-        return
-
-    if pd.api.types.is_numeric_dtype(df[field]):
-        return
-
-    series = df[field].dropna()
-    if series.empty:
-        return
-
-    if not pd.api.types.is_numeric_dtype(series):
-        raise NumericFieldError(layer, field)
-
-
-def _check_boolean_field_type(df: pd.DataFrame, layer: ModelLayer, field: Field) -> None:
-    """Ensure the provided field contains boolean values when present.
-
-    If the column is missing or all values are NA, this check is skipped.
-    Raises `BooleanFieldError` if the column exists and contains non-boolean values.
-    """
-
-    import pandas as pd
-
-    if field not in df:
-        return
-
-    series = df[field]
-    if series.hasnans:
-        series = series.dropna()
-        if series.empty:
-            return
-
-    try:
-        series = series.astype("boolean")
-    except TypeError as e:
-        raise BooleanFieldError(layer, field) from e
-
-    if not pd.api.types.is_bool_dtype(series):
-        raise BooleanFieldError(layer, field)
-
-
-def _check_model_not_empty(layers: dict[ModelLayer, pd.DataFrame]) -> None:
-    """Ensure the provided `layers` mapping contains at least one non-empty layer.
-
-    This is a fast-fail for completely empty imports. If the mapping is empty
-    or contains only empty DataFrames, raise a combined verification error
-    similar to previous behaviour so callers/tests that expect aggregated
-    errors continue to work.
-    """
-    # If there is at least one non-empty dataframe, consider the model non-empty
-    if not any(layer in layers and not layers[layer].empty for layer in layers):
-        raise EmptyModelError
-
-
-def _check_valve_settings(df: pd.DataFrame) -> None:
-    """Verify that valve settings are valid.
-
-    Args:
-        df: DataFrame of valve attributes.
-
-    Raises:
-        ValveSettingError: If any valve setting is invalid.
-    """
-
-    try:
-        valve_types = df[Field.VALVE_TYPE].str.upper()
-    except (KeyError, AttributeError):
-        raise ValveTypeError from None
-
-    if not valve_types.isin(ValveType._member_names_).all():
-        raise ValveTypeError from None
-
-    for valve_type in ValveType:
-        valve_mask = valve_types == valve_type.value
-
-        if not valve_mask.any():
-            continue
-
-        if valve_type.setting_field.value not in df:
-            raise ValveSettingError(valve_type)
-
-        if df.loc[valve_mask, valve_type.setting_field.value].hasnans:
-            raise ValveSettingError(valve_type)
-
-    gpv_mask = valve_types == ValveType.GPV.value
-
-    if gpv_mask.any():
-        try:
-            curves = df.loc[gpv_mask, Field.HEADLOSS_CURVE].map(Curve.factory, na_action="ignore")
-        except ValueError as e:
-            raise CurveError(ModelLayer.VALVES, Field.HEADLOSS_CURVE, e) from e
-        if curves.hasnans:
-            raise ValveSettingError(ValveType.GPV)
-
-
-def _check_pump_parameters(df: pd.DataFrame) -> None:
-    try:
-        df[Field.PUMP_TYPE] = df[Field.PUMP_TYPE].str.upper()
-    except (KeyError, AttributeError):
-        raise PumpTypeError from None
-
-    if not df[Field.PUMP_TYPE].isin(PumpTypes._member_names_).all():
-        raise PumpTypeError
-
-    power_pumps = df[Field.PUMP_TYPE] == PumpTypes.POWER.value
-    head_pumps = df[Field.PUMP_TYPE] == PumpTypes.HEAD.value
-
-    if power_pumps.any():
-        if Field.POWER not in df:
-            raise PumpPowerError
-        if df.loc[power_pumps, Field.POWER].hasnans:
-            raise PumpPowerError
-        # The comparison may raise TypeError/ValueError if POWER contains non-numeric
-        # values (e.g. strings). Per request, ignore such comparison errors rather
-        # than letting them propagate — do not treat them as pump-power failures
-        # here. Numeric-ness is checked elsewhere by `_check_numeric_field_type`.
-        try:
-            if (df.loc[power_pumps, Field.POWER] <= 0).any():
-                raise PumpPowerError
-        except (TypeError, ValueError):
-            # Non-numeric values prevented numeric comparison; ignore as requested.
-            pass
-
-    if head_pumps.any():
-        if Field.PUMP_CURVE not in df:
-            raise PumpCurveMissingError
-
-        try:
-            head_curves = df.loc[head_pumps, Field.PUMP_CURVE].map(Curve.factory, na_action="ignore")
-        except ValueError as e:
-            raise CurveError(ModelLayer.PUMPS, Field.PUMP_CURVE, e) from e
-
-        if head_curves.hasnans:
-            raise PumpCurveMissingError
-
-
-def _check_link_connects_to_nodes(layer: ModelLayer, df: pd.DataFrame) -> None:
-    # Check that link is connected to two nodes.
-    if "start_node_name" not in df.columns or "end_node_name" not in df.columns:
-        link_names = df[Field.NAME].astype(str).tolist() if Field.NAME in df.columns else []
-        raise LinkNotConnectedToNodesError(layer, link_names)
-
-    missing_nodes = df["end_node_name"].isna() | df["start_node_name"].isna()
-
-    if missing_nodes.any():
-        raise LinkNotConnectedToNodesError(layer, df.loc[missing_nodes, Field.NAME].astype(str).tolist())
-
-
-def _check_link_ends_not_same_node(layer: ModelLayer, df: pd.DataFrame) -> None:
-    # Only accept explicit `start_node_name` and `end_node_name` columns.
-    if "start_node_name" not in df.columns or "end_node_name" not in df.columns:
-        return
-
-    start_nodes = df["start_node_name"].astype(str)
-    end_nodes = df["end_node_name"].astype(str)
-
-    same_node_mask = start_nodes == end_nodes
-    if same_node_mask.any():
-        duplicate_links = df.loc[same_node_mask, Field.NAME].astype(str).tolist()
-        raise LinkEndsSameNodeError(layer, duplicate_links)
-
-
-def _check_no_orphan_junctions(layers: dict[ModelLayer, pd.DataFrame]) -> None:
-    """Only consider junctions as reservoirs/tanks may be unconnected intentionally."""
-    connected_nodes: set[str] = set()
-
-    for link_layer in [ModelLayer.PIPES, ModelLayer.PUMPS, ModelLayer.VALVES]:
-        if link_layer not in layers:
-            continue
-
-        df = layers[link_layer]
-        if "start_node_name" in df.columns:
-            series = df["start_node_name"]
-            if series.hasnans:
-                series = series.dropna()
-            connected_nodes.update(series.astype(str).tolist())
-
-        if "end_node_name" in df.columns:
-            series = df["end_node_name"]
-            if series.hasnans:
-                series = series.dropna()
-            connected_nodes.update(series.astype(str).tolist())
-
-    if not connected_nodes:
-        # not worth testing if there are no links
-        return
-
-    if ModelLayer.JUNCTIONS not in layers:
-        return
-
-    df = layers[ModelLayer.JUNCTIONS]
-
-    if Field.NAME not in df.columns:
-        return
-
-    series = df[Field.NAME]
-    if series.hasnans:
-        series = series.dropna()
-    link_names = series.astype(str).tolist()
-    orphan_junctions = [name for name in link_names if name not in connected_nodes]
-
-    if orphan_junctions:
-        raise OrphanJunctionsError(orphan_junctions)
 
 
 class VerificationError(Exception):
@@ -524,11 +153,322 @@ class MultipleVerificationError(VerificationError):
         super().__init__(combined_message)
 
 
-class EmptyModelError(VerificationError):
-    """Raised when the model contains no elements."""
+def _check_junction_layer(layers: Mapping[ModelLayer, Mapping[str, Iterable]]) -> None:
+    """Check that the junction layer exists and is not empty.
 
-    def __init__(self) -> None:
-        super().__init__(tr("The model is empty."))
+    Args:
+        layers: Mapping of ModelLayer to DataFrame to check.
+
+    Raises:
+        NoJunctionError: If any required field is missing.
+    """
+    junctions = layers.get(ModelLayer.JUNCTIONS)
+    if junctions is None or len(junctions) == 0:
+        raise NoJunctionError
+
+
+def _check_link_layers(layers: Mapping[ModelLayer, Mapping[str, Iterable]]) -> None:
+    """Check that at least one link layer exists and is not empty.
+
+    Args:
+        layers: Mapping of ModelLayer to DataFrame to check.
+
+    Raises:
+        NoLinksError: If there are no links
+    """
+    link_layers = [ModelLayer.PIPES, ModelLayer.VALVES, ModelLayer.PUMPS]
+    if not any(len(layers.get(layer, {})) > 0 for layer in link_layers):
+        raise NoLinksError
+
+
+def _check_reservoir_or_tank_exists(layers: Mapping[ModelLayer, Mapping[str, Iterable]]) -> None:
+    """Check that at least one reservoir or tank layer exists and is not empty.
+
+    Args:
+        layers: Mapping of ModelLayer to DataFrame to check.
+
+    Raises:
+        NoReservoirOrTankError: If neither reservoirs nor tanks are present.
+    """
+    if not any(len(layers.get(layer, {})) > 0 for layer in [ModelLayer.RESERVOIRS, ModelLayer.TANKS]):
+        raise NoReservoirOrTankError
+
+
+def _find_duplicates(items: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    dupes: set[str] = set()
+    for it in items:
+        if it in seen:
+            dupes.add(it)
+        else:
+            seen.add(it)
+    return sorted(dupes)
+
+
+def _check_duplicate_node_names(layers: Mapping[ModelLayer, Mapping[str, Iterable]]) -> None:
+    names = itertools.chain(
+        layers.get(ModelLayer.JUNCTIONS, {}).get(Field.NAME, []),
+        layers.get(ModelLayer.RESERVOIRS, {}).get(Field.NAME, []),
+        layers.get(ModelLayer.TANKS, {}).get(Field.NAME, []),
+    )
+
+    dupes = _find_duplicates(names)
+    if dupes:
+        raise DuplicateNodeNameError(dupes)
+
+
+def _check_duplicate_link_names(layers: Mapping[ModelLayer, Mapping[str, Iterable]]) -> None:
+    names = itertools.chain(
+        layers.get(ModelLayer.PIPES, {}).get(Field.NAME, []),
+        layers.get(ModelLayer.PUMPS, {}).get(Field.NAME, []),
+        layers.get(ModelLayer.VALVES, {}).get(Field.NAME, []),
+    )
+    dupes = _find_duplicates(names)
+    if dupes:
+        raise DuplicateLinkNameError(dupes)
+
+
+def _check_required_field(df: Mapping[str, Iterable], layer: ModelLayer, field: Field) -> None:
+    """Check if a required field is present in the dataframe.
+
+    Args:
+        df: DataFrame to check.
+        layer: ModelLayer to check against.
+        field: Field to check for.
+    Raises:
+        RequiredFieldError: If the required field is missing.
+    """
+
+    if field not in df or any(val is None for val in df[field]):
+        raise RequiredFieldError(layer, field)
+
+
+def _check_pipe_length_exists(pipe_df: Mapping[str, Iterable]) -> None:
+    """Check that the LENGTH field exists and has no missing values.
+
+    Args:
+        df: DataFrame to check."""
+    if Field.LENGTH not in pipe_df or any(val is None for val in pipe_df[Field.LENGTH]):
+        raise PipeLengthMissingError
+
+
+def _check_names(layers: Mapping[ModelLayer, Mapping[str, Iterable]]) -> None:
+    """Check name field constraints across provided layers.
+
+    Requirements:
+    - If present, name values must be non-empty strings
+    - No spaces allowed in names
+    - Names must be shorter than 32 characters
+    """
+
+    for layer, layer_dict in layers.items():
+        if Field.NAME not in layer_dict:
+            continue
+
+        names = layer_dict[Field.NAME]
+
+        bad_names = [
+            name
+            for name in names
+            if name is not None and (not name or not isinstance(name, str) or " " in name or len(name) > 31)
+        ]
+
+        if bad_names:
+            raise NameFieldError(layer, bad_names)
+
+
+def _check_numeric_field_type(df: Mapping[str, Iterable], layer: ModelLayer, field: Field) -> None:
+    """Ensure the provided field contains numeric values when present.
+
+    If the column is missing or all values are NA, this check is skipped.
+    Raises `NumericFieldError` if the column exists and contains non-numeric values.
+    """
+
+    if field not in df:
+        return
+
+    try:
+        [float(val) if val is not None else None for val in df[field]]
+    except (ValueError, TypeError) as e:
+        raise NumericFieldError(layer, field) from e
+
+
+def _check_boolean_field_type(df: Mapping[str, Iterable], layer: ModelLayer, field: Field) -> None:
+    """Ensure the provided field contains boolean values when present.
+
+    If the column is missing or all values are NA, this check is skipped.
+    Raises `BooleanFieldError` if the column exists and contains non-boolean values.
+    """
+
+    if field not in df:
+        return
+
+    try:
+        [bool(float(val)) if val is not None else None for val in df[field]]
+    except (ValueError, TypeError) as e:
+        raise BooleanFieldError(layer, field) from e
+
+
+def _check_model_not_empty(layers: Mapping[ModelLayer, Mapping[str, Iterable]]) -> None:
+    """Ensure the provided `layers` mapping contains at least one non-empty layer.
+
+    This is a fast-fail for completely empty imports. If the mapping is empty
+    or contains only empty dicts, raise a combined verification error
+    similar to previous behaviour so callers/tests that expect aggregated
+    errors continue to work.
+    """
+    # If there is at least one non-empty dict, consider the model non-empty
+    if not any(len(layer_dict) > 0 for layer_dict in layers.values()):
+        raise EmptyModelError
+
+
+def _check_valve_settings(valve_dict: Mapping[str, Iterable]) -> None:
+    """Verify that valve settings are valid.
+
+    Args:
+        df: DataFrame of valve attributes.
+
+    Raises:
+        ValveSettingError: If any valve setting is invalid.
+    """
+
+    if Field.VALVE_TYPE not in valve_dict:
+        return
+
+    try:
+        valve_types = [ValveType[str(v).upper()] if v is not None else None for v in valve_dict[Field.VALVE_TYPE]]
+    except KeyError as e:
+        raise ValveTypeError from e
+
+    nones = itertools.repeat(None)
+    pressures = valve_dict.get(Field.PRESSURE_SETTING, nones)
+    flows = valve_dict.get(Field.FLOW_SETTING, nones)
+    throttles = valve_dict.get(Field.THROTTLE_SETTING, nones)
+    headloss_curves = valve_dict.get(Field.HEADLOSS_CURVE, nones)
+
+    for valve_type, pressure, flow, throttle, curve in zip(valve_types, pressures, flows, throttles, headloss_curves):
+        if valve_type is None:
+            continue
+
+        if valve_type in [ValveType.PRV, ValveType.PSV, ValveType.PBV]:
+            if pressure is None:
+                raise ValveSettingError(valve_type)
+
+        elif valve_type is ValveType.FCV:
+            if flow is None:
+                raise ValveSettingError(valve_type)
+
+        elif valve_type is ValveType.TCV:
+            if throttle is None:
+                raise ValveSettingError(valve_type)
+
+        elif valve_type is ValveType.GPV:
+            try:
+                curve = Curve.factory(curve) if curve is not None else None
+            except ValueError as e:
+                raise CurveError(ModelLayer.VALVES, Field.HEADLOSS_CURVE, e) from e
+
+            if curve is None:
+                raise ValveSettingError(valve_type)
+
+
+def _check_pump_parameters(pump_dict: Mapping[str, Iterable]) -> None:
+    if Field.PUMP_TYPE not in pump_dict:
+        raise PumpTypeError
+
+    try:
+        pump_types = [PumpTypes[str(p).upper()] if p is not None else None for p in pump_dict[Field.PUMP_TYPE]]
+    except KeyError as e:
+        raise PumpTypeError from e
+
+    nones = itertools.repeat(None)
+    powers = pump_dict.get(Field.POWER, nones)
+    curves = pump_dict.get(Field.PUMP_CURVE, nones)
+    for pump_type, power, curve in zip(pump_types, powers, curves):
+        if pump_type is None:
+            continue
+
+        if pump_type is PumpTypes.POWER:
+            if power is None:
+                raise PumpPowerError
+
+            try:
+                if float(power) <= 0:
+                    raise PumpPowerError
+            except (TypeError, ValueError):
+                continue
+
+        elif pump_type is PumpTypes.HEAD:
+            try:
+                curve = Curve.factory(curve) if curve is not None else None
+            except ValueError as e:
+                raise CurveError(ModelLayer.PUMPS, Field.PUMP_CURVE, e) from e
+
+            if curve is None:
+                raise PumpCurveMissingError
+
+
+def _check_link_connects_to_nodes(network: Network) -> None:
+    """Check that link is connected to two nodes."""
+
+    missing_connection = [link for link, node in network.link_start_nodes.items() if node is None] + [
+        link for link, node in network.link_end_nodes.items() if node is None
+    ]
+
+    if not missing_connection:
+        return
+
+    raise LinkNotConnectedToNodesError(missing_connection)
+
+
+class LinkNotConnectedToNodesError(VerificationError):
+    def __init__(self, links: list[str]):
+        super().__init__(
+            tr("The following links do not connect to a node at each end: {links}").format(links=", ".join(links))
+        )
+
+
+def _check_link_ends_not_same_node(network: Network) -> None:
+    """Check that link does not connect to the same node on both ends."""
+
+    has_matching_ends = [
+        name for name, start in network.link_start_nodes.items() if start and network.link_end_nodes[name] == start
+    ]
+
+    if not has_matching_ends:
+        return
+
+    raise LinkEndsSameNodeError(has_matching_ends)
+
+
+class LinkEndsSameNodeError(VerificationError):
+    """Raised when a link connects to the same node on both ends."""
+
+    def __init__(self, duplicate_links: list[str]):
+        super().__init__(
+            tr("{num_features} links have the same start and end nodes: {links}").format(
+                num_features=len(duplicate_links), links=", ".join(duplicate_links)
+            )
+        )
+
+
+def _check_no_orphan_junctions(junctions_layer: Mapping[str, Iterable], network: Network) -> None:
+    """Only consider junctions as reservoirs/tanks may be unconnected intentionally."""
+    connected_nodes = set(network.link_start_nodes.values()) | set(network.link_end_nodes.values())
+
+    if not connected_nodes:
+        # not worth testing if there are no links
+        return
+
+    if Field.NAME not in junctions_layer:
+        return
+
+    junction_names = junctions_layer[Field.NAME]
+
+    orphan_junctions = [str(name) for name in junction_names if name is not None and name not in connected_nodes]
+
+    if orphan_junctions:
+        raise OrphanJunctionsError(orphan_junctions)
 
 
 class OrphanJunctionsError(VerificationError):
@@ -540,24 +480,11 @@ class OrphanJunctionsError(VerificationError):
         )
 
 
-class LinkNotConnectedToNodesError(VerificationError):
-    def __init__(self, layer: ModelLayer, links: list[str]):
-        super().__init__(
-            tr("In {layer_name}, some the following links do not connect to a node at each end: {links}").format(
-                layer_name=layer.friendly_name, links=", ".join(links)
-            )
-        )
+class EmptyModelError(VerificationError):
+    """Raised when the model contains no elements."""
 
-
-class LinkEndsSameNodeError(VerificationError):
-    """Raised when a link connects to the same node on both ends."""
-
-    def __init__(self, layer: ModelLayer, duplicate_links: list[str]):
-        super().__init__(
-            tr("In {layer_name} {num_features} features have the same start and end nodes: {links}").format(
-                layer_name=layer.friendly_name, num_features=len(duplicate_links), links=", ".join(duplicate_links)
-            )
-        )
+    def __init__(self) -> None:
+        super().__init__(tr("The model is empty."))
 
 
 class NoJunctionError(VerificationError):

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import itertools
 import logging
+import math
 from collections.abc import Mapping
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from qgis.core import (
@@ -16,11 +18,14 @@ from qgis.core import (
     QgsFeatureSource,
     QgsGeometry,
     QgsUnitTypes,
+    QgsWkbTypes,
 )
 
-from gusnet.elements import Field, FlowUnit, ModelLayer, Parameter, SimpleFieldType
+from gusnet.elements import CurveType, Field, FlowUnit, ModelLayer, Parameter, SimpleFieldType
 from gusnet.i18n import tr
-from gusnet.spatial_index2 import SpatialIndex
+from gusnet.network import Network
+from gusnet.pattern_curve import Curve, Pattern
+from gusnet.profiler import profile
 
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
@@ -28,11 +33,14 @@ if TYPE_CHECKING:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
-QGIS_USE_DISTANCE_UNIT = Qgis.versionInt() >= 33000
-QGIS_METERS = Qgis.DistanceUnit.Meters if QGIS_USE_DISTANCE_UNIT else QgsUnitTypes.DistanceMeters
-QGIS_FEET = Qgis.DistanceUnit.Feet if QGIS_USE_DISTANCE_UNIT else QgsUnitTypes.DistanceFeet
+try:
+    QGIS_METERS = Qgis.DistanceUnit.Meters
+    QGIS_FEET = Qgis.DistanceUnit.Feet
+except AttributeError:
+    QGIS_METERS = QgsUnitTypes.DistanceMeters  # type: ignore[attr-defined]
+    QGIS_FEET = QgsUnitTypes.DistanceFeet  # type: ignore[attr-defined]
 
-SHAPEFILE_NAME_MAP = {field[:10]: field for field in Field}
+SHAPEFILE_NAME_MAP = MappingProxyType({field[:10]: field for field in Field})
 
 
 def read(
@@ -41,70 +49,105 @@ def read(
     transform_context: QgsCoordinateTransformContext,
     ellipsoid: str,
     flow_unit: FlowUnit,
-) -> dict[ModelLayer, pd.DataFrame]:
-    node_dfs: dict[ModelLayer, pd.DataFrame] = {}
-    link_dfs: dict[ModelLayer, pd.DataFrame] = {}
+) -> tuple[Mapping[ModelLayer, Mapping[str, list]], Network]:
+    node_attributes: dict[ModelLayer, dict] = {}
+    link_attributes: dict[ModelLayer, dict] = {}
+    node_geometries: dict[ModelLayer, list[QgsGeometry]] = {}
+    link_geometries: dict[ModelLayer, list[QgsGeometry]] = {}
 
-    for model_layer in ModelLayer:
-        source = feature_sources.get(model_layer)
-        if source is None:
-            continue
+    with profile(tr("Getting features from QGIS")):
+        for model_layer in ModelLayer:
+            source = feature_sources.get(model_layer)
+            if not source:
+                continue
 
-        df = _source_to_df(source, crs, transform_context)
+            attribute_dict, geometry_list = _source_to_df(source, crs, transform_context)
+            if not attribute_dict:
+                continue
 
-        if df.empty:
-            continue
+            source_geom_type = QgsWkbTypes.geometryType(source.wkbType())
+            if model_layer.is_node and source_geom_type != Qgis.GeometryType.Point:
+                msg = tr("{layer} expects a point layer. Received: {received_type}").format(
+                    layer=model_layer.friendly_name, received_type=QgsWkbTypes.geometryDisplayString(source_geom_type)
+                )
+                raise ReadFeatureError(msg)  #
+            if not model_layer.is_node and source_geom_type != Qgis.GeometryType.Line:
+                msg = tr("{layer} expects a line layer. Received: {received_type}").format(
+                    layer=model_layer.friendly_name, received_type=QgsWkbTypes.geometryDisplayString(source_geom_type)
+                )
+                raise ReadFeatureError(msg)
 
-        df = _fix_column_types(df)
+            if model_layer.is_node:
+                node_attributes[model_layer] = attribute_dict
+                node_geometries[model_layer] = geometry_list
+            else:
+                link_attributes[model_layer] = attribute_dict
+                link_geometries[model_layer] = geometry_list
 
-        if model_layer.is_node:
-            node_dfs[model_layer] = df
-        else:
-            link_dfs[model_layer] = df
+    with profile(tr("Fixing names")):
+        node_attributes = _do_names(node_attributes)
+        link_attributes = _do_names(link_attributes)
 
-    node_dfs = _do_names(node_dfs)
-    link_dfs = _do_names(link_dfs)
+    with profile(tr("Handling geometries")):
+        net = Network()
+        for layer, geometries in node_geometries.items():
+            net.add_node_geometries(node_attributes[layer][Field.NAME], geometries)
+        for layer, geometries in link_geometries.items():
+            net.add_link_geometries(link_attributes[layer][Field.NAME], geometries)
 
-    _do_geometries(node_dfs | link_dfs)
-
-    if node_dfs and link_dfs:
-        link_dfs = _snap_links_to_nodes(node_dfs, link_dfs)
-
-    if ModelLayer.PIPES in link_dfs:
+    if ModelLayer.PIPES in link_attributes:
         if crs and crs.isValid():
-            link_dfs[ModelLayer.PIPES]["length"] = _process_pipe_length(
-                link_dfs[ModelLayer.PIPES], crs, transform_context, ellipsoid, flow_unit
-            )
+            with profile(tr("Measuring Pipes")):
+                link_attributes[ModelLayer.PIPES][Field.LENGTH] = _process_pipe_length(
+                    link_attributes[ModelLayer.PIPES],
+                    net.link_geometries,
+                    crs,
+                    transform_context,
+                    ellipsoid,
+                    flow_unit,
+                )
         else:
             logger.warning(tr("Cannot calculate pipe lengths without a valid coordinate reference system."))
 
-    return node_dfs | link_dfs
+    convert_patterns_curves(node_attributes)
+    convert_patterns_curves(link_attributes)
+
+    attribute_mapping = MappingProxyType(
+        {k: MappingProxyType(v) for k, v in (node_attributes | link_attributes).items()}
+    )
+
+    return attribute_mapping, net
 
 
 def _source_to_df(
     source: QgsFeatureSource, crs: QgsCoordinateReferenceSystem | None, transform_context: QgsCoordinateTransformContext
-) -> pd.DataFrame:
-    import numpy as np
-    import pandas as pd
-
+) -> tuple[dict[str, list], list[QgsGeometry]]:
     column_names = [name.lower() for name in source.fields().names()]
     column_names = [SHAPEFILE_NAME_MAP.get(name, name) for name in column_names]
-    column_names.append("geometry")
 
     feature_list: list[list] = []
+    geometry_list: list[QgsGeometry] = []
+
     feature_request = QgsFeatureRequest()
     if crs and crs.isValid():
         feature_request.setDestinationCrs(crs, transform_context)
-    ft: QgsFeature
-    for ft in source.getFeatures(feature_request):
-        attrs = [attr if attr != NULL else np.nan for attr in ft]  # is not faster than !=
-        geometry = ft.geometry()
-        if geometry.isMultipart():
-            geometry.convertToSingleType()
-        attrs.append(geometry)
-        feature_list.append(attrs)
 
-    return pd.DataFrame(feature_list, columns=column_names)
+    ft: QgsFeature
+    for ft in source.getFeatures(feature_request):  # type: ignore[union-attr]
+        attrs = [attr if attr != NULL else None for attr in ft]  # is not faster than !=
+        feature_list.append(attrs)
+        geometry_list.append(ft.geometry())
+
+    attribute_dict = {col: list(vals) for col, vals in zip(column_names, zip(*feature_list))}
+
+    if QgsWkbTypes.isMultiType(source.wkbType()):
+        for geom in geometry_list:
+            geom.convertToSingleType()
+
+    if geometry_list and not attribute_dict:
+        attribute_dict = {Field.NAME: [None] * len(geometry_list)}
+
+    return attribute_dict, geometry_list
 
 
 def _fix_column_types(df: pd.DataFrame) -> pd.DataFrame:
@@ -136,7 +179,7 @@ def _fix_column_types(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _do_geometries(dfs: dict[ModelLayer, pd.DataFrame]) -> None:
+def _do_geometries(model_dicts: dict[ModelLayer, dict]) -> None:
     """Check and transform geometries.
 
     Check that all geometries are valid and convert node geometries to coordinate tuples and
@@ -145,28 +188,32 @@ def _do_geometries(dfs: dict[ModelLayer, pd.DataFrame]) -> None:
     Raises GeometryError if any problems are found."""
     errors: list[tuple[ModelLayer, list[str]]] = []
 
-    for layer, df in dfs.items():
+    for layer, layer_dict in model_dicts.items():
         if layer.is_node:
-            result = df["geometry"].map(_point_geometry_to_tuple)
-            df["coordinates"] = result
+            node_result = [_point_geometry_to_tuple(geom) for geom in layer_dict["geometry"]]
+            layer_dict["coordinates"] = node_result
+            # Check for invalid geometries (contains NaN)
+            problem_indices = [i for i, coord in enumerate(node_result) if coord is None or math.isnan(coord[0])]
         else:
-            result = df["geometry"].map(_line_geometry_to_vertices)
-            df["vertices"] = result
+            link_result = [_line_geometry_to_vertices(geom) for geom in layer_dict["geometry"]]
+            layer_dict["vertices"] = link_result
+            # Check for invalid geometries (None)
+            problem_indices = [i for i, vert in enumerate(link_result) if vert is None]
 
-        problems = result.isna()
-        if problems.any():
-            errors.append((layer, df["name"][problems].tolist()))
+        if problem_indices:
+            problem_names = [layer_dict["name"][i] for i in problem_indices]
+            errors.append((layer, problem_names))
 
     if errors:
         raise GeometryError(errors)
 
 
-def _point_geometry_to_tuple(geometry: QgsGeometry) -> tuple[float, float] | None:
+def _point_geometry_to_tuple(geometry: QgsGeometry) -> list[float] | None:
     try:
         point = geometry.asPoint()
-        return point.x(), point.y()
+        return [point.x(), point.y()]
     except (TypeError, ValueError):
-        return None
+        return [math.nan, math.nan]
 
 
 def _line_geometry_to_vertices(geometry: QgsGeometry) -> list[tuple[float, float]] | None:
@@ -177,133 +224,157 @@ def _line_geometry_to_vertices(geometry: QgsGeometry) -> list[tuple[float, float
 
 
 def _process_pipe_length(
-    pipe_df: pd.DataFrame,
+    pipe_dict: dict,
+    link_geometries: Mapping[str, QgsGeometry],
     crs: QgsCoordinateReferenceSystem,
     transform_context: QgsCoordinateTransformContext,
     ellipsoid: str,
     flow_unit: FlowUnit,
-) -> pd.Series:
+) -> list:
     measurer = QgsDistanceArea()
     measurer.setSourceCrs(crs, transform_context)
     measurer.setEllipsoid(ellipsoid)
 
-    calculated_lengths = pipe_df["geometry"].map(measurer.measureLength).astype("float")
+    calculated_lengths = [measurer.measureLength(link_geometries[name]) for name in pipe_dict[Field.NAME]]
 
     qgis_length_unit = QGIS_FEET if flow_unit.is_traditional else QGIS_METERS
 
     if measurer.lengthUnits() != qgis_length_unit:
-        calculated_lengths = calculated_lengths.apply(measurer.convertLengthMeasurement, args=(qgis_length_unit,))
+        calculated_lengths = [
+            measurer.convertLengthMeasurement(length, qgis_length_unit) for length in calculated_lengths
+        ]
 
-    # if calculated_lengths.isna().any():
-    #    raise PipeMeasuringError(calculated_lengths.isna().sum())
+    calculated_lengths_no_nan = [length if not math.isnan(length) else None for length in calculated_lengths]
 
-    attribute_lengths = pipe_df.get("length")
+    if None in calculated_lengths_no_nan:
+        logger.warning(tr("The length of one or more pipes could not be calculated."))
 
-    if attribute_lengths is None or attribute_lengths.isna().all():
-        return calculated_lengths
+    attribute_lengths = pipe_dict.get(Field.LENGTH)
 
-    _mismatch_warning(pipe_df["name"], calculated_lengths, attribute_lengths, flow_unit)
+    if attribute_lengths is None or all(i is None for i in attribute_lengths):
+        return calculated_lengths_no_nan
 
-    return attribute_lengths.fillna(calculated_lengths)
+    _mismatch_warning(pipe_dict[Field.NAME], calculated_lengths_no_nan, attribute_lengths, flow_unit)
+
+    return [
+        att_length if att_length is not None else calc_length
+        for att_length, calc_length in zip(attribute_lengths, calculated_lengths)
+    ]
 
 
-def _mismatch_warning(
-    names: pd.Series, calculated_lengths: pd.Series, attribute_lengths: pd.Series, flow_unit: FlowUnit
-) -> None:
-    import numpy as np
-    import pandas as pd
-
-    if calculated_lengths.isna().any():
+def _mismatch_warning(names: list, calculated_lengths: list, attribute_lengths: list, flow_unit: FlowUnit) -> None:
+    if any(math.isnan(calculated_length) for calculated_length in calculated_lengths):
         return
 
-    mismatch = attribute_lengths.notna() & ~np.isclose(
-        calculated_lengths,
-        attribute_lengths,
-        rtol=0.05,
-        atol=10,
-    )
-
-    if not mismatch.any():
+    try:
+        attribute_lengths = [float(length) if length is not None else None for length in attribute_lengths]
+    except (TypeError, ValueError):
         return
 
-    unit_string = "feet" if flow_unit.is_traditional else "metres"
+    mismatch = [
+        (name, att, calc)
+        for name, att, calc in zip(names, attribute_lengths, calculated_lengths)
+        if att is not None and not math.isclose(att, calc, rel_tol=0.05, abs_tol=10)
+    ]
 
-    examples = pd.concat(
-        [names, calculated_lengths, attribute_lengths],
-        axis=1,
-        ignore_index=True,
-    )
-    examples.columns = pd.Index(["name", "attribute_length", "calculated_length"])
-    examples = examples.loc[mismatch].head(5)
+    if not mismatch:
+        return
+
+    unit_string = tr("feet") if flow_unit.is_traditional else tr("metres")
+
+    mismatch_string_list = [
+        f"{name} ({attribute_length:.0f} {unit_string} vs {calculated_length:.0f} {unit_string})"
+        for name, attribute_length, calculated_length in mismatch[:5]
+    ]
+
+    mismatch_string = ", ".join(mismatch_string_list) + ("..." if len(mismatch) > 5 else "")
 
     msg = tr(
-        "%n pipe(s) have very different attribute length vs measured length. First five are: ",
+        "%n pipe(s) have very different attribute length vs measured length. This is pipe(s): {mismatches}",
         "",
-        mismatch.sum(),
-    )
-    msg += ", ".join(
-        examples.apply(
-            tr(
-                f"{{name}} ({{attribute_length:.0f}} {unit_string} vs {{calculated_length:.0f}} {unit_string})"
-            ).format_map,
-            axis=1,
-        )
-    )
+        len(mismatch),
+    ).format(mismatches=mismatch_string)
+
     logger.warning(msg)
 
 
-def _snap_links_to_nodes(
-    node_dfs: dict[ModelLayer, pd.DataFrame], link_dfs: dict[ModelLayer, pd.DataFrame]
-) -> dict[ModelLayer, pd.DataFrame]:
-    """Snap the nodes to the links and return the updated node dataframe."""
+# def _snap_links_to_nodes(
+#     node_dicts: dict[ModelLayer, dict], link_dicts: dict[ModelLayer, dict]
+# ) -> dict[ModelLayer, dict]:
+#     """Snap the nodes to the links and return the updated node dataframe."""
 
-    spatial_index = SpatialIndex()
+#     spatial_index = SpatialIndex()
 
-    for node_df in node_dfs.values():
-        spatial_index.add_nodes([[*point] for point in node_df["coordinates"]], node_df["name"])
+#     for node_dict in node_dicts.values():
+#         spatial_index.add_nodes(node_dict["coordinates"], node_dict["name"])
 
-    output_link_df = {}
+#     for link_dict in link_dicts.values():
+#         geometry, start_node, end_node = spatial_index.snap_links(link_dict["geometry"])
 
-    for layer, link_df in link_dfs.items():
-        geometry, start_node, end_node = spatial_index.snap_links(link_df["geometry"])
+#         link_dict["geometry"] = geometry
+#         link_dict["start_node_name"] = start_node
+#         link_dict["end_node_name"] = end_node
 
-        link_df["geometry"] = geometry
-        link_df["start_node_name"] = start_node
-        link_df["end_node_name"] = end_node
-
-        output_link_df[layer] = link_df
-
-    return output_link_df
+#     return link_dicts
 
 
-def _do_names(dfs: dict[ModelLayer, pd.DataFrame]) -> dict[ModelLayer, pd.DataFrame]:
+def _do_names(model_dicts: dict[ModelLayer, dict]) -> dict[ModelLayer, dict]:
     """Fill blank names, not duplicting between nodes/links"""
-
-    import numpy as np
-    import pandas as pd
 
     existing_names: set[str] = set()
     names = {}
-    for layer, df in dfs.items():
-        if "name" in df.columns:
-            names[layer] = df["name"].astype("string").str.strip().replace("", pd.NA)
-            existing_names.update(names[layer].dropna())
+    for layer, layer_dict in model_dicts.items():
+        if "name" in layer_dict:
+            names[layer] = ["" if name is None else str(name).strip() for name in layer_dict["name"]]
+
+            existing_names.update(names[layer])
         else:
-            names[layer] = pd.Series(index=df.index, dtype="string")
+            names[layer] = [""] * len(next(iter(layer_dict.values())))
 
     name_generator = map(str, itertools.count(1))
     valid_name_generator = filter(lambda name: name not in existing_names, name_generator)
 
-    for layer, name_series in names.items():
-        mask = name_series.isna()
+    for layer, name_list in names.items():
+        if "" in name_list:
+            name_list = [name if name != "" else next(valid_name_generator) for name in name_list]
 
-        if mask.any():
-            new_names = np.array(list(itertools.islice(valid_name_generator, mask.sum())))
-            name_series[mask] = new_names
+        model_dicts[layer]["name"] = name_list
 
-        dfs[layer]["name"] = name_series
+    return model_dicts
 
-    return dfs
+
+def convert_patterns_curves(elements: dict[ModelLayer, dict]) -> None:
+    for layer_dict in elements.values():
+        for fieldname in layer_dict:
+            try:
+                parameter = Field(fieldname).type
+            except ValueError:
+                continue
+            if parameter == SimpleFieldType.PATTERN:
+                pattern_values = []
+                for value in layer_dict[fieldname]:
+                    if value is not None:
+                        try:
+                            pattern = Pattern(value)
+                        except ValueError:
+                            pattern = value
+                        pattern_values.append(pattern if pattern != "" else None)
+                    else:
+                        pattern_values.append(None)
+                layer_dict[fieldname] = pattern_values
+
+            elif isinstance(parameter, CurveType):
+                curve_values = []
+                for value in layer_dict[fieldname]:
+                    if value is not None:
+                        try:
+                            curve = Curve.factory(value)
+                        except ValueError:
+                            curve = value
+                        curve_values.append(curve if curve != "" else None)
+                    else:
+                        curve_values.append(None)
+                layer_dict[fieldname] = curve_values
 
 
 class ReadFeatureError(Exception):

@@ -4,19 +4,20 @@ This module contains the interfaces for for converting between WNTR and QGIS, bo
 
 from __future__ import annotations
 
+import datetime
 import functools
 import itertools
 import logging
 import math
 import pathlib
 import warnings
-from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable, Mapping
+from types import MappingProxyType
+from typing import TYPE_CHECKING
 
-from qgis.core import Qgis, QgsGeometry, QgsPoint, QgsUnitTypes
+from qgis.core import QgsGeometry, QgsPoint
 
 from gusnet.elements import (
-    DEFAULT_OPTIONS,
     CurveType,
     DemandType,
     Field,
@@ -32,9 +33,9 @@ from gusnet.elements import (
     ResultLayer,
     ValveType,
     WallReactionOrder,
-    _AbstractLayer,
 )
 from gusnet.i18n import tr
+from gusnet.network import Network
 from gusnet.pattern_curve import Curve, Pattern
 from gusnet.units import Converter, SpecificUnitNames
 
@@ -45,34 +46,20 @@ if TYPE_CHECKING:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
-QGIS_USE_DISTANCE_UNIT = Qgis.versionInt() >= 33000
-QGIS_METERS = Qgis.DistanceUnit.Meters if QGIS_USE_DISTANCE_UNIT else QgsUnitTypes.DistanceMeters
-QGIS_FEET = Qgis.DistanceUnit.Feet if QGIS_USE_DISTANCE_UNIT else QgsUnitTypes.DistanceFeet
 
-
-class WntrModel:
+class WntrWrapper:
     _wn: wntr.network.WaterNetworkModel
     _options: ModelOptions
     _converter: Converter
     _existing_patterns: dict[Pattern, str]
-    _elements: dict[ModelLayer, pd.DataFrame] | None = None
-    _node_geometry: dict[str, QgsGeometry] | pd.Series[QgsGeometry] | None = None
-    _link_geometry: dict[str, QgsGeometry] | pd.Series[QgsGeometry] | None = None
+    _elements: Mapping[ModelLayer, Mapping[str, Iterable]] | None = None
+    _node_geometry: dict[str, QgsGeometry] | None = None
+    _link_geometry: dict[str, QgsGeometry] | None = None
     _wntr_results: wntr.sim.SimulationResults | None = None
-    _processed_results: dict[ResultLayer, pd.DataFrame] | None = None
+    _processed_results: Mapping[ResultLayer, Mapping[str, Iterable]] | None = None
 
-    def __init__(self, wn: wntr.network.WaterNetworkModel | pathlib.Path | str | None = None):
-        import wntr
-
-        if wn:
-            if isinstance(wn, (str, pathlib.Path)):
-                wn = wntr.network.WaterNetworkModel(str(wn))
-
-            self._wn = wn
-            options = self.options_from_wn()
-        else:
-            self._wn = wntr.network.WaterNetworkModel()
-            options = DEFAULT_OPTIONS
+    def __init__(self, wn: wntr.network.WaterNetworkModel) -> None:
+        self._wn = wn
 
         self._next_pattern_name = functools.partial(
             next, filter(lambda n: n not in self._wn.pattern_name_list, map(str, itertools.count(2)))
@@ -82,7 +69,7 @@ class WntrModel:
         )
         self._existing_patterns = {Pattern(pat.multipliers): name for name, pat in self._wn.patterns()}
 
-        self.options = options
+        self.options = self.options_from_wn()
 
     @property
     def wn(self) -> wntr.network.WaterNetworkModel:
@@ -98,33 +85,15 @@ class WntrModel:
         self._converter = Converter.from_options(options)
         self._options = options
 
-    def suggested_fields(self, layer: _AbstractLayer | None = None) -> list[Field]:
-        field_groups = FieldGroup.BASE | _get_field_groups(self.options)
-
-        if layer:
-            return [field for field in layer.wq_fields() if field.field_group & field_groups]
-        else:
-            return [field for field in Field if field.field_group & field_groups]
-
-    def add_elements(self, node_df: pd.DataFrame, link_df: pd.DataFrame) -> None:
-        """Convert the node and link dataframes to a WNTR WaterNetworkModel"""
-
-        wn_dict: dict[str, Any] = {}
-        wn_dict["nodes"] = _to_dict(node_df)
-        wn_dict["links"] = _to_dict(link_df)
-
-        logging.getLogger("wntr.network.io").setLevel(logging.CRITICAL)
-        try:
-            self._wn.from_dict(wn_dict)
-        except Exception as e:
-            raise WntrError(e) from e
-
     def add_pattern(self, pattern: Pattern | Iterable[float] | str | None) -> str | None:
         """Takes a Pattern object, or a string or iterable describing the pattern.
         Adds it to the wntr wn, and returns the new pattern name.
         Returns None if the pattern is empty.
 
         Raises ValueError if the pattern is malformed"""
+
+        if not pattern:
+            return None
 
         if not isinstance(pattern, Pattern):
             pattern = Pattern(pattern)
@@ -142,7 +111,7 @@ class WntrModel:
 
     def _add_finalised_pattern(self, name: str, pattern: Pattern) -> None:
         """Adds a pattern that has already been finalised with a name."""
-        self._wn.add_pattern(name=name, pattern=list(pattern))
+        self._wn.add_pattern(name=name, pattern=list(pattern.multipliers))
 
     def get_pattern(self, pattern_name: wntr.network.Pattern | str | None) -> Pattern:
         if not pattern_name:
@@ -194,7 +163,7 @@ class WntrModel:
         return str(self.get_curve(curve_name))
 
     @property
-    def node_geometries(self) -> dict[str, QgsGeometry] | pd.Series[QgsGeometry]:
+    def node_geometries(self) -> dict[str, QgsGeometry]:
         if self._node_geometry is not None:
             return self._node_geometry
 
@@ -203,7 +172,7 @@ class WntrModel:
         return nodes
 
     @property
-    def link_geometries(self) -> dict[str, QgsGeometry] | pd.Series:
+    def link_geometries(self) -> dict[str, QgsGeometry]:
         if self._link_geometry is not None:
             return self._link_geometry
 
@@ -221,26 +190,6 @@ class WntrModel:
 
         return self._link_geometry
 
-    def set_node_geometry(self, node_geometry: dict[str, QgsGeometry] | pd.Series[QgsGeometry]) -> None:
-        node_registry = self._wn.nodes
-
-        for name, geometry in node_geometry.items():
-            node = node_registry[name]
-            point = geometry.constGet()
-            node.coordinates = (point.x(), point.y())
-
-        self._node_geometry = node_geometry
-        self._link_geometry = None  # invalidate link geometry cache
-
-    def set_link_geometry(self, link_geometry: dict[str, QgsGeometry]) -> None:
-        link_registry = self._wn.links
-
-        for name, geometry in link_geometry.items():
-            link = link_registry[name]
-            link.vertices = [(v.x(), v.y()) for v in geometry.asPolyline()[1:-1]]
-
-        self._link_geometry = link_geometry
-
     def run(self, output_file_prefix: str = "temp") -> None:
         import wntr
 
@@ -250,15 +199,31 @@ class WntrModel:
         except wntr.epanet.exceptions.EpanetException as e:
             raise EpanetError(e) from e
 
-    def get_elements(self) -> dict[ModelLayer, pd.DataFrame]:
+    def get_network(self) -> Network:
+        net = Network()
+
+        point_data = [(name, tuple(node.coordinates)) for name, node in self.wn.nodes()]
+
+        if not point_data:
+            return net
+
+        net.add_nodes_from_points(*zip(*point_data))
+
+        link_data = [(name, link.start_node_name, link.end_node_name, link.vertices) for name, link in self.wn.links()]
+        net.add_links_from_nodes_and_vertices(*zip(*link_data))
+
+        return net
+
+    def get_elements(self, flow_unit: FlowUnit | None) -> Mapping[ModelLayer, Mapping[str, Iterable]]:
         if self._elements:
             return self._elements
 
         import pandas as pd
 
+        self._converter = self.get_converter(flow_unit)
         wn_dict = self._wn.to_dict()
 
-        dfs: dict[ModelLayer, pd.DataFrame] = {}
+        layers: dict[ModelLayer, dict[str, Iterable]] = {}
 
         df_nodes = pd.DataFrame(wn_dict["nodes"])
         df_nodes = df_nodes.drop(
@@ -269,7 +234,9 @@ class WntrModel:
             for layer in [ModelLayer.JUNCTIONS, ModelLayer.RESERVOIRS, ModelLayer.TANKS]:
                 mask = df_nodes["node_type"] == layer.field_type
                 if mask.any():
-                    dfs[layer] = self._process_model_df_from_wntr(df_nodes[mask], layer)
+                    df = self._process_model_df_from_wntr(df_nodes[mask], layer)
+                    df = _convert_dataframe(df, self._converter.from_si)
+                    layers[layer] = df.to_dict("list")
 
         df_links = pd.DataFrame(wn_dict["links"])
         df_links = df_links.drop(
@@ -279,9 +246,11 @@ class WntrModel:
             for layer in [ModelLayer.PIPES, ModelLayer.PUMPS, ModelLayer.VALVES]:
                 mask = df_links["link_type"] == layer.field_type
                 if mask.any():
-                    dfs[layer] = self._process_model_df_from_wntr(df_links[mask], layer)
+                    df = self._process_model_df_from_wntr(df_links[mask], layer)
+                    df = _convert_dataframe(df, self._converter.from_si)
+                    layers[layer] = df.to_dict("list")
 
-        self._elements = dfs
+        self._elements = layers
         return self._elements
 
     def _process_model_df_from_wntr(self, df: pd.DataFrame, layer: ModelLayer) -> pd.DataFrame:
@@ -357,16 +326,27 @@ class WntrModel:
 
             df = df.rename(columns={"initial_status": "valve_status"})
 
-        df = _convert_dataframe(df, self._converter.from_si)
-
         return df
 
-    def set_elements(self, elements: dict[ModelLayer, pd.DataFrame]) -> None:
+    def set_elements(self, elements: Mapping[ModelLayer, Mapping], network: Network) -> None:
         """Convert the node and link dataframes to a WNTR WaterNetworkModel"""
+        import pandas as pd
 
+        start_node_names = network.link_start_nodes
+        end_node_names = network.link_end_nodes
+        link_vertices = network.link_middle_vertices
         wn_dict: dict[str, list[dict]] = {"nodes": [], "links": []}
-        for layer, df in elements.items():
+        for layer, layer_mapping in elements.items():
             model_layer = ModelLayer(layer)
+
+            df = pd.DataFrame(dict(layer_mapping))
+
+            if model_layer.is_node:
+                df["coordinates"] = df["name"].map(network.node_coordinates)
+            else:
+                df["start_node_name"] = df["name"].map(start_node_names)
+                df["end_node_name"] = df["name"].map(end_node_names)
+                df["vertices"] = df["name"].map(link_vertices)
 
             df = _convert_dataframe(df, self._converter.to_si)
 
@@ -399,7 +379,7 @@ class WntrModel:
             df[Field.BASE_DEMAND] = np.nan
 
         if Field.DEMAND_PATTERN in df.columns:
-            df[Field.DEMAND_PATTERN] = df[Field.DEMAND_PATTERN].map(Pattern.factory, na_action="ignore")
+            df[Field.DEMAND_PATTERN] = df[Field.DEMAND_PATTERN].map(Pattern, na_action="ignore")
         else:
             df[Field.DEMAND_PATTERN] = np.nan
 
@@ -486,7 +466,7 @@ class WntrModel:
         self._wntr_results = results
         self._processed_results = None
 
-    def get_results(self) -> dict[ResultLayer, pd.DataFrame]:
+    def get_results(self, flow_unit: FlowUnit | None = None) -> Mapping[ResultLayer, Mapping[str, Iterable]]:
         if self._processed_results:
             return self._processed_results
 
@@ -499,10 +479,14 @@ class WntrModel:
         pipe_lengths = self._get_pipe_lengths()
         link_dfs["unit_headloss"], link_dfs["headloss"] = _fix_headloss_df(link_dfs[Field.HEADLOSS.value], pipe_lengths)
 
-        node_df = self._process_results_layer(ResultLayer.NODES, node_dfs)
-        link_df = self._process_results_layer(ResultLayer.LINKS, link_dfs)
+        self._converter = self.get_converter(flow_unit=flow_unit)
 
-        self._processed_results = {ResultLayer.NODES: node_df, ResultLayer.LINKS: link_df}
+        node_dict = self._process_results_layer(ResultLayer.NODES, node_dfs)
+        link_dict = self._process_results_layer(ResultLayer.LINKS, link_dfs)
+
+        self._processed_results = MappingProxyType(
+            {ResultLayer.NODES: MappingProxyType(node_dict), ResultLayer.LINKS: MappingProxyType(link_dict)}
+        )
         return self._processed_results
 
     def _get_pipe_lengths(self) -> pd.Series:
@@ -510,10 +494,10 @@ class WntrModel:
 
         return pd.Series({name: pipe.length for name, pipe in self._wn.pipes()})
 
-    def _process_results_layer(self, layer: ResultLayer, results_dfs: dict[str, pd.DataFrame]) -> pd.DataFrame:
-        import pandas as pd
+    def _process_results_layer(self, layer: ResultLayer, results_dfs: dict[str, pd.DataFrame]) -> dict[str, list]:
+        import numpy as np
 
-        output_series: list[pd.Series] = []
+        output_dict: dict[str, list] = {"name": next(iter(results_dfs.values())).columns.tolist()}
 
         for field in layer.wq_fields():
             df = results_dfs.get(field.value)
@@ -524,23 +508,30 @@ class WntrModel:
             if isinstance(field.type, Parameter):
                 df = self._converter.from_si(df, field.type)
 
-            if self.options.simulation_duration == 0:
-                series = df.iloc[0]
-                series.name = field.value
-                output_series.append(series)
+            if not self.options.simulation_duration:
+                output_dict[field] = df.iloc[0].replace(np.nan, None).tolist()
             else:
-                lists = df.transpose().to_numpy().tolist()
-                output_series.append(pd.Series(lists, index=df.columns, name=field.value))
+                array = df.to_numpy().T
+                output_dict[field] = [
+                    element_list if not any(math.isnan(el) for el in element_list) else None
+                    for element_list in array.tolist()
+                ]
 
-        combined_df = pd.concat(output_series, axis=1)
-        combined_df["name"] = combined_df.index.to_series()
-
-        return combined_df
+        return output_dict
 
     def write_inp_file(self, file_path: str | pathlib.Path) -> None:
         import wntr
 
         wntr.network.write_inpfile(self.wn, str(file_path))
+
+    def get_converter(self, flow_unit: FlowUnit | None = None) -> Converter:
+        o: wntr.network.Options = self.wn.options
+
+        flow_unit = flow_unit or FlowUnit(o.hydraulic.inpfile_units)
+        headloss_formula = HeadlossFormula(o.hydraulic.headloss)
+        mass_unit = MassUnit(o.quality.inpfile_units)
+
+        return Converter(flow_unit, headloss_formula, mass_unit)
 
     def options_from_wn(self) -> ModelOptions:
         o: wntr.network.Options = self.wn.options
@@ -554,8 +545,11 @@ class WntrModel:
         return ModelOptions(
             flow_unit=flow_unit,
             headloss_formula=headloss_formula,
-            simulation_duration=o.time.duration / 3600,
+            simulation_duration=datetime.timedelta(seconds=o.time.duration),
             demand_multiplier=o.hydraulic.demand_multiplier,
+            default_pattern=self.get_pattern(o.hydraulic.pattern)
+            if o.hydraulic.pattern in self.wn.pattern_name_list
+            else Pattern(),
             emitter_exponent=o.hydraulic.emitter_exponent,
             demand_type=DemandType(o.hydraulic.demand_model),
             minimum_pressure=converter.from_si(o.hydraulic.minimum_pressure, Parameter.HYDRAULIC_HEAD),
@@ -593,8 +587,9 @@ class WntrModel:
             o.hydraulic.headloss = options.headloss_formula.value
 
         o.hydraulic.inpfile_units = options.flow_unit.value
-        o.time.duration = int(options.simulation_duration * 3600)
+        o.time.duration = int(options.simulation_duration.total_seconds())
         o.hydraulic.demand_multiplier = options.demand_multiplier
+        o.hydraulic.pattern = self.add_pattern(options.default_pattern) or "1"
         o.hydraulic.emitter_exponent = options.emitter_exponent
         o.hydraulic.demand_model = options.demand_type.value
         o.hydraulic.minimum_pressure = converter.to_si(options.minimum_pressure, Parameter.HYDRAULIC_HEAD)
@@ -720,20 +715,23 @@ class WntrModel:
         return html, text
 
 
-def _fix_headloss_df(df: pd.DataFrame, pipe_lengths: pd.Series) -> tuple[pd.DataFrame, pd.DataFrame]:
+def _fix_headloss_df(headloss_df: pd.DataFrame, pipe_lengths: pd.Series) -> tuple[pd.DataFrame, pd.DataFrame]:
     import pandas as pd
 
-    df = df.astype("float64")
-    unit_headloss = df[pipe_lengths.index]
+    headloss_df = headloss_df.astype("float64")
+    unit_headloss = pd.DataFrame(index=headloss_df.index, columns=headloss_df.columns, dtype="float64")
+    unit_headloss[pipe_lengths.index] = headloss_df[pipe_lengths.index]
 
-    valve_total_headloss = df.drop(pipe_lengths.index, axis=1, errors="ignore")
-    pipe_total_headloss = unit_headloss * pipe_lengths
+    pipe_total_headloss = headloss_df[pipe_lengths.index] * pipe_lengths
+    valve_total_headloss = headloss_df.drop(pipe_lengths.index, axis=1, errors="ignore")
     total_headloss = pd.concat([valve_total_headloss, pipe_total_headloss], axis=1)
 
     return unit_headloss, total_headloss
 
 
 def _convert_dataframe(source_df: pd.DataFrame, conversion_function: Callable) -> pd.DataFrame:
+    import pandas as pd
+
     for fieldname in source_df.columns:
         try:
             parameter = Field(fieldname).type
@@ -741,6 +739,9 @@ def _convert_dataframe(source_df: pd.DataFrame, conversion_function: Callable) -
             continue
         if not isinstance(parameter, Parameter):
             continue
+
+        if not pd.api.types.is_numeric_dtype(source_df[fieldname].dtype):
+            source_df[fieldname] = pd.to_numeric(source_df[fieldname])
 
         source_df[fieldname] = conversion_function(source_df[fieldname], parameter)
     return source_df

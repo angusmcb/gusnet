@@ -93,15 +93,15 @@ def gusnet_check_pattern(pattern, feature, parent, context):  # noqa ARG001
     </ul>
     """
 
+    if pattern is None:
+        return None
+
     try:
         pattern = Pattern(pattern)
     except ValueError:
         return False
 
-    if not pattern:
-        return None
-    else:
-        return True
+    return bool(pattern) or None
 
 
 @qgsfunction(group=GROUP, referenced_columns=[])

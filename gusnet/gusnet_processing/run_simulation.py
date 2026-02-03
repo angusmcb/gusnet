@@ -11,12 +11,16 @@
 
 from __future__ import annotations
 
+import datetime
+import functools
 import logging
 import time
-from collections.abc import Generator
+import uuid
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
+from enum import Enum
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 from qgis.core import (
     QgsApplication,
@@ -42,6 +46,7 @@ from qgis.PyQt.QtGui import QIcon
 from gusnet.elements import (
     DEFAULT_OPTIONS,
     DemandType,
+    EnumWithName,
     FlowUnit,
     HeadlossFormula,
     MassUnit,
@@ -51,17 +56,20 @@ from gusnet.elements import (
     ResultLayer,
     WallReactionOrder,
 )
-from gusnet.feature_reader import ReadFeatureError
-from gusnet.feature_writer import get_qgs_fields, write
-from gusnet.gusnet_processing.common import CommonProcessingBase, profile
-from gusnet.hybrid_wntr import HybridWntrModel
+from gusnet.epanet_wrapper import EpanetWrapperError, run_analysis
+from gusnet.feature_reader import ReadFeatureError, read
+from gusnet.feature_writer import get_qgs_fields_from_options, write
+from gusnet.gusnet_processing.common import CommonProcessingBase
 from gusnet.i18n import tr
-from gusnet.interface import NetworkModelError, WntrModel
+from gusnet.inpfile_writer import write_inp_file
+from gusnet.network import Network
+from gusnet.output_file_reader import BinFileError, read_output_file
 from gusnet.pattern_curve import Pattern
+from gusnet.profiler import profile
 from gusnet.settings import ProjectSettings, SettingKey
 from gusnet.style import style
 from gusnet.units import SpecificUnitNames
-from gusnet.verify_model import VerificationError
+from gusnet.verify_model import VerificationError, verify_model
 
 
 class _ModelCreatorAlgorithm(CommonProcessingBase):
@@ -71,6 +79,7 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
     OUTPUT_INP = "OUTPUT_INP"
     DEMAND_TYPE = "DEMAND_TYPE"
     DEMAND_MULTIPLIER = "DEMAND_MULTIPLIER"
+    DEFAULT_PATTERN = "DEFAULT_PATTERN"
     EMITTER_EXPONENT = "EMITTER_EXPONENT"
     MINIMUM_PRESSURE = "MINIMUM_PRESSURE"
     REQUIRED_PRESSURE = "REQUIRED_PRESSURE"
@@ -101,9 +110,10 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
 
         param_values[self.UNITS] = list(FlowUnit).index(options.flow_unit)
         param_values[self.HEADLOSS_FORMULA] = list(HeadlossFormula).index(options.headloss_formula)
-        param_values[self.DURATION] = options.simulation_duration
+        param_values[self.DURATION] = options.simulation_duration.total_seconds() / 3600  # hours
         param_values[self.DEMAND_TYPE] = list(DemandType).index(options.demand_type)
         param_values[self.DEMAND_MULTIPLIER] = options.demand_multiplier
+        param_values[self.DEFAULT_PATTERN] = str(options.default_pattern)
         param_values[self.EMITTER_EXPONENT] = options.emitter_exponent
         param_values[self.MINIMUM_PRESSURE] = options.minimum_pressure
         param_values[self.REQUIRED_PRESSURE] = options.required_pressure
@@ -159,89 +169,42 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
 
             self.addParameter(param)
 
-        param = QgsProcessingParameterEnum(self.UNITS, tr("Units"), options=[fu.friendly_name for fu in FlowUnit])
-        self.addParameter(param)
+        self.add_param_enum(self.UNITS, tr("Units"), FlowUnit, advanced=False)
 
-        param = QgsProcessingParameterEnum(
-            self.HEADLOSS_FORMULA, tr("Headloss Formula"), options=[f.friendly_name for f in HeadlossFormula]
-        )
-        self.addParameter(param)
+        self.add_param_enum(self.HEADLOSS_FORMULA, tr("Headloss Formula"), HeadlossFormula, advanced=False)
 
-        param = QgsProcessingParameterNumber(
-            self.DURATION, tr("Simulation duration in hours (or 0 for single period)"), minValue=0
-        )
-        self.addParameter(param)
+        self.add_param_float(self.DURATION, tr("Simulation duration in hours (or 0 for single period)"), 2, 0, False)
 
-        param = QgsProcessingParameterEnum(
-            self.DEMAND_TYPE, tr("Demand Type"), options=[option.friendly_name for option in DemandType]
-        )
-        self.addParameter(param)
+        self.add_param_enum(self.DEMAND_TYPE, tr("Demand type"), DemandType, advanced=False)
 
-        param = QgsProcessingParameterNumber(
-            self.DEMAND_MULTIPLIER, tr("Demand Multiplier"), QgsProcessingParameterNumber.Double
-        )
-        param.setMetadata({"widget_wrapper": {"decimals": 2}})
+        self.add_param_float(self.DEMAND_MULTIPLIER, tr("Demand Multiplier"), 2, None, advanced=True)
+
+        param = QgsProcessingParameterString(self.DEFAULT_PATTERN, tr("Default Demand Pattern"), optional=True)
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(param)
 
-        param = QgsProcessingParameterNumber(
-            self.EMITTER_EXPONENT, tr("Emitter exponent"), QgsProcessingParameterNumber.Double, minValue=0
-        )
-        param.setMetadata({"widget_wrapper": {"decimals": 2}})
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_float(self.EMITTER_EXPONENT, tr("Emitter exponent"), 2, None, True)
 
-        param = QgsProcessingParameterNumber(
-            self.MINIMUM_PRESSURE, tr("Minimum pressure"), QgsProcessingParameterNumber.Double, minValue=0
-        )
-        param.setMetadata({"widget_wrapper": {"decimals": 1}})
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_float(self.MINIMUM_PRESSURE, tr("Minimum pressure"), 1, 0, True)
 
-        param = QgsProcessingParameterNumber(
-            self.REQUIRED_PRESSURE, tr("Required pressure"), QgsProcessingParameterNumber.Double, minValue=0.1
-        )
-        param.setMetadata({"widget_wrapper": {"decimals": 1}})
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_float(self.REQUIRED_PRESSURE, tr("Required pressure"), 1, 0.1, True)
 
-        param = QgsProcessingParameterNumber(self.PRESSURE_EXPONENT, tr("Pressure exponent"), minValue=0)
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_float(self.PRESSURE_EXPONENT, tr("Pressure exponent"), 2, 0, True)
 
-        param = QgsProcessingParameterNumber(
-            self.ENERGY_PRICE, tr("Energy price (per kWh)"), QgsProcessingParameterNumber.Double, minValue=0
-        )
-        param.setMetadata({"widget_wrapper": {"decimals": 3}})
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_float(self.ENERGY_PRICE, tr("Energy price (per kWh)"), 3, 0, True)
 
         # Optional: allow empty / unset energy price pattern
         param = QgsProcessingParameterString(self.ENERGY_PATTERN, tr("Energy price pattern"), optional=True)
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(param)
 
-        param = QgsProcessingParameterNumber(
-            self.ENERGY_PUMP_EFFICIENCY, tr("Pump efficiency (%)"), minValue=0, maxValue=100
-        )
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_float(self.ENERGY_PUMP_EFFICIENCY, tr("Pump efficiency (%)"), 1, 0, True)
 
-        param = QgsProcessingParameterNumber(self.ENERGY_DEMAND_CHARGE, tr("Energy demand charge"), minValue=0)
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_float(self.ENERGY_DEMAND_CHARGE, tr("Energy demand charge"), 2, 0, True)
 
-        param = QgsProcessingParameterEnum(
-            self.QUALITY_PARAMETER, tr("Quality analysis"), options=[qp.friendly_name for qp in QualityParameter]
-        )
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_enum(self.QUALITY_PARAMETER, tr("Quality analysis"), QualityParameter, advanced=True)
 
-        param = QgsProcessingParameterEnum(
-            self.MASS_UNIT, tr("Mass unit"), options=[mu.friendly_name for mu in MassUnit]
-        )
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_enum(self.MASS_UNIT, tr("Mass unit"), MassUnit, advanced=True)
 
         param = QgsProcessingParameterNumber(self.RELATIVE_DIFFUSIVITY, tr("Relative diffusivity"), minValue=0)
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
@@ -260,11 +223,7 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(param)
 
-        param = QgsProcessingParameterEnum(
-            self.WALL_REACTION_ORDER, tr("Wall reaction order"), options=[wr.friendly_name for wr in WallReactionOrder]
-        )
-        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(param)
+        self.add_param_enum(self.WALL_REACTION_ORDER, tr("Wall reaction order"), WallReactionOrder, advanced=True)
 
         param = QgsProcessingParameterNumber(self.GLOBAL_BULK_COEFFICIENT, tr("Global bulk coefficient"), minValue=0)
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
@@ -290,6 +249,30 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
                 param_def.setDefaultValue(default_values[param_name])
                 param_def.setGuiDefaultValueOverride(saved_values[param_name])
 
+    def add_param_enum(self, name: str, description: str, enum_type: type[EnumWithName], advanced: bool) -> None:  # noqa: FBT001
+        param = QgsProcessingParameterEnum(name, description, options=[e.friendly_name for e in enum_type])
+        if advanced:
+            param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+
+        self.addParameter(param)
+
+    def add_param_float(
+        self,
+        name: str,
+        description: str,
+        decimals: int,
+        min_value: float | None,
+        advanced: bool,  # noqa: FBT001
+    ) -> None:
+        param = QgsProcessingParameterNumber(name, description, QgsProcessingParameterNumber.Double)
+        if min_value is not None:
+            param.setMinimum(min_value)
+        if decimals is not None:
+            param.setMetadata({"widget_wrapper": {"decimals": decimals}})
+        if advanced:
+            param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
+
     def init_output_parameters(self):
         pass
 
@@ -310,80 +293,51 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         """
         Get the model options from the parameters.
         """
+        double = functools.partial(self.parameterAsDouble, parameters, context=context)
+        string_param = functools.partial(self.parameterAsString, parameters, context=context)
+        E = TypeVar("E", bound=Enum)
 
-        # Numeric/simple parameters
-        duration = self.parameterAsDouble(parameters, self.DURATION, context)
-        demand_multiplier = self.parameterAsDouble(parameters, self.DEMAND_MULTIPLIER, context)
-        emitter_exponent = self.parameterAsDouble(parameters, self.EMITTER_EXPONENT, context)
-        minimum_pressure = self.parameterAsDouble(parameters, self.MINIMUM_PRESSURE, context)
-        required_pressure = self.parameterAsDouble(parameters, self.REQUIRED_PRESSURE, context)
-        pressure_exponent = self.parameterAsDouble(parameters, self.PRESSURE_EXPONENT, context)
-
-        energy_price = self.parameterAsDouble(parameters, self.ENERGY_PRICE, context)
-        energy_pump_efficiency = self.parameterAsDouble(parameters, self.ENERGY_PUMP_EFFICIENCY, context)
-        energy_demand_charge = self.parameterAsDouble(parameters, self.ENERGY_DEMAND_CHARGE, context)
-
-        relative_diffusivity = self.parameterAsDouble(parameters, self.RELATIVE_DIFFUSIVITY, context)
-
-        quality_tolerance = self.parameterAsDouble(parameters, self.QUALITY_TOLERANCE, context)
-
-        bulk_reaction_order = self.parameterAsDouble(parameters, self.BULK_REACTION_ORDER, context)
-
-        global_bulk_coefficient = self.parameterAsDouble(parameters, self.GLOBAL_BULK_COEFFICIENT, context)
-        global_wall_coefficient = self.parameterAsDouble(parameters, self.GLOBAL_WALL_COEFFICIENT, context)
-        limiting_concentration = self.parameterAsDouble(parameters, self.LIMITING_CONCENTRATION, context)
-        wall_coefficient_correlation = self.parameterAsDouble(parameters, self.WALL_COEFFICIENT_CORRELATION, context)
-
-        trace_node = self.parameterAsString(parameters, self.TRACE_NODE, context) or ""
+        def enum_index(enum: type[E], param: str) -> E:
+            return list(enum)[self.parameterAsEnum(parameters, param, context)]
 
         try:
-            energy_pattern = Pattern(self.parameterAsString(parameters, self.ENERGY_PATTERN, context))
+            energy_pattern = Pattern(string_param(self.ENERGY_PATTERN))
+            default_pattern = Pattern(string_param(self.DEFAULT_PATTERN))
         except ValueError as e:
             raise QgsProcessingException(e) from e
 
-        # Enum parameters
-
-        flow_unit = list(FlowUnit)[self.parameterAsEnum(parameters, self.UNITS, context)]
-        headloss = list(HeadlossFormula)[self.parameterAsEnum(parameters, self.HEADLOSS_FORMULA, context)]
-        demand_type = list(DemandType)[self.parameterAsEnum(parameters, self.DEMAND_TYPE, context)]
-        quality_parameter = list(QualityParameter)[self.parameterAsEnum(parameters, self.QUALITY_PARAMETER, context)]
-        mass_unit = list(MassUnit)[self.parameterAsEnum(parameters, self.MASS_UNIT, context)]
-        wall_reaction_order = list(WallReactionOrder)[
-            self.parameterAsEnum(parameters, self.WALL_REACTION_ORDER, context)
-        ]
-
         return ModelOptions(
-            flow_unit=flow_unit,
-            headloss_formula=headloss,
-            simulation_duration=duration,
-            demand_multiplier=demand_multiplier,
-            emitter_exponent=emitter_exponent,
-            demand_type=demand_type,
-            minimum_pressure=minimum_pressure,
-            required_pressure=required_pressure,
-            pressure_exponent=pressure_exponent,
+            flow_unit=enum_index(FlowUnit, self.UNITS),
+            headloss_formula=enum_index(HeadlossFormula, self.HEADLOSS_FORMULA),
+            simulation_duration=datetime.timedelta(hours=double(self.DURATION)),
+            demand_multiplier=double(self.DEMAND_MULTIPLIER),
+            default_pattern=default_pattern,
+            emitter_exponent=double(self.EMITTER_EXPONENT),
+            demand_type=enum_index(DemandType, self.DEMAND_TYPE),
+            minimum_pressure=double(self.MINIMUM_PRESSURE),
+            required_pressure=double(self.REQUIRED_PRESSURE),
+            pressure_exponent=double(self.PRESSURE_EXPONENT),
             energy_report=True,
-            energy_price=energy_price,
+            energy_price=double(self.ENERGY_PRICE),
             energy_pattern=energy_pattern,
-            energy_pump_efficiency=energy_pump_efficiency,
-            energy_demand_charge=energy_demand_charge,
-            quality_parameter=quality_parameter,
-            mass_unit=mass_unit,
-            relative_diffusivity=relative_diffusivity,
-            trace_node=trace_node,
-            quality_tolerance=quality_tolerance,
-            bulk_reaction_order=bulk_reaction_order,
-            wall_reaction_order=wall_reaction_order,
-            global_bulk_coefficient=global_bulk_coefficient,
-            global_wall_coefficient=global_wall_coefficient,
-            limiting_concentration=limiting_concentration,
-            wall_coefficient_correlation=wall_coefficient_correlation,
+            energy_pump_efficiency=double(self.ENERGY_PUMP_EFFICIENCY),
+            energy_demand_charge=double(self.ENERGY_DEMAND_CHARGE),
+            quality_parameter=enum_index(QualityParameter, self.QUALITY_PARAMETER),
+            mass_unit=enum_index(MassUnit, self.MASS_UNIT),
+            relative_diffusivity=double(self.RELATIVE_DIFFUSIVITY),
+            trace_node=string_param(self.TRACE_NODE) or "",
+            quality_tolerance=double(self.QUALITY_TOLERANCE),
+            bulk_reaction_order=double(self.BULK_REACTION_ORDER),
+            wall_reaction_order=enum_index(WallReactionOrder, self.WALL_REACTION_ORDER),
+            global_bulk_coefficient=double(self.GLOBAL_BULK_COEFFICIENT),
+            global_wall_coefficient=double(self.GLOBAL_WALL_COEFFICIENT),
+            limiting_concentration=double(self.LIMITING_CONCENTRATION),
+            wall_coefficient_correlation=double(self.WALL_COEFFICIENT_CORRELATION),
         )
 
-    def _get_model(self, parameters: dict[str, Any], context: QgsProcessingContext) -> WntrModel:
-        from gusnet.feature_reader import read
-        from gusnet.verify_model import verify_model
-
+    def _get_model(
+        self, parameters: dict[str, Any], context: QgsProcessingContext
+    ) -> tuple[ModelOptions, Network, Mapping]:
         sources = {
             lyr: source for lyr in ModelLayer if (source := self.parameterAsSource(parameters, lyr.name, context))
         }
@@ -395,34 +349,27 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         ellipsoid = context.ellipsoid()
         transform_context = context.transformContext()
 
-        try:
-            elements = read(sources, crs, transform_context, ellipsoid, model_options.flow_unit)
-        except ReadFeatureError as e:
-            raise QgsProcessingException(tr("Error reading features: {exception}").format(exception=e)) from e
+        with profile(tr("Reading features")):
+            try:
+                elements, network = read(sources, crs, transform_context, ellipsoid, model_options.flow_unit)
+            except ReadFeatureError as e:
+                raise QgsProcessingException(tr("Error reading features: {exception}").format(exception=e)) from e
 
-        try:
-            verify_model(elements)
-        except VerificationError as e:
-            raise QgsProcessingException(tr("Error verifying model: {exception}").format(exception=e)) from None
+        with profile(tr("Verifying model")):
+            try:
+                verify_model(elements, network)
+            except VerificationError as e:
+                raise QgsProcessingException(tr("Error verifying model: {exception}").format(exception=e)) from e
 
-        model = HybridWntrModel()
+        return model_options, network, elements
 
-        model.options = model_options
-
-        try:
-            model.set_elements(elements)
-        except NetworkModelError as e:
-            raise QgsProcessingException(e) from e
-
-        return model
-
-    def _describe_model(self, model: WntrModel, feedback: QgsProcessingFeedback) -> None:
-        if hasattr(feedback, "pushFormattedMessage"):  # QGIS > 3.32
-            feedback.pushFormattedMessage(*model.describe_network())
-            feedback.pushFormattedMessage(*model.describe_pipes())
-        else:
-            feedback.pushInfo(model.describe_network()[1])
-            feedback.pushInfo(model.describe_pipes()[1])
+    # def _describe_model(self, model: HybridWntrModel, feedback: QgsProcessingFeedback) -> None:
+    #     if hasattr(feedback, "pushFormattedMessage"):  # QGIS > 3.32
+    #         feedback.pushFormattedMessage(*model.describe_network())
+    #         feedback.pushFormattedMessage(*model.describe_pipes())
+    #     else:
+    #         feedback.pushInfo(model.describe_network()[1])
+    #         feedback.pushInfo(model.describe_pipes()[1])
 
     def prepareAlgorithm(  # noqa: N802
         self, parameters: dict[str, Any], context: QgsProcessingContext, feedback: QgsProcessingFeedback | None
@@ -446,7 +393,9 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        model: WntrModel,
+        options: ModelOptions,
+        network: Network,
+        attributes: Mapping[ResultLayer, Mapping],
     ) -> dict[str, str]:
         outputs: dict[str, str] = {}
 
@@ -454,26 +403,22 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
 
         group_name = tr("Simulation Results ({finish_time})").format(finish_time=time.strftime("%X"))
 
-        style_theme = "extended" if model.options.simulation_duration else None
-        unit_names = SpecificUnitNames.from_options(model.options)
-
-        results = model.get_results()
+        style_theme = "extended" if options.simulation_duration else None
+        unit_names = SpecificUnitNames.from_options(options)
 
         for layer_type in ResultLayer:
-            field_enums = model.suggested_fields(layer_type)
+            fields = get_qgs_fields_from_options(options, layer_type)
 
-            attribute_df = results[layer_type]
-
-            fields = get_qgs_fields(field_enums, attribute_df, model.options.simulation_duration > 0)
+            attribute_df = attributes[layer_type]
 
             (sink, layer_id) = self.parameterAsSink(
-                parameters, layer_type.results_name, context, fields, layer_type.qgs_wkb_type, crs
+                parameters, layer_type.results_name, context, fields, layer_type.wkb_type, crs
             )
 
             if not sink:
                 continue
 
-            geometries = model.node_geometries if layer_type.is_node else model.link_geometries
+            geometries = network.node_geometries if layer_type.is_node else network.link_geometries
 
             write(sink, fields, attribute_df, geometries)
 
@@ -492,22 +437,6 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
             self.post_processors[layer_id] = post_processor
 
         return outputs
-
-    def write_inp_file(
-        self,
-        parameters: dict[str, Any],
-        context: QgsProcessingContext,
-        feedback: QgsProcessingFeedback | None,
-        model: WntrModel,
-    ) -> dict[str, str]:
-        inp_file = self.parameterAsFile(parameters, self.OUTPUT_INP, context)
-
-        model.write_inp_file(inp_file)
-
-        if feedback:
-            feedback.pushInfo(tr(".inp file written to: {file_path}").format(file_path=inp_file))
-
-        return {self.OUTPUT_INP: inp_file}
 
 
 class RunSimulation(_ModelCreatorAlgorithm):
@@ -543,24 +472,44 @@ in other software.
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback | None,
     ) -> dict:
-        with profile(tr("Verifying Dependencies"), 10, feedback):
-            self._check_wntr()
+        if not feedback:
+            feedback = QgsProcessingFeedback()
 
-        with logger_to_feedback("wntr", feedback), logger_to_feedback("gusnet", feedback):
+        with profile(tr("Verifying Dependencies"), 10, feedback):
+            self._check_can_execute()
+
+        with logger_to_feedback("gusnet", feedback):
             with profile(tr("Preparing Model"), 30, feedback):
-                model = self._get_model(parameters, context)
+                model_options, network, elements = self._get_model(parameters, context)
 
                 # self._describe_model(model, feedback)
+            temp_file_dir = Path(QgsProcessingUtils.tempFolder(context)) / f"gusnet_run_{uuid.uuid4().hex}"
+            temp_file_dir.mkdir(parents=True, exist_ok=True)
+            feedback.pushDebugInfo(tr("Using temporary folder: {folder}").format(folder=temp_file_dir))
+            input_file = temp_file_dir / "run_input.inp"
+            report_file = temp_file_dir / "run_report.rpt"
+            output_file = temp_file_dir / "run_output.bin"
+            hydraulics_temp_file = temp_file_dir / "run_hydraulics.tmp"
 
-            with profile(tr("Running Simulation"), 50, feedback):
-                temp_folder = Path(QgsProcessingUtils.tempFolder()) / "wntr"
+            with profile(tr("Writing EPANET input file"), 40, feedback):
+                write_inp_file(elements, model_options, network, input_file, hydraulics_temp_file)
+
+            with profile(tr("Run EPANET simulation"), 50, feedback):
                 try:
-                    model.run(str(temp_folder))
-                except NetworkModelError as e:
+                    run_analysis(input_file, report_file, output_file)
+                except EpanetWrapperError as e:
                     raise QgsProcessingException(e) from e
 
-            with profile(tr("Creating Outputs"), 80, feedback):
-                outputs = self.write_output_result_layers(parameters, context, model)
+            with profile(tr("Process results output file"), 60, feedback):
+                try:
+                    result_attributes = read_output_file(output_file)
+                except BinFileError as e:
+                    raise QgsProcessingException(e) from e
+
+            with profile(tr("Creating output layers"), 80, feedback):
+                outputs = self.write_output_result_layers(
+                    parameters, context, model_options, network, result_attributes
+                )
 
         return outputs
 
@@ -605,18 +554,17 @@ in other software.
         context: QgsProcessingContext,
         feedback: QgsProcessingFeedback | None,
     ) -> dict:
-        with profile(tr("Verifying Dependencies"), 10, feedback):
-            self._check_wntr()
-
-        with logger_to_feedback("wntr", feedback), logger_to_feedback("gusnet", feedback):
+        with logger_to_feedback("gusnet", feedback):
             with profile(tr("Preparing Model"), 30, feedback):
-                model = self._get_model(parameters, context)
+                model_options, network, elements = self._get_model(parameters, context)
                 # self._describe_model(model, feedback)
 
             with profile(tr("Creating Outputs"), 80, feedback):
-                outputs = self.write_inp_file(parameters, context, feedback, model)
+                inp_file_path = self.parameterAsFile(parameters, self.OUTPUT_INP, context)
 
-        return outputs
+                write_inp_file(elements, model_options, network, inp_file_path)
+
+        return {self.OUTPUT_INP: inp_file_path}
 
 
 class LayerPostProcessor(QgsProcessingLayerPostProcessorInterface):

@@ -8,12 +8,17 @@ Note:
 from __future__ import annotations
 
 import dataclasses
+import datetime
 import sys
+from abc import abstractmethod
+from collections.abc import Iterable, Mapping
 from enum import Enum, Flag, auto
+from typing import Any
 
-from qgis.core import QgsProcessing, QgsWkbTypes
+from qgis.core import Qgis, QgsProcessing
 
 from gusnet.i18n import tr
+from gusnet.network import Network
 from gusnet.pattern_curve import Pattern
 
 if sys.version_info >= (3, 11):
@@ -22,7 +27,16 @@ else:
     from gusnet.strenum import StrEnum
 
 
-class FlowUnit(Enum):
+class EnumWithName(Enum):
+    """Abstract enum for value maps"""
+
+    @property
+    @abstractmethod
+    def friendly_name(self):
+        """A human readable name for the enum value"""
+
+
+class FlowUnit(EnumWithName):
     LPS = "LPS"
     LPM = "LPM"
     MLD = "MLD"
@@ -68,7 +82,7 @@ class FlowUnit(Enum):
 _TRADITIONAL_FLOW_UNITS = {FlowUnit.CFS, FlowUnit.GPM, FlowUnit.MGD, FlowUnit.IMGD, FlowUnit.AFD}
 
 
-class MassUnit(Enum):
+class MassUnit(EnumWithName):
     MG = "mg/L"
     UG = "ug/L"
 
@@ -82,7 +96,7 @@ class MassUnit(Enum):
         raise ValueError  # pragma: no cover
 
 
-class HeadlossFormula(Enum):
+class HeadlossFormula(EnumWithName):
     HAZEN_WILLIAMS = "H-W"
     DARCY_WEISBACH = "D-W"
     CHEZY_MANNING = "C-M"
@@ -98,7 +112,7 @@ class HeadlossFormula(Enum):
         raise ValueError  # pragma: no cover
 
 
-class DemandType(Enum):
+class DemandType(EnumWithName):
     FIXED = "DDA"
     PRESSURE_DEPENDENT = "PDA"
 
@@ -111,7 +125,7 @@ class DemandType(Enum):
         raise ValueError
 
 
-class QualityParameter(Enum):
+class QualityParameter(EnumWithName):
     NONE = "NONE"
     AGE = "AGE"
     CHEMICAL = "CHEMICAL"
@@ -130,15 +144,7 @@ class QualityParameter(Enum):
         raise ValueError  # pragma: no cover
 
 
-class _AbstractValueMap(Enum):
-    """Abstract enum for value maps"""
-
-    @property
-    def friendly_name(self):
-        """To be implemented by subclasses"""
-
-
-class PumpTypes(_AbstractValueMap):
+class PumpTypes(EnumWithName):
     POWER = "POWER"
     HEAD = "HEAD"
 
@@ -151,7 +157,7 @@ class PumpTypes(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class TankMixingModel(_AbstractValueMap):
+class TankMixingModel(EnumWithName):
     FULLY_MIXED = "MIXED"
     MIX2 = "2COMP"
     FIFO = "FIFO"
@@ -170,7 +176,7 @@ class TankMixingModel(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class InitialStatus(_AbstractValueMap):
+class InitialStatus(EnumWithName):
     OPEN = "Open"
     CLOSED = "Closed"
 
@@ -183,7 +189,7 @@ class InitialStatus(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class ValveStatus(_AbstractValueMap):
+class ValveStatus(EnumWithName):
     ACTIVE = "Active"
     OPEN = "Open"
     CLOSED = "Closed"
@@ -199,7 +205,7 @@ class ValveStatus(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class ValveType(_AbstractValueMap):
+class ValveType(EnumWithName):
     PRV = "PRV"
     PSV = "PSV"
     PBV = "PBV"
@@ -236,7 +242,7 @@ class ValveType(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class WallReactionOrder(_AbstractValueMap):
+class WallReactionOrder(EnumWithName):
     ZERO = 0
     ONE = 1
 
@@ -321,8 +327,8 @@ class _AbstractLayer(StrEnum):
         raise NotImplementedError
 
     @property
-    def qgs_wkb_type(self):
-        return QgsWkbTypes.Point if self.is_node else QgsWkbTypes.LineString
+    def wkb_type(self) -> Qgis.WkbType:
+        return Qgis.WkbType.Point if self.is_node else Qgis.WkbType.LineString
 
     def wq_fields(self) -> list[Field]:
         raise NotImplementedError
@@ -773,8 +779,9 @@ class ModelOptions:
     flow_unit: FlowUnit
     headloss_formula: HeadlossFormula
 
-    simulation_duration: float  # hours
+    simulation_duration: datetime.timedelta
     demand_multiplier: float
+    default_pattern: Pattern
     emitter_exponent: float
 
     demand_type: DemandType
@@ -805,8 +812,9 @@ class ModelOptions:
 DEFAULT_OPTIONS = ModelOptions(
     flow_unit=FlowUnit.LPS,
     headloss_formula=HeadlossFormula.HAZEN_WILLIAMS,
-    simulation_duration=0.0,
+    simulation_duration=datetime.timedelta(0),
     demand_multiplier=1.0,
+    default_pattern=Pattern(),
     emitter_exponent=0.5,
     demand_type=DemandType.FIXED,
     minimum_pressure=0.0,
@@ -829,3 +837,13 @@ DEFAULT_OPTIONS = ModelOptions(
     limiting_concentration=0.0,
     wall_coefficient_correlation=0.0,
 )
+
+LayerAttributes = Mapping[Field | str, Iterable[Any]]
+ModelAttributes = Mapping[ModelLayer, LayerAttributes]
+
+
+@dataclasses.dataclass(frozen=True)
+class Model:
+    network: Network
+    options: ModelOptions
+    attributes: ModelAttributes

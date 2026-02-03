@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Iterable
 
-from qgis.core import QgsGeometry, QgsPointXY, QgsSpatialIndex
+from qgis.core import QgsGeometry, QgsLineString, QgsPointXY, QgsRectangle, QgsSpatialIndex
 
 from gusnet.i18n import tr
-
-if TYPE_CHECKING:  # pragma: no cover
-    import pandas as pd
 
 
 class SpatialIndex:
@@ -16,6 +13,8 @@ class SpatialIndex:
     def __init__(self) -> None:
         self._node_spatial_index = QgsSpatialIndex()
         self._nodelist: list[tuple[QgsPointXY, str]] = []
+        self._node_names: tuple[str, ...] = ()
+        self._node_coordinates: tuple[tuple[float, float], ...] = ()
 
     def add_node(self, geometry: QgsGeometry, element_name: str) -> None:
         "Add a node to the spatial index."
@@ -25,23 +24,29 @@ class SpatialIndex:
         self._nodelist.append((point, element_name))
         self._node_spatial_index.addFeature(feature_id, geometry.boundingBox())
 
-    def add_nodes(self, geometries: pd.Series, names: pd.Series) -> None:
+    def add_nodes(self, names: Iterable[str], geometries: Iterable[tuple[float, float]]) -> None:
         """Add nodes from pandas series to the spatial index."""
 
-        for parts in zip(geometries, names):
-            self.add_node(*parts)
+        next_index = len(self._node_coordinates)
 
-    def snap_links(self, geometries: pd.Series, names: pd.Series) -> tuple[list, list, list]:
+        for geometry in geometries:
+            self._node_spatial_index.addFeature(
+                next_index, QgsRectangle(geometry[0], geometry[1], geometry[0], geometry[1])
+            )
+            next_index += 1
+
+        self._node_names += tuple(names)
+        self._node_coordinates += tuple(geometries)
+
+    def snap_links(self, geometries: Iterable[QgsGeometry]) -> tuple[tuple, ...]:
         """Snap the start and end points of links to the nearest nodes in the spatial index.
 
         Returns:
             tuple: (snapped_geometries, start_node_names, end_node_names) as separate lists.
         """
-        results = [self.snap_link(*data) for data in zip(geometries, names)]
-        snapped_geoms = [r[0] for r in results]
-        start_names = [r[1] for r in results]
-        end_names = [r[2] for r in results]
-        return snapped_geoms, start_names, end_names
+
+        results = [self.snap_link_2(data) for data in geometries]
+        return tuple(zip(*results))
 
     def snap_link(self, geometry: QgsGeometry, link_name: str = "") -> tuple[QgsGeometry, str, str]:
         """Snap the start and end points of a link to the nearest node in the spatial index.
@@ -62,6 +67,28 @@ class SpatialIndex:
 
         return snapped_geometry, start_node_name, end_node_name
 
+    def snap_link_2(self, geometry: QgsGeometry) -> tuple[str | None, str | None]:
+        linestring = geometry.constGet()
+        if not (isinstance(linestring, QgsLineString)):
+            return None, None
+
+        start_point = (linestring.xAt(0), linestring.yAt(0))
+        end_point = (linestring.xAt(-1), linestring.yAt(-1))
+
+        max_length = geometry.length() * self.snap_tolerance
+
+        new_start_point, start_node_name = self._snapper2(start_point, max_length)
+        new_end_point, end_node_name = self._snapper2(end_point, max_length)
+
+        if new_start_point:
+            linestring.setXAt(0, new_start_point[0])
+            linestring.setYAt(0, new_start_point[1])
+        if new_end_point:
+            linestring.setXAt(-1, new_end_point[0])
+            linestring.setYAt(-1, new_end_point[1])
+
+        return start_node_name, end_node_name
+
     def _snapper(self, line_vertex_point: QgsPointXY, original_length: float, link_name: str) -> tuple[QgsPointXY, str]:
         nearest = self._node_spatial_index.nearestNeighbor(line_vertex_point)
         matched_node_point, matched_node_name = self._nodelist[nearest[0]]
@@ -71,6 +98,21 @@ class SpatialIndex:
             raise SnapTooFarError(link_name, matched_node_name)
 
         return matched_node_point, matched_node_name
+
+    def _snapper2(
+        self, point: tuple[float, float], max_snap_length: float
+    ) -> tuple[tuple[float, float], str] | tuple[None, None]:
+        nearest = self._node_spatial_index.nearestNeighbor(QgsPointXY(point[0], point[1]), 1, max_snap_length)
+        if not nearest:
+            return None, None
+        nearest_point = self._node_coordinates[nearest[0]]
+
+        distance = ((nearest_point[0] - point[0]) ** 2 + (nearest_point[1] - point[1]) ** 2) ** 0.5
+
+        if distance > max_snap_length:
+            return None, None
+
+        return self._node_coordinates[nearest[0]], self._node_names[nearest[0]]
 
 
 class SnapError(Exception):

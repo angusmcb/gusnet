@@ -11,10 +11,11 @@ from gusnet import feature_writer
 from gusnet.elements import DEFAULT_OPTIONS, FlowUnit, HeadlossFormula, ModelLayer, ResultLayer
 from gusnet.feature_reader import read
 from gusnet.i18n import tr
-from gusnet.interface import WntrModel
+from gusnet.inpfile_reader import read_inp_file
 from gusnet.style import style
 from gusnet.units import SpecificUnitNames
 from gusnet.verify_model import verify_model
+from gusnet.wntr_wrapper import WntrWrapper
 
 if TYPE_CHECKING:  # pragma: no cover
     import wntr
@@ -39,36 +40,29 @@ def from_wntr(
 
     """
 
-    network = WntrModel(wn)
+    crs_object = _get_crs(crs)
 
-    if crs:
-        crs_object = QgsCoordinateReferenceSystem(crs)
-        if not crs_object.isValid():
-            msg = tr("CRS {crs} is not valid.").format(crs=crs)
-            raise ValueError(msg)
-    else:
-        crs_object = QgsCoordinateReferenceSystem()
+    try:
+        flow_unit = FlowUnit[units.upper()] if units else None
+    except KeyError as e:
+        raise FlowUnitError(e) from e
 
-    if units:
-        try:
-            flow_unit = FlowUnit[units.upper()]
-        except KeyError as e:
-            raise FlowUnitError(e) from e
+    wntr_wrapper = WntrWrapper(wn)
+    options = wntr_wrapper.options_from_wn()
+    elements = wntr_wrapper.get_elements(flow_unit)
+    network = wntr_wrapper.get_network()
+    if results:
+        wntr_wrapper.set_results(results)
+        processed_results = wntr_wrapper.get_results(flow_unit)
 
-        options = dataclasses.replace(network.options, flow_unit=flow_unit)
-        network.options = options
-
-    else:
+    if not units:
         logger.warning(
             tr("No units specified. Will use the value from wn: {units_friendly_name}").format(
-                units_friendly_name=network.options.flow_unit.friendly_name
+                units_friendly_name=options.flow_unit.friendly_name
             )
         )
 
-    unit_names = SpecificUnitNames.from_options(network.options)
-
-    if results:
-        network.set_results(results)
+    unit_names = SpecificUnitNames.from_options(options)
 
     model_layers: list[ModelLayer | ResultLayer] = list(ResultLayer if results else ModelLayer)
 
@@ -83,15 +77,11 @@ def from_wntr(
         if not data_provider:
             raise RuntimeError
 
-        gusnet_fields = network.suggested_fields(model_layer)
-
         attribute_df = (
-            network.get_results().get(model_layer)
-            if isinstance(model_layer, ResultLayer)
-            else network.get_elements().get(model_layer)
+            processed_results.get(model_layer) if isinstance(model_layer, ResultLayer) else elements.get(model_layer)
         )
 
-        qgs_fields = feature_writer.get_qgs_fields(gusnet_fields, attribute_df, network.options.simulation_duration > 0)
+        qgs_fields = feature_writer.get_qgs_fields_from_options(options, model_layer)
 
         data_provider.addAttributes(qgs_fields)
 
@@ -103,7 +93,7 @@ def from_wntr(
         layer.updateFields()
         layer.updateExtents()
 
-        style(layer, model_layer, "extended" if results and network.options.simulation_duration else None, unit_names)
+        style(layer, model_layer, "extended" if results and options.simulation_duration else None, unit_names)
 
         if project := QgsProject.instance():
             project.addMapLayer(layer)
@@ -125,15 +115,48 @@ def from_inp(
 
     """
 
-    network = WntrModel(inp_path)
+    attribute_tables, network, options = read_inp_file(inp_path)
 
-    return from_wntr(network.wn, crs=crs, units=network.options.flow_unit.name)  # type: ignore[arg-type]
+    crs_object = _get_crs(crs)
+
+    unit_names = SpecificUnitNames.from_options(options)
+
+    map_layers: dict[str, QgsVectorLayer] = {}
+    for model_layer, attribute_df in attribute_tables.items():
+        layer_type = "Point" if model_layer.is_node else "LineString"
+
+        layer = QgsVectorLayer(layer_type, model_layer.friendly_name, "memory")
+        layer.setCrs(crs_object)
+        data_provider = layer.dataProvider()
+
+        if not data_provider:
+            raise RuntimeError
+
+        qgs_fields = feature_writer.get_qgs_fields_from_options(options, model_layer)
+
+        data_provider.addAttributes(qgs_fields)
+
+        geometries = network.node_geometries if model_layer.is_node else network.link_geometries
+
+        feature_writer.write(data_provider, qgs_fields, attribute_df, geometries)
+
+        layer.updateFields()
+        layer.updateExtents()
+
+        style(layer, model_layer, None, unit_names)
+
+        if project := QgsProject.instance():
+            project.addMapLayer(layer)
+
+        map_layers[model_layer.name] = layer
+
+    return map_layers
 
 
 def to_wntr(
     layers: dict[Literal["JUNCTIONS", "RESERVOIRS", "TANKS", "PIPES", "VALVES", "PUMPS"], QgsFeatureSource],
     units: Literal["LPS", "LPM", "MLD", "CMH", "CFS", "GPM", "MGD", "IMGD", "AFD", "CMD"],
-    headloss: Literal["H-W", "D-W", "C-M"] | None = None,
+    headloss_formula: Literal["H-W", "D-W", "C-M"] | None = None,
     wn: wntr.network.WaterNetworkModel | None = None,
 ) -> wntr.network.WaterNetworkModel:
     """Read from QGIS layers or feature sources to a WNTR ``WaterNetworkModel``
@@ -149,6 +172,8 @@ def to_wntr(
 
     """
 
+    import wntr
+
     try:
         model_layers = {ModelLayer(str(layer_name).upper()): layer for layer_name, layer in layers.items()}
     except ValueError as e:
@@ -160,25 +185,26 @@ def to_wntr(
         raise FlowUnitError(e) from e
 
     if wn:
-        if headloss:
+        if headloss_formula:
             msg = tr(
-                "Cannot set headloss when wn is set. Set the headloss in the wn.options.hydraulic.headloss instead"
+                "Cannot set headloss formula when wn is set. Set the headloss in the wn.options.hydraulic.headloss instead"  # noqa: E501
             )
             raise ValueError(msg)
 
-        model = WntrModel(wn)
-        model.options = dataclasses.replace(model.options, flow_unit=unit)
+        wntr_wrapper = WntrWrapper(wn)
+
+        options = dataclasses.replace(wntr_wrapper.options, flow_unit=unit)
 
     else:
-        model = WntrModel()
-
-        if not headloss:
+        if not headloss_formula:
             msg = tr("headloss must be set if wn is not set: possible values are: H-W, D-W, C-M")
             raise ValueError(msg)
 
-        headloss_formula = HeadlossFormula(headloss.upper())
+        headloss_formula_enum = HeadlossFormula(headloss_formula.upper())
 
-        model.options = dataclasses.replace(DEFAULT_OPTIONS, headloss_formula=headloss_formula, flow_unit=unit)
+        options = dataclasses.replace(DEFAULT_OPTIONS, headloss_formula=headloss_formula_enum, flow_unit=unit)
+
+        wn = wntr.network.WaterNetworkModel()
 
     all_crs = [layer.sourceCrs().authid() for layer in layers.values() if layer.sourceCrs().isValid()]
 
@@ -200,16 +226,38 @@ def to_wntr(
     transform_context = project.transformContext()
     ellipsoid = project.ellipsoid()
 
-    elements = read(model_layers, crs, transform_context, ellipsoid, model.options.flow_unit)
+    elements, network = read(model_layers, crs, transform_context, ellipsoid, unit)
 
-    verify_model(elements)
+    verify_model(elements, network)
 
-    model.set_elements(elements)
+    wntr_wrapper = WntrWrapper(wn)
+    wntr_wrapper.options = options
+    wntr_wrapper.set_elements(elements, network)
 
-    return model.wn
+    return wn
 
 
-class FlowUnitError(ValueError):
+def _get_crs(crs: str | QgsCoordinateReferenceSystem | None) -> QgsCoordinateReferenceSystem:
+    """Turn CRS user input into QGIS CRS Object"""
+    if crs:
+        crs_object = QgsCoordinateReferenceSystem(crs)
+        if not crs_object.isValid():
+            raise CrsError(crs)
+    else:
+        crs_object = QgsCoordinateReferenceSystem()
+    return crs_object
+
+
+class GusnetApiError(Exception):
+    pass
+
+
+class CrsError(ValueError, GusnetApiError):
+    def __init__(self, crs):
+        super().__init__(tr("CRS {crs} is not valid.").format(crs=crs))
+
+
+class FlowUnitError(ValueError, GusnetApiError):
     def __init__(self, exception):
         super().__init__(
             tr("{exception} is not a known set of units. Possible units are: ").format(exception=exception)
@@ -217,7 +265,7 @@ class FlowUnitError(ValueError):
         )
 
 
-class InvalidLayerError(ValueError):
+class InvalidLayerError(ValueError, GusnetApiError):
     def __init__(self, value_error: ValueError):
         super().__init__(
             tr(

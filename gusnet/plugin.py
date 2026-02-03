@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-import importlib
 import math
-import sys
 import typing
 from pathlib import Path
 
@@ -21,7 +19,6 @@ from qgis.core import (
     QgsProject,
     QgsRasterLayer,
     QgsSettings,
-    QgsTask,
 )
 from qgis.gui import QgisInterface, QgsLayerTreeViewIndicator, QgsProjectionSelectionDialog
 from qgis.PyQt.QtCore import QCoreApplication, QLocale, QObject, QSettings, QTranslator, pyqtSlot
@@ -41,7 +38,7 @@ from qgis.utils import iface
 
 import gusnet
 import gusnet.expressions
-from gusnet.dependencies import WntrInstaller
+from gusnet.dependencies import CheckAndFetchEpanetTask
 from gusnet.elements import FlowUnit, HeadlossFormula, ModelLayer, ResultLayer
 from gusnet.gusnet_processing.empty_model import TemplateLayers
 from gusnet.gusnet_processing.import_inp import ImportInp
@@ -64,7 +61,6 @@ class Plugin:
 
     def __init__(self) -> None:
         self.object = QWidget()
-        self.task_manager = QgsApplication.taskManager()
 
         self.init_translation()
 
@@ -182,33 +178,17 @@ class Plugin:
 
     def warm_up_wntr(self) -> None:
         """wntr is slow to load so start warming it up now !"""
-        task: QgsTask = QgsTask.fromFunction(
-            "Set up wntr",
-            import_wntr,
-            flags=QgsTask.Hidden | QgsTask.Silent,
-        )
-        task.taskCompleted.connect(self.show_welcome_message)
-        task.taskTerminated.connect(self.install_wntr)
-
-        self.task_manager.addTask(task)
-
-        if self.TESTING:
-            assert task.waitForFinished()  # noqa: S101
-
-    def install_wntr(self) -> None:
-        task: QgsTask = QgsTask.fromFunction(
-            tr("Installing WNTR"),
-            lambda _: WntrInstaller.install_wntr(),
-            flags=QgsTask.Silent,
-        )
+        task = CheckAndFetchEpanetTask()
         task.taskCompleted.connect(self.show_welcome_message)
         task.taskTerminated.connect(
             lambda: iface.messageBar().pushMessage(
-                tr("Failed to install WNTR. Please check your internet connection."), level=Qgis.MessageLevel.Critical
+                tr("Failed to fetch EPANET. Please check your internet connection."), level=Qgis.MessageLevel.Critical
             )
         )
 
-        self.task_manager.addTask(task)
+        if task_manager := QgsApplication.taskManager():
+            task_manager.addTask(task)
+            self._task_manager = task_manager  # prevent garbage collection
 
         if self.TESTING:
             assert task.waitForFinished()  # noqa: S101
@@ -239,7 +219,7 @@ class Plugin:
         with contextlib.suppress(ModuleNotFoundError, AttributeError):
             import console
 
-            console.console_sci._init_statements.extend(["import gusnet", "import wntr"])  # noqa: SLF001
+            console.console_sci._init_statements.extend(["import gusnet"])  # noqa: SLF001
 
 
 class ProcessingRunnerAction(QAction):
@@ -304,11 +284,11 @@ class ProcessingRunnerAction(QAction):
     def on_executed_with_error(self):
         self.display_error(self.feedback.errors[0], self.feedback.textLog())
 
-        QgsApplication.messageLog().logMessage(
-            self.feedback.errors[0] + "\n" + self.feedback.textLog(),
-            MESSAGE_CATEGORY,
-            Qgis.MessageLevel.Critical,
-        )
+        # QgsApplication.messageLog().logMessage(
+        #     self.feedback.errors[0] + "\n" + self.feedback.textLog(),
+        #     MESSAGE_CATEGORY,
+        #     Qgis.MessageLevel.Critical,
+        # )
 
     def display_error(self, error_text: str, show_more: str | None = None) -> None:
         params = {"title": tr("Error"), "text": error_text, "level": Qgis.MessageLevel.Critical, "duration": 0}
@@ -515,21 +495,6 @@ class OpenSettingsAction(QAction):
         import processing
 
         processing.execAlgorithmDialog(RunSimulation())  # type: ignore
-
-
-def import_wntr(_: QgsTask):
-    """Pre-import wntr to speed up loading"""
-
-    if "wntr" in sys.modules:
-        import wntr
-
-        importlib.reload(wntr)
-
-    import wntr  # type: ignore
-
-    if not Path(wntr.__file__).exists():
-        msg = "File missing - probably due to plugin upgrade"
-        raise ImportError(msg)
 
 
 class IconWithLogo(QIcon):

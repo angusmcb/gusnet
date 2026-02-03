@@ -2,41 +2,50 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Iterable
+from typing import ClassVar, Self, SupportsFloat
 
 
 class Pattern(str):
-    _list: list[float]
+    """A representation of a simple pattern. Stored as a string, with multipliers as attribute.
 
-    def __new__(cls, pattern: Iterable | str | None = None):
-        if pattern is None:
-            obj = super().__new__(cls, "")
-            obj._list = []
-            return obj
+    Will raise PatternReadError(ValueError) if invalid pattern is provided.
 
-        pattern_parts = pattern.strip().split() if isinstance(pattern, str) else pattern
+    Factory methods can be used if None is preferred for empty patterns, or if input type is uncertain."""
+
+    multipliers: tuple[float, ...]
+
+    _cache: ClassVar[dict] = {}
+
+    def __new__(cls, pattern: Iterable[SupportsFloat | str] | str = "") -> Self:
+        try:
+            return cls._cache[pattern]
+        except (TypeError, KeyError):
+            pass
+
+        pattern_parts = pattern.split() if isinstance(pattern, str) else pattern
 
         try:
             float_list = [float(item) for item in pattern_parts]
         except (ValueError, TypeError):
             raise PatternReadError(pattern) from None
 
-        obj = super().__new__(cls, " ".join(map(str, float_list)))
-        obj._list = float_list
+        obj_str = " ".join(map(str, float_list))
+
+        obj = super().__new__(cls, obj_str)
+        obj.multipliers = tuple(float_list)
+
+        try:
+            cls._cache[obj_str] = obj
+            cls._cache[pattern] = obj
+        except TypeError:
+            pass
+
         return obj
-
-    def __iter__(self):
-        return self._list.__iter__()
-
-    @classmethod
-    def factory(cls, pattern: Iterable[float] | str | None = None) -> Pattern | None:
-        if pattern_class := cls(pattern):
-            return pattern_class
-        else:
-            return None
 
 
 class Curve(str):
     _points: list[tuple[float, float]]
+    _cache: ClassVar[dict[str, Curve]] = {}
 
     def __new__(cls, curve: Iterable[tuple[float, float]] | str | None = None):
         points: Iterable[tuple[float, float]]
@@ -44,12 +53,15 @@ class Curve(str):
         if curve is None:
             points = []
         elif isinstance(curve, str):
+            # Check cache for string curves (most common case from INP files)
+            if curve in cls._cache:
+                return cls._cache[curve]
             points = _read_curve_str(curve)
         else:
             points = curve
 
         final_points = []
-        last_x: float | None = None
+        last_x: float = -float("inf")
         try:
             for point in points:
                 try:
@@ -58,7 +70,7 @@ class Curve(str):
                 except ValueError as e:
                     raise CurveReadError(str(curve), e) from e
 
-                if last_x is not None and x <= last_x:
+                if x <= last_x:
                     raise CurveXNotIncreasingError(str(curve))
                 last_x = x
                 final_points.append((x, y))
@@ -68,6 +80,11 @@ class Curve(str):
         point_strings = [f"({x}, {y})" for x, y in final_points]
         obj = super().__new__(cls, ", ".join(point_strings))
         obj._points = final_points
+
+        # Cache the result if input was a string
+        if isinstance(curve, str):
+            cls._cache[curve] = obj
+
         return obj
 
     def __iter__(self):

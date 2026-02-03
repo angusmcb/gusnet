@@ -15,8 +15,9 @@ from qgis.PyQt.QtGui import QIcon
 
 from gusnet.elements import FieldGroup, ModelLayer
 from gusnet.feature_writer import get_qgs_fields
-from gusnet.gusnet_processing.common import CommonProcessingBase, profile
+from gusnet.gusnet_processing.common import CommonProcessingBase
 from gusnet.i18n import tr
+from gusnet.profiler import profile
 
 
 class TemplateLayers(CommonProcessingBase):
@@ -79,8 +80,7 @@ class TemplateLayers(CommonProcessingBase):
         for layer in ModelLayer:
             field_enums = [field for field in layer.wq_fields() if field.field_group & analysis_types_to_use]
             fields = get_qgs_fields(field_enums)
-            wkb_type = layer.qgs_wkb_type
-            (_, outputs[layer]) = self.parameterAsSink(parameters, layer, context, fields, wkb_type, crs)
+            (_, outputs[layer]) = self.parameterAsSink(parameters, layer, context, fields, layer.wkb_type, crs)
 
         self._setup_postprocessing(context, outputs, tr("Model Layers"), True)
 
