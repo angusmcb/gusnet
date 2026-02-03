@@ -8,6 +8,8 @@ filterwarnings = [
 pythonpath = [
   "."
 ]
+markers = ["needs_wntr: requires wntr python package to test", "needs_pandas: requires pandas pythong package for test"]
+
 [tool.coverage.report]
 omit = ["gusnet/packages/*","gusnet/packages/*/wntr/*.py","gusnet/packages/*/wntr/*/*.py","gusnet/packages/*/wntr/*/*/*.py","tests/*.py","build.py","create_qgis_venv.py","conftest.py",]
 
