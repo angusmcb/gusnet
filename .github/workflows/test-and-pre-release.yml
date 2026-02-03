@@ -31,7 +31,7 @@ jobs:
           apt-get update
           apt-get -y install python3-pandas
           apt-get -y install python3-networkx
-          pip3 install -r requirements-ci-tests.txt
+          pip3 install pytest-qgis
           pip3 install wntr --no-deps
 
       - name: Run Tests
@@ -59,7 +59,7 @@ jobs:
       - name: Setup Environment
         run: |
           apt-get update
-          pip3 install -r requirements-ci-tests.txt
+          pip3 install pytest-qgis
 
       - name: Run Tests
         run: xvfb-run -s '+extension GLX -screen 0 1024x768x24' python3 -m pytest -v --doctest-glob='' -m "not needs_wntr and not needs_pandas"
