@@ -139,7 +139,7 @@ def read_sections_from_file(file_path: os.PathLike | str) -> dict[Sections, list
         for line in non_empty_lines:
             if line.startswith("[") and line.endswith("]"):
                 section_string = line[1:-1].upper()
-                if section_string in Sections:
+                if section_string in [section.name for section in Sections]:
                     current_section = Sections[section_string]
                     sections[current_section] = []
                 else:
@@ -418,12 +418,12 @@ def _read_options(
     for line in all_lines:
         # prefer two word keys if they exist
         key2 = " ".join(line[:2]).lower()
-        if key2 in OptKey:
+        if key2 in [opt_key.value for opt_key in OptKey]:
             opt_dict[OptKey(key2)] = line[2:]
             continue
 
         key = line[0].lower()
-        if key in OptKey:
+        if key in [opt_key.value for opt_key in OptKey]:
             opt_dict[OptKey(key)] = line[1:]
 
     flow_unit = FlowUnit(opt_data.units[0] or FlowUnit.GPM)
