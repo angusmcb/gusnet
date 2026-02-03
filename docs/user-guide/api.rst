@@ -2,12 +2,16 @@
 PyQGIS API
 =================
 
-This is the fledgling documentation for the work-in-progress API. The API is likely to change at every release.
+The API lets you import and export to and from the WNTR python package.
 
-This API will allow you to use features in PyQGIS scripts and within the python console in QGIS.
+You will need to have WNTR installed in the same python environment as QGIS.
+
+This is the fledgling documentation for the work-in-progress API. The API is likely to change at every release.
 
 Usage
 ======
+
+Once installe, the easiest way to use the api is within the QGIS python console.
 
 First import gusnet and wntr. Note that this is not necessary from the QGIS console - they are already imported.
 
