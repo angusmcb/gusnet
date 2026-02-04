@@ -63,11 +63,16 @@ class Network:
 
         node_coord_dict = self.node_coordinates
 
+        try:
+            part_iterator = zip(start_nodes, end_nodes, vertices, strict=True)
+        except TypeError:  # python 3.9
+            part_iterator = zip(start_nodes, end_nodes, vertices)
+
         geometries = [
             _create_line_geometry(node_coord_dict[start], node_coord_dict[end], middle_vertices)
             if start and end
             else QgsGeometry()
-            for start, end, middle_vertices in zip(start_nodes, end_nodes, vertices, strict=True)
+            for start, end, middle_vertices in part_iterator
         ]
 
         self._add_links(names, vertices, start_nodes, end_nodes, geometries)
@@ -75,8 +80,12 @@ class Network:
     def _add_nodes(
         self, names: Iterable[str], coordinates: Iterable[tuple[float, float]], geometeries: Iterable[QgsGeometry]
     ) -> None:
-        self._node_coordinates.update(zip(names, coordinates, strict=True))
-        self._node_geometries.update(zip(names, geometeries, strict=True))
+        try:
+            self._node_coordinates.update(zip(names, coordinates, strict=True))
+            self._node_geometries.update(zip(names, geometeries, strict=True))
+        except TypeError:  # python 3.9
+            self._node_coordinates.update(zip(names, coordinates))
+            self._node_geometries.update(zip(names, geometeries))
         self._spatial_index = None
 
     def _add_links(
@@ -87,10 +96,16 @@ class Network:
         end_node: Iterable[str],
         geometries: Iterable[QgsGeometry],
     ) -> None:
-        self._link_start_nodes.update(zip(names, start_node, strict=True))
-        self._link_end_nodes.update(zip(names, end_node, strict=True))
-        self._link_middle_vertices.update(zip(names, middle_vertices, strict=True))
-        self._link_geometries.update(zip(names, geometries, strict=True))
+        try:
+            self._link_start_nodes.update(zip(names, start_node, strict=True))
+            self._link_end_nodes.update(zip(names, end_node, strict=True))
+            self._link_middle_vertices.update(zip(names, middle_vertices, strict=True))
+            self._link_geometries.update(zip(names, geometries, strict=True))
+        except TypeError:  # python 3.9
+            self._link_start_nodes.update(zip(names, start_node))
+            self._link_end_nodes.update(zip(names, end_node))
+            self._link_middle_vertices.update(zip(names, middle_vertices))
+            self._link_geometries.update(zip(names, geometries))
 
     def _get_spatial_index(self) -> SpatialIndex:
         if not self._spatial_index:
