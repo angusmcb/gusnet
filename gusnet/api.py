@@ -20,6 +20,8 @@ from gusnet.wntr_wrapper import WntrWrapper
 if TYPE_CHECKING:  # pragma: no cover
     import wntr
 
+    flow_unit_string = Literal["LPS", "LPM", "MLD", "CMH", "CFS", "GPM", "MGD", "IMGD", "AFD", "CMD"]
+    model_layer_strings = Literal["JUNCTIONS", "RESERVOIRS", "TANKS", "PIPES", "VALVES", "PUMPS"]
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +30,9 @@ def from_wntr(
     wn: wntr.network.WaterNetworkModel,
     results: wntr.sim.SimulationResults | None = None,
     crs: QgsCoordinateReferenceSystem | str | None = None,
-    units: Literal["LPS", "LPM", "MLD", "CMH", "CFS", "GPM", "MGD", "IMGD", "AFD", "CMD"] | None = None,
+    units: flow_unit_string | None = None,
 ) -> dict[str, QgsVectorLayer]:
-    """Write from WNTR network model to QGIS Layers
+    """Create QGIS layers from a WNTR :py:class:`~wntr.network.model.WaterNetworkModel`
 
     Args:
         wn: the water network model
@@ -154,12 +156,12 @@ def from_inp(
 
 
 def to_wntr(
-    layers: dict[Literal["JUNCTIONS", "RESERVOIRS", "TANKS", "PIPES", "VALVES", "PUMPS"], QgsFeatureSource],
-    units: Literal["LPS", "LPM", "MLD", "CMH", "CFS", "GPM", "MGD", "IMGD", "AFD", "CMD"],
+    layers: dict[model_layer_strings, QgsFeatureSource],
+    units: flow_unit_string,
     headloss_formula: Literal["H-W", "D-W", "C-M"] | None = None,
     wn: wntr.network.WaterNetworkModel | None = None,
 ) -> wntr.network.WaterNetworkModel:
-    """Read from QGIS layers or feature sources to a WNTR ``WaterNetworkModel``
+    """Read from QGIS layers or feature sources to a WNTR :py:class:`~wntr.network.model.WaterNetworkModel`
 
     Args:
         layers: layers to read from
@@ -168,7 +170,7 @@ def to_wntr(
             (H-W for Hazen Williams, D-W for Darcy Weisbach, or C-M for Chezy-Manning).
             Must be set if there is no wn.
             If wn is provided, headloss in wn.options.hydraulic.headloss will be used instead.
-        wn: The `WaterNetworkModel` that the layers will be read into. Will create a new model if `None`.
+        wn: The model that the layers will be read into. Will create a new model if `None`.
 
     """
 
