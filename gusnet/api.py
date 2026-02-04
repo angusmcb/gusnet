@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-import pathlib
+import os
 from typing import TYPE_CHECKING, Literal
 
 from qgis.core import QgsCoordinateReferenceSystem, QgsFeatureSource, QgsProject, QgsVectorLayer
@@ -32,13 +32,18 @@ def from_wntr(
     crs: QgsCoordinateReferenceSystem | str | None = None,
     units: flow_unit_string | None = None,
 ) -> dict[str, QgsVectorLayer]:
-    """Create QGIS layers from a WNTR :py:class:`~wntr.network.model.WaterNetworkModel`
+    """Create QGIS layers from a WNTR :py:class:`~wntr.network.model.WaterNetworkModel`.
+
+    Optionally, specify WNTR simulation results to create qgis layers of the results.
 
     Args:
         wn: the water network model
         results: simulation results, if any.
-        crs: The coordinate Reference System of the coordinates in the wntr model. E.g. 'EPSG:4326'.
-        units: The flow unit set to use for the created layers.
+        crs: The Coordinate Reference System of the coordinates in the wntr model. E.g. 'EPSG:4326'.
+            If not set the layers will not have any projection associated.
+        units: WNTR stores all values as SI units.
+            Gusnet does not use pure SI units, so you must choose which unit set you would like to use.
+            If not set, will use the units specified in `wntr.options.hydraulic.inp_units`
 
     """
 
@@ -106,14 +111,15 @@ def from_wntr(
 
 
 def from_inp(
-    inp_path: pathlib.Path | str,
+    inp_path: os.PathLike | str,
     crs: QgsCoordinateReferenceSystem | str | None = None,
 ) -> dict[str, QgsVectorLayer]:
-    """Write from INP file to QGIS Layers
+    """Create QGIS Layers from an Epanet input (.inp) model file.
 
     Args:
-        inp_path: path (string or path object) to an input file
-        crs: The coordinate Reference System of the coordinates in the inp file.
+        inp_path: path to the epanet input (.inp) file
+        crs: The Coordinate Reference System of the coordinates in the inp file.
+            If not set the layers will not have any projection associated.
 
     """
 
