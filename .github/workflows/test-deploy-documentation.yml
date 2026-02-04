@@ -20,7 +20,7 @@ jobs:
 
       - name: Setup Environment
         run: |
-          pip3 install wntr
+          pip3 install wntr --ignore-installed
           pip3 install -r docs/requirements.txt
 
       - name: Build documentation
