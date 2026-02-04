@@ -16,15 +16,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "macos-intel"]
-        python-version: ["3.9", "3.10","3.11", "3.12"]
+        os: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.9", "3.12"]
         wntr-version: ["wntr=v1.2.0","wntr"] # don't test no-wntr then versions
         # can optinally add a test for wntr install by installing dependencies geopandas, networkx
         qgis: ["qgis","conda-forge/label/qgis_ltr::qgis"]
         exclude:
           - os: "ubuntu-latest"
             wntr-version: ""
-          - os: "macos-13"
+          - os: "macos-latest"
             python-version: "3.12"
             qgis: "conda-forge/label/qgis_ltr::qgis"
     steps:
@@ -52,3 +52,43 @@ jobs:
       - name: Run Tests (Ubuntu)
         if: ${{ matrix.os =='ubuntu-latest' }}
         run: xvfb-run -s '+extension GLX -screen 0 1024x768x24' python -m pytest -v
+
+  conda-tests-no-wntr:
+    name: '${{ matrix.python-version }}, ${{ matrix.os }}, no wntr, ${{matrix.qgis}}'
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "macos-intel"]
+        python-version: ["3.9", "3.10","3.11", "3.12", "3.13", "3.14"]
+        # can optinally add a test for wntr install by installing dependencies geopandas, networkx
+        qgis: ["qgis","conda-forge/label/qgis_ltr::qgis"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          miniconda-version: 'latest'
+          channels: conda-forge, defaults
+          channel-priority: true
+          auto-activate-base: false
+      - name: Install packages
+        run: |
+          conda install -y pytest ${{ matrix.qgis }}
+          pip install pytest-qgis
+      - name: Conda info
+        run: |
+          conda info
+          conda list
+      - name: Python Path
+        run: python -c "import sys; print(sys.path)"
+      - name: Run tests (non-Ubuntu)
+        if: ${{ matrix.os !='ubuntu-latest' }}
+        run: python -m pytest -v -m "not needs_wntr and not needs_pandas"
+      - name: Run Tests (Ubuntu)
+        if: ${{ matrix.os =='ubuntu-latest' }}
+        run: xvfb-run -s '+extension GLX -screen 0 1024x768x24' python -m pytest -v -m "not needs_wntr and not needs_pandas"
