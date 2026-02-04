@@ -20,7 +20,7 @@ from gusnet.wntr_wrapper import WntrWrapper
 if TYPE_CHECKING:  # pragma: no cover
     import wntr
 
-    flow_unit_string = Literal["LPS", "LPM", "MLD", "CMH", "CFS", "GPM", "MGD", "IMGD", "AFD", "CMD"]
+    flow_unit_string = Literal["LPS", "LPM", "MLD", "CMH", "CMD", "CFS", "GPM", "MGD", "IMGD", "AFD"]
     model_layer_strings = Literal["JUNCTIONS", "RESERVOIRS", "TANKS", "PIPES", "VALVES", "PUMPS"]
 
 logger = logging.getLogger(__name__)
@@ -172,8 +172,8 @@ def to_wntr(
     Args:
         layers: layers to read from
         units: The flow unit set that the layers being read use.
-        headloss: the headloss formula to use
-            (H-W for Hazen Williams, D-W for Darcy Weisbach, or C-M for Chezy-Manning).
+        headloss_formula: the headloss formula to use
+            (``H-W`` for Hazen Williams, ``D-W`` for Darcy Weisbach, or ``C-M`` for Chezy-Manning).
             Must be set if there is no wn.
             If wn is provided, headloss in wn.options.hydraulic.headloss will be used instead.
         wn: The model that the layers will be read into. Will create a new model if `None`.
