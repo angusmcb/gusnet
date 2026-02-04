@@ -495,8 +495,6 @@ class WntrWrapper:
         return pd.Series({name: pipe.length for name, pipe in self._wn.pipes()})
 
     def _process_results_layer(self, layer: ResultLayer, results_dfs: dict[str, pd.DataFrame]) -> dict[str, list]:
-        import numpy as np
-
         output_dict: dict[str, list] = {"name": next(iter(results_dfs.values())).columns.tolist()}
 
         for field in layer.wq_fields():
@@ -509,7 +507,7 @@ class WntrWrapper:
                 df = self._converter.from_si(df, field.type)
 
             if not self.options.simulation_duration:
-                output_dict[field] = df.iloc[0].replace(np.nan, None).tolist()
+                output_dict[field] = [v if not math.isnan(v) else None for v in df.iloc[0].tolist()]
             else:
                 array = df.to_numpy().T
                 output_dict[field] = [
