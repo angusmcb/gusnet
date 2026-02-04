@@ -116,6 +116,7 @@ numfig_format = {"figure": "Figure %s", "table": "Table %s", "code-block": "List
 autodoc_type_aliases = {"Iterable": "Iterable", "ArrayLike": "ArrayLike"}
 # add_module_names = False
 autodoc_member_order = "bysource"
+autodoc_mock_imports = ["wntr"]
 
 googleanalytics_id = "G-EXG3JYMMHK"
 
