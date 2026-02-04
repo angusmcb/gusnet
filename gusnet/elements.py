@@ -13,7 +13,7 @@ import sys
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping
 from enum import Enum, Flag, auto
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from qgis.core import Qgis, QgsProcessing
 
@@ -838,8 +838,10 @@ DEFAULT_OPTIONS = ModelOptions(
     wall_coefficient_correlation=0.0,
 )
 
-LayerAttributes = Mapping[Field | str, Iterable[Any]]
-ModelAttributes = Mapping[ModelLayer, LayerAttributes]
+
+if TYPE_CHECKING:
+    LayerAttributes = Mapping[Field | str, Iterable[Any]]
+    ModelAttributes = Mapping[ModelLayer, LayerAttributes]
 
 
 @dataclasses.dataclass(frozen=True)
