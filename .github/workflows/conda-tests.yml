@@ -22,8 +22,7 @@ jobs:
         # can optinally add a test for wntr install by installing dependencies geopandas, networkx
         qgis: ["qgis","conda-forge/label/qgis_ltr::qgis"]
         exclude:
-          - python-version: "3.12"
-            qgis: "conda-forge/label/qgis_ltr::qgis"
+
           - os: "macos-latest"
             python-version: "3.11"
             qgis: "conda-forge/label/qgis_ltr::qgis"
@@ -38,14 +37,21 @@ jobs:
             wntr-version: "wntr"
           - python-version: "3.14"
             wntr-version: "wntr"
-          - python-version: "3.14"
+          - python-version: "3.14" # problems with pytest-qgis
             qgis: "conda-forge/label/qgis_ltr::qgis"
-          - python-version: "3.13"
+          - python-version: "3.13" # problems with pytest-qgis
             qgis: "conda-forge/label/qgis_ltr::qgis"
+          - python-version: "3.12" # problems with pytest-qgis
+            qgis: "conda-forge/label/qgis_ltr::qgis"
+          - python-version: "3.11" # problems with pytest-qgis
+            qgis: "conda-forge/label/qgis_ltr::qgis"
+          - wntr-version: "wntr" # depreciated pkg_resources
+            python-version: "3.10"
           - wntr-version: "wntr" # depreciated pkg_resources
             python-version: "3.11"
           - wntr-version: "wntr" # depreciated pkg_resources
             python-version: "3.12"
+
 
     steps:
       - uses: actions/checkout@v4
