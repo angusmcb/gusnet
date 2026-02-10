@@ -17,15 +17,15 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.9", "3.12"]
-        wntr-version: ["wntr=v1.2.0","wntr"] # don't test no-wntr then versions
+        python-version: ["3.9","3.10","3.11", "3.12","3.13", "3.14" ]
+        wntr-version: ["", "wntr=v1.2.0","wntr"] # don't test no-wntr then versions
         # can optinally add a test for wntr install by installing dependencies geopandas, networkx
         qgis: ["qgis","conda-forge/label/qgis_ltr::qgis"]
         exclude:
-          - os: "ubuntu-latest"
-            wntr-version: ""
           - os: "macos-latest"
             python-version: "3.12"
+            qgis: "conda-forge/label/qgis_ltr::qgis"
+          - python-version: "3.12"
             qgis: "conda-forge/label/qgis_ltr::qgis"
     steps:
       - uses: actions/checkout@v4
@@ -39,46 +39,6 @@ jobs:
       - name: Install packages
         run: |
           conda install -y pytest ${{ matrix.wntr-version}} ${{ matrix.qgis }}
-          pip install pytest-qgis pytest-cov pytest-mock
-      - name: Conda info
-        run: |
-          conda info
-          conda list
-      - name: Python Path
-        run: python -c "import sys; print(sys.path)"
-      - name: Run tests (non-Ubuntu)
-        if: ${{ matrix.os !='ubuntu-latest' }}
-        run: python -m pytest -v
-      - name: Run Tests (Ubuntu)
-        if: ${{ matrix.os =='ubuntu-latest' }}
-        run: xvfb-run -s '+extension GLX -screen 0 1024x768x24' python -m pytest -v
-
-  conda-tests-no-wntr:
-    name: '${{ matrix.python-version }}, ${{ matrix.os }}, no wntr, ${{matrix.qgis}}'
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash -el {0}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ["ubuntu-latest", "macos-latest", "macos-intel"]
-        python-version: ["3.9", "3.10","3.11", "3.12", "3.13", "3.14"]
-        # can optinally add a test for wntr install by installing dependencies geopandas, networkx
-        qgis: ["qgis","conda-forge/label/qgis_ltr::qgis"]
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v3
-        with:
-          python-version: ${{ matrix.python-version }}
-          miniconda-version: 'latest'
-          channels: conda-forge, defaults
-          channel-priority: true
-          auto-activate-base: false
-      - name: Install packages
-        run: |
-          conda install -y pytest ${{ matrix.qgis }}
           pip install pytest-qgis
       - name: Conda info
         run: |
@@ -86,9 +46,15 @@ jobs:
           conda list
       - name: Python Path
         run: python -c "import sys; print(sys.path)"
-      - name: Run tests (non-Ubuntu)
+      - name: Run tests (non-Ubuntu), don't test wntr
         if: ${{ matrix.os !='ubuntu-latest' }}
         run: python -m pytest -v -m "not needs_wntr and not needs_pandas"
-      - name: Run Tests (Ubuntu)
+      - name: Run Tests (Ubuntu), don't test wntr
         if: ${{ matrix.os =='ubuntu-latest' }}
         run: xvfb-run -s '+extension GLX -screen 0 1024x768x24' python -m pytest -v -m "not needs_wntr and not needs_pandas"
+      - name: Run tests (non-Ubuntu), test wntr
+        if: ${{ matrix.os !='ubuntu-latest' && matrix.wntr-version != ''}}
+        run: python -m pytest -v -m "needs_wntr or needs_pandas"
+      - name: Run Tests (Ubuntu), test wntr
+        if: ${{ matrix.os =='ubuntu-latest' && matrix.wntr-version != ''}}
+        run: xvfb-run -s '+extension GLX -screen 0 1024x768x24' python -m pytest -v -m "needs_wntr or needs_pandas"
