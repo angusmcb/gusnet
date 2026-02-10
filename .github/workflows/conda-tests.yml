@@ -18,16 +18,12 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.9","3.10","3.11", "3.12","3.13", "3.14" ]
-        wntr-version: ["", "wntr=v1.2.0 setuptools==39.1.0","wntr"] # don't test no-wntr then versions
+        wntr-version: ["", "wntr"] # don't test no-wntr then versions
         # can optinally add a test for wntr install by installing dependencies geopandas, networkx
         qgis: ["qgis","conda-forge/label/qgis_ltr::qgis"]
         exclude:
           - python-version: "3.12"
             qgis: "conda-forge/label/qgis_ltr::qgis"
-          - os: "macos-latest"
-            python-version: "3.13"
-          - os: "macos-latest"
-            python-version: "3.14"
           - os: "macos-latest"
             python-version: "3.11"
             qgis: "conda-forge/label/qgis_ltr::qgis"
@@ -36,10 +32,11 @@ jobs:
             qgis: "conda-forge/label/qgis_ltr::qgis"
           - os: "macos-latest"
             python-version: "3.13"
-            qgis: "conda-forge/label/qgis_ltr::qgis"
           - os: "macos-latest"
             python-version: "3.14"
-            qgis: "conda-forge/label/qgis_ltr::qgis"
+          - os: "macos-latest"
+            wntr-version: "wntr"
+
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
