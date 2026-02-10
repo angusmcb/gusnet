@@ -36,6 +36,16 @@ jobs:
             python-version: "3.14"
           - os: "macos-latest"
             wntr-version: "wntr"
+          - python-version: "3.14"
+            wntr-version: "wntr"
+          - python-version: "3.14"
+            qgis: "conda-forge/label/qgis_ltr::qgis"
+          - python-version: "3.13"
+            qgis: "conda-forge/label/qgis_ltr::qgis"
+          - wntr-versions: "wntr" # depreciated pkg_resources
+            python-version: "3.11"
+          - wntr-versions: "wntr" # depreciated pkg_resources
+            python-version: "3.12"
 
     steps:
       - uses: actions/checkout@v4
