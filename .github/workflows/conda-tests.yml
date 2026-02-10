@@ -42,9 +42,9 @@ jobs:
             qgis: "conda-forge/label/qgis_ltr::qgis"
           - python-version: "3.13"
             qgis: "conda-forge/label/qgis_ltr::qgis"
-          - wntr-versions: "wntr" # depreciated pkg_resources
+          - wntr-version: "wntr" # depreciated pkg_resources
             python-version: "3.11"
-          - wntr-versions: "wntr" # depreciated pkg_resources
+          - wntr-version: "wntr" # depreciated pkg_resources
             python-version: "3.12"
 
     steps:
