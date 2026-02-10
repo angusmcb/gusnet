@@ -18,8 +18,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.9","3.10","3.11", "3.12","3.13", "3.14" ]
-        wntr-version: ["", "wntr"] # don't test no-wntr then versions
-        # can optinally add a test for wntr install by installing dependencies geopandas, networkx
+        wntr-version: ["", "wntr"]
         qgis: ["qgis","conda-forge/label/qgis_ltr::qgis"]
         exclude:
 
@@ -29,39 +28,46 @@ jobs:
           - os: "macos-latest"
             python-version: "3.12"
             qgis: "conda-forge/label/qgis_ltr::qgis"
+
+          - os: "macos-latest"
+            wntr-version: "wntr"
+
+          - python-version: "3.14"
+            wntr-version: "wntr"
+
+          # no new qgis versions for mac on conda-forge
           - os: "macos-latest"
             python-version: "3.13"
           - os: "macos-latest"
             python-version: "3.14"
-          - os: "macos-latest"
-            wntr-version: "wntr"
+
+          # problems with pytest-qgis
           - python-version: "3.14"
-            wntr-version: "wntr"
-          - python-version: "3.14" # problems with pytest-qgis
             qgis: "conda-forge/label/qgis_ltr::qgis"
-          - python-version: "3.13" # problems with pytest-qgis
+          - python-version: "3.13"
             qgis: "conda-forge/label/qgis_ltr::qgis"
-          - python-version: "3.12" # problems with pytest-qgis
+          - python-version: "3.12"
             qgis: "conda-forge/label/qgis_ltr::qgis"
-          - python-version: "3.11" # problems with pytest-qgis
+          - python-version: "3.11"
             qgis: "conda-forge/label/qgis_ltr::qgis"
-          - wntr-version: "wntr" # depreciated pkg_resources
+
+          # depreciated pkg_resources
+          - wntr-version: "wntr"
             python-version: "3.10"
-          - wntr-version: "wntr" # depreciated pkg_resources
+          - wntr-version: "wntr"
             python-version: "3.11"
-          - wntr-version: "wntr" # depreciated pkg_resources
+          - wntr-version: "wntr"
             python-version: "3.12"
 
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
           miniconda-version: 'latest'
           channels: conda-forge, defaults
           channel-priority: true
-          auto-activate-base: false
       - name: Install packages
         run: |
           conda install -y pytest ${{ matrix.wntr-version}} ${{ matrix.qgis }}
