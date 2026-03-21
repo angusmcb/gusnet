@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from qgis.core import QgsGeometry, QgsLineString, QgsPointXY, QgsRectangle, QgsSpatialIndex
+from qgis.core import (
+    QgsAbstractFeatureIterator,
+    QgsFeature,
+    QgsFeatureIterator,
+    QgsFeatureRequest,
+    QgsGeometry,
+    QgsLineString,
+    QgsPointXY,
+    QgsSpatialIndex,
+)
 
 from gusnet.i18n import tr
 
@@ -27,13 +36,27 @@ class SpatialIndex:
     def add_nodes(self, names: Iterable[str], geometries: Iterable[tuple[float, float]]) -> None:
         """Add nodes from pandas series to the spatial index."""
 
-        next_index = len(self._node_coordinates)
+        # for i, (x, y) in enumerate(geometries, start=len(self._node_coordinates)):
+        #     self._node_spatial_index.addFeature(i, QgsRectangle(x, y, x, y))
 
-        for geometry in geometries:
-            self._node_spatial_index.addFeature(
-                next_index, QgsRectangle(geometry[0], geometry[1], geometry[0], geometry[1])
-            )
-            next_index += 1
+        #     next_index = 0
+
+        # features = []
+
+        # for i, geometry in enumerate(geometries, start=len(self._node_coordinates)):
+        #     f = QgsFeature(i)
+        #     f.setGeometry(QgsGeometry.fromWkt(f"POINT ({geometry[0]} {geometry[1]})"))
+        #     features.append(f)
+
+        # # Add all features at once
+        # vl = QgsVectorLayer("Point", "temp", "memory")
+        # vl.dataProvider().addFeatures(features)
+        # self._node_spatial_index = QgsSpatialIndex(vl)
+
+        fi = FeatureIterator(QgsFeatureRequest())
+        fi.set_geometries([QgsGeometry.fromWkt(f"POINT ({x} {y})") for x, y in geometries])
+        qfi = QgsFeatureIterator(fi)
+        self._node_spatial_index = QgsSpatialIndex(qfi)
 
         self._node_names += tuple(names)
         self._node_coordinates += tuple(geometries)
@@ -113,6 +136,27 @@ class SpatialIndex:
             return None, None
 
         return self._node_coordinates[nearest[0]], self._node_names[nearest[0]]
+
+
+class FeatureIterator(QgsAbstractFeatureIterator):
+    def close(self):
+        pass
+
+    def rewind(self):
+        pass
+
+    def fetchFeature(self, f: QgsFeature):  # noqa: N802
+        try:
+            idx, geom = next(self._geometry_iter)
+            f.setId(idx)
+            f.setGeometry(geom)
+        except StopIteration:
+            return False
+        return True
+
+    def set_geometries(self, geometries: Iterable[QgsGeometry]):
+        self._geometries = geometries
+        self._geometry_iter = enumerate(geometries)
 
 
 class SnapError(Exception):

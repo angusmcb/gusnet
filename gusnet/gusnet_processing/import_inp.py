@@ -12,7 +12,6 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -26,12 +25,11 @@ from qgis.core import (
 )
 from qgis.PyQt.QtGui import QIcon
 
-from gusnet.elements import ModelLayer, ModelOptions
+from gusnet.elements import Model, ModelLayer
 from gusnet.feature_writer import get_qgs_fields_from_options, write
 from gusnet.gusnet_processing.common import CommonProcessingBase
 from gusnet.i18n import tr
 from gusnet.inpfile_reader import InpFileReadError, read_inp_file
-from gusnet.network import Network
 from gusnet.profiler import profile
 from gusnet.settings import SettingKey
 from gusnet.units import SpecificUnitNames, UnitNames
@@ -110,7 +108,7 @@ class ImportInp(CommonProcessingBase):
             input_file = self.parameterAsFile(parameters, self.INPUT, context)
 
             try:
-                attribute_tables, network, options = read_inp_file(input_file)
+                model = read_inp_file(input_file)
             except InpFileReadError as e:
                 raise QgsProcessingException(e) from e
 
@@ -120,17 +118,17 @@ class ImportInp(CommonProcessingBase):
 
             feedback.pushInfo(
                 tr("Will output with the following units: {flow_unit}").format(
-                    flow_unit=options.flow_unit.friendly_name
+                    flow_unit=model.options.flow_unit.friendly_name
                 )
             )
 
-        self._options_to_save = options
+        self._options_to_save = model.options
         self._settings = {SettingKey.MODEL_LAYERS: {}}
 
         with profile(tr("Creating Outputs"), 80, feedback):
             group_name = tr("Model Layers ({filename})").format(filename=Path(input_file).stem)
-            units = SpecificUnitNames.from_options(options)
-            outputs = self._write_to_sinks(parameters, context, attribute_tables, network, options, group_name, units)
+            units = SpecificUnitNames.from_options(model.options)
+            outputs = self._write_to_sinks(parameters, context, model, group_name, units)
 
         return outputs
 
@@ -148,9 +146,7 @@ class ImportInp(CommonProcessingBase):
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        attribute_tables: Mapping[ModelLayer, Mapping[str, list[Any]]],
-        network: Network,
-        options: ModelOptions,
+        model: Model,
         group_name: str,
         units: UnitNames | None,
     ) -> dict[str, str]:
@@ -162,14 +158,13 @@ class ImportInp(CommonProcessingBase):
 
         outputs: dict[str, str] = {}
         for layer in ModelLayer:
-            attribute_table = attribute_tables.get(layer)
+            attribute_table = model.attributes.get(layer)
 
-            fields = get_qgs_fields_from_options(options, layer)
+            fields = get_qgs_fields_from_options(model.options, layer)
 
             (sink, outputs[layer]) = self.parameterAsSink(parameters, layer, context, fields, layer.wkb_type, crs)
 
-            geometries = network.node_geometries if layer.is_node else network.link_geometries
-
+            geometries = model.network.node_geometries if layer.is_node else model.network.link_geometries
             if sink and attribute_table is not None:
                 write(sink, fields, attribute_table, geometries)
 

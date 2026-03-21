@@ -7,12 +7,14 @@ Note:
 
 from __future__ import annotations
 
+import copy
 import dataclasses
 import datetime
 import sys
 from abc import abstractmethod
-from collections.abc import Iterable, Mapping
+from collections.abc import Collection, Mapping
 from enum import Enum, Flag, auto
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from qgis.core import Qgis, QgsProcessing
@@ -840,7 +842,7 @@ DEFAULT_OPTIONS = ModelOptions(
 
 
 if TYPE_CHECKING:
-    LayerAttributes = Mapping[Field | str, Iterable[Any]]
+    LayerAttributes = Mapping[Field | str, Collection[Any]]
     ModelAttributes = Mapping[ModelLayer, LayerAttributes]
 
 
@@ -849,3 +851,15 @@ class Model:
     network: Network
     options: ModelOptions
     attributes: ModelAttributes
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            "attributes",
+            MappingProxyType(
+                {
+                    layer_type: MappingProxyType(copy.deepcopy(attributes))
+                    for layer_type, attributes in self.attributes.items()
+                }
+            ),
+        )

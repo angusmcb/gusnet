@@ -6,7 +6,7 @@ import enum
 import itertools
 import os
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
@@ -17,10 +17,12 @@ from gusnet.elements import (
     Field,
     FlowUnit,
     HeadlossFormula,
+    Model,
     ModelLayer,
     ModelOptions,
     PumpTypes,
     QualityParameter,
+    WallReactionOrder,
 )
 from gusnet.i18n import tr
 from gusnet.network import Network
@@ -34,7 +36,7 @@ else:
 
 def read_inp_file(
     file_path: os.PathLike | str,
-) -> tuple[Mapping[ModelLayer, Mapping], Network, ModelOptions]:
+) -> Model:
     try:
         sections = read_sections_from_file(file_path)
     except FileNotFoundError as e:
@@ -57,53 +59,35 @@ def read_inp_file(
 
         junctions = _read_junctions(sections[Sections.JUNCTIONS], patterns)
         reservoirs = _read_reservoirs(sections[Sections.RESERVOIRS], patterns)
-        tanks = _read_tanks(sections[Sections.TANKS], curves)
+        tanks = _read_tanks(sections[Sections.TANKS], curves, sections[Sections.REACTIONS], sections[Sections.MIXING])
 
         node_quality = _read_quality(sections[Sections.QUALITY])
         _add_quality_to_nodes(junctions, node_quality)
         _add_quality_to_nodes(reservoirs, node_quality)
         _add_quality_to_nodes(tanks, node_quality)
 
-        pipes = _make_table(
-            sections[Sections.PIPES],
-            (
-                Field.NAME,
-                "_from",
-                "_to",
-                Field.LENGTH,
-                Field.DIAMETER,
-                Field.ROUGHNESS,
-                Field.MINOR_LOSS,
-                Field.INITIAL_STATUS,
-            ),
-        )
-
+        pipes = _read_pipes(sections[Sections.PIPES], sections[Sections.REACTIONS], status)
         pumps = _read_pumps(sections[Sections.PUMPS], curves, status)
-
         valves = _read_valves(sections[Sections.VALVES], curves, status)
-
-        model_layers = {}
-        if junctions:
-            model_layers[ModelLayer.JUNCTIONS] = junctions
-        if reservoirs:
-            model_layers[ModelLayer.RESERVOIRS] = reservoirs
-        if tanks:
-            model_layers[ModelLayer.TANKS] = tanks
-        if pipes:
-            model_layers[ModelLayer.PIPES] = pipes
-        if pumps:
-            model_layers[ModelLayer.PUMPS] = pumps
-        if valves:
-            model_layers[ModelLayer.VALVES] = valves
 
         network = _get_network(sections)
 
     except Exception as e:
         raise InpFileReadError(e) from e
 
-    model_layer_mapping = MappingProxyType({k: MappingProxyType(v) for k, v in model_layers.items()})
+    model_layers = {
+        ModelLayer.JUNCTIONS: junctions,
+        ModelLayer.RESERVOIRS: reservoirs,
+        ModelLayer.TANKS: tanks,
+        ModelLayer.PIPES: pipes,
+        ModelLayer.PUMPS: pumps,
+        ModelLayer.VALVES: valves,
+    }
 
-    return model_layer_mapping, network, options
+    if all(not v for v in model_layers.values()):
+        raise InpFileReadError(tr("No valid sections found in input file."))
+
+    return Model(network, options, model_layers)
 
 
 class Sections(enum.Enum):
@@ -126,33 +110,42 @@ class Sections(enum.Enum):
     VERTICES = "VERTICES"
 
 
-def read_sections_from_file(file_path: os.PathLike | str) -> dict[Sections, list[list[str]]]:
+class Line(tuple[str, ...]):
+    line_number: int
+
+    def __new__(cls, *values: str, line_number: int):
+        obj = super().__new__(cls, values)
+        obj.line_number = line_number
+        return obj
+
+
+def read_sections_from_file(file_path: os.PathLike | str) -> MappingProxyType[Sections, tuple[Line, ...]]:
     with Path(file_path).open("r", encoding="utf-8") as file:
         lines = file.readlines()
 
         lines_without_comments = [line.split(";")[0].strip() for line in lines]
 
-        non_empty_lines = [line for line in lines_without_comments if line]
+        sections: dict[Sections, list[Line]] = {section: [] for section in Sections}
 
-        sections: dict[Sections, list[list[str]]] = {section: [] for section in Sections}
+        for line_number, line in enumerate(lines_without_comments, start=1):
+            if not line:
+                continue
 
-        for line in non_empty_lines:
             if line.startswith("[") and line.endswith("]"):
-                section_string = line[1:-1].upper()
+                section_string = line[1:-1].upper().strip()
                 if section_string in [section.name for section in Sections]:
                     current_section = Sections[section_string]
-                    sections[current_section] = []
                 else:
                     current_section = None
             else:
                 if current_section:
                     split_line = line.split()
-                    sections[current_section].append(split_line)
+                    sections[current_section].append(Line(*split_line, line_number=line_number))
 
-    return sections
+    return MappingProxyType({section: tuple(lines) for section, lines in sections.items()})
 
 
-def _make_table(lines: list[list], titles: tuple) -> dict:
+def _make_table(lines: Iterable[Sequence[str | None]], titles: tuple) -> dict:
     columns = [col for col in itertools.zip_longest(*lines)]
 
     table = {title: column for title, column in zip(titles, columns)}
@@ -160,7 +153,7 @@ def _make_table(lines: list[list], titles: tuple) -> dict:
     return table
 
 
-def _read_patterns(lines: list[list[str]]) -> dict[str, Pattern]:
+def _read_patterns(lines: Iterable[Sequence[str]]) -> MappingProxyType[str, Pattern]:
     pattern_multipliers: dict[str, list] = {}
 
     for line in lines:
@@ -169,12 +162,12 @@ def _read_patterns(lines: list[list[str]]) -> dict[str, Pattern]:
         if pattern_name in pattern_multipliers:
             pattern_multipliers[pattern_name].extend(multipliers)
         else:
-            pattern_multipliers[pattern_name] = multipliers
+            pattern_multipliers[pattern_name] = list(multipliers)
 
-    return {name: Pattern(multipliers) for name, multipliers in pattern_multipliers.items()}
+    return MappingProxyType({name: Pattern(multipliers) for name, multipliers in pattern_multipliers.items()})
 
 
-def _read_curves(lines: list[list[str]]) -> dict[str, Curve]:
+def _read_curves(lines: Iterable[Sequence[str]]) -> dict[str, Curve]:
     curve_points: dict[str, list[tuple[float, float]]] = {}
 
     for line in lines:
@@ -189,16 +182,11 @@ def _read_curves(lines: list[list[str]]) -> dict[str, Curve]:
     return {name: Curve(points) for name, points in curve_points.items()}
 
 
-def _read_status(lines: list[list[str]]) -> dict[str, str]:
-    status_dict = {}
-    for line in lines:
-        name = line[0]
-        status = line[1]
-        status_dict[name] = status
-    return status_dict
+def _read_status(lines: Iterable[Sequence[str]]) -> dict[str, str]:
+    return {line[0]: line[1].upper() for line in lines if len(line) > 1}
 
 
-def _read_junctions(lines: list[list[str]], patterns: dict[str, Pattern]) -> dict:
+def _read_junctions(lines: Iterable[Sequence[str]], patterns: Mapping[str, Pattern]) -> dict:
     junctions = _make_table(lines, (Field.NAME, Field.ELEVATION, Field.BASE_DEMAND, Field.DEMAND_PATTERN))
     if Field.BASE_DEMAND in junctions:
         junctions[Field.BASE_DEMAND] = [
@@ -212,7 +200,7 @@ def _read_junctions(lines: list[list[str]], patterns: dict[str, Pattern]) -> dic
     return junctions
 
 
-def _read_reservoirs(lines: list[list[str]], patterns: dict[str, Pattern]) -> dict:
+def _read_reservoirs(lines: Iterable[Sequence[str]], patterns: Mapping[str, Pattern]) -> dict:
     reservoirs = _make_table(lines, (Field.NAME, Field.BASE_HEAD, Field.HEAD_PATTERN))
 
     if Field.HEAD_PATTERN in reservoirs:
@@ -223,7 +211,12 @@ def _read_reservoirs(lines: list[list[str]], patterns: dict[str, Pattern]) -> di
     return reservoirs
 
 
-def _read_tanks(lines: list[list[str]], curves: dict[str, Curve]) -> dict:
+def _read_tanks(
+    lines: Iterable[Sequence[str]],
+    curves: Mapping[str, Curve],
+    reaction_data: Iterable[Sequence[str]],
+    mixing_data: Iterable[Sequence[str]],
+) -> dict:
     tanks = _make_table(
         lines,
         (
@@ -241,11 +234,70 @@ def _read_tanks(lines: list[list[str]], curves: dict[str, Curve]) -> dict:
     if Field.VOL_CURVE in tanks:
         tanks[Field.VOL_CURVE] = [curves.get(name) if name is not None else None for name in tanks[Field.VOL_CURVE]]
 
+    if tanks:
+        mixing_type = {parts[0]: parts[1] for parts in mixing_data}
+        comp_ratio = {
+            parts[0]: float(parts[2]) for parts in mixing_data if len(parts) > 2 and parts[1].upper() == "2COMP"
+        }
+
+        tanks[Field.MIXING_MODEL] = [mixing_type.get(name) for name in tanks[Field.NAME]]
+        tanks[Field.MIXING_FRACTION] = [comp_ratio.get(name) for name in tanks[Field.NAME]]
+
+        reaction_order = {parts[1]: float(parts[2]) for parts in reaction_data if parts[0].lower() == "tank"}
+        tanks[Field.BULK_COEFF] = [reaction_order.get(name, 0.0) for name in tanks[Field.NAME]]
+
     return tanks
 
 
-def _read_pumps(lines: list[list[str]], curves: Mapping[str, Curve], status: Mapping[str, str]) -> dict:
-    processed_lines = []
+def _read_pipes(
+    lines: Iterable[Sequence[str]], reaction_data: Iterable[Sequence[str]], status: Mapping[str, str]
+) -> dict:
+    processed_lines: list[tuple] = []
+
+    for line in lines:
+        name = line[0]
+        length = line[3]
+        diameter = line[4]
+        roughness = line[5]
+        minor_loss = line[6] if len(line) > 6 else None
+        initial_status_read = line[7].upper() if len(line) > 7 else None
+
+        if initial_status_read == "CLOSED" or status.get(name) == "CLOSED":
+            initial_status = "CLOSED"
+            cv = False
+        elif initial_status_read == "CV" or status.get(name) == "CV":
+            initial_status = "OPEN"
+            cv = True
+        else:
+            initial_status = "OPEN"
+            cv = False
+
+        processed_lines.append((name, length, diameter, roughness, minor_loss, initial_status, cv))
+
+    pipes = _make_table(
+        processed_lines,
+        (
+            Field.NAME,
+            Field.LENGTH,
+            Field.DIAMETER,
+            Field.ROUGHNESS,
+            Field.MINOR_LOSS,
+            Field.INITIAL_STATUS,
+            Field.CHECK_VALVE,
+        ),
+    )
+    if pipes:
+        bulk_reaction_order = {parts[1]: float(parts[2]) for parts in reaction_data if parts[0].lower() == "bulk"}
+        wall_reaction_order = {parts[1]: float(parts[2]) for parts in reaction_data if parts[0].lower() == "wall"}
+
+        pipes[Field.BULK_COEFF] = [bulk_reaction_order.get(name, 0.0) for name in pipes[Field.NAME]]
+        pipes[Field.WALL_COEFF] = [wall_reaction_order.get(name, 0.0) for name in pipes[Field.NAME]]
+
+    return pipes
+
+
+def _read_pumps(lines: Iterable[Sequence[str]], curves: Mapping[str, Curve], status: Mapping[str, str]) -> dict:
+    processed_lines: list[tuple[str | None, ...]] = []
 
     for line in lines:
         name = line[0]
@@ -262,9 +314,13 @@ def _read_pumps(lines: list[list[str]], curves: Mapping[str, Curve], status: Map
             elif line[i] == "SPEED":
                 speed = line[i + 1]
 
-        pump_status = status.get(name, None)
+        pump_status = status.get(name, "OPEN").upper()
 
-        processed_lines.append([name, pump_type, power, head_curve, speed, efficiency, pump_status])
+        if pump_status not in ("OPEN", "CLOSED"):
+            speed = pump_status
+            pump_status = "OPEN"
+
+        processed_lines.append((name, pump_type, power, head_curve, speed, efficiency, pump_status))
 
     return _make_table(
         processed_lines,
@@ -280,30 +336,35 @@ def _read_pumps(lines: list[list[str]], curves: Mapping[str, Curve], status: Map
     )
 
 
-def _read_valves(lines: list[list[str]], curves: dict[str, Curve], status: Mapping[str, str]) -> dict:
-    processed_lines = []
+def _read_valves(lines: Iterable[Sequence[str]], curves: dict[str, Curve], status: Mapping[str, str]) -> dict:
+    processed_lines: list[tuple[str | None, ...]] = []
 
     for line in lines:
         valve_type = pressure_setting = flow_setting = throttle_setting = headloss_curve = minor_loss = None
 
         name = line[0]
 
+        valve_setting = line[5] if len(line) > 5 else None
+
+        valve_status = status.get(name, "ACTIVE").upper()
+        if valve_status not in ("ACTIVE", "OPEN", "CLOSED"):
+            valve_setting = valve_status
+            valve_status = "ACTIVE"
+
         valve_type = line[4].upper()
         if valve_type == "PRV" or valve_type == "PSV" or valve_type == "PBV":
-            pressure_setting = line[5]
+            pressure_setting = valve_setting
         elif valve_type == "FCV":
-            flow_setting = line[5]
+            flow_setting = valve_setting
         elif valve_type == "TCV":
-            throttle_setting = line[5]
+            throttle_setting = valve_setting
         elif valve_type == "GPV":
-            headloss_curve = curves.get(line[5]) if line[5] is not None else None
+            headloss_curve = curves.get(valve_setting) if valve_setting is not None else None
 
         minor_loss = line[6] if len(line) > 6 else None
 
-        valve_status = status.get(name, None)
-
         processed_lines.append(
-            [
+            (
                 name,
                 line[3],
                 valve_type,
@@ -313,7 +374,7 @@ def _read_valves(lines: list[list[str]], curves: dict[str, Curve], status: Mappi
                 headloss_curve,
                 minor_loss,
                 valve_status,
-            ]
+            )
         )
 
     return _make_table(
@@ -330,22 +391,6 @@ def _read_valves(lines: list[list[str]], curves: dict[str, Curve], status: Mappi
             Field.VALVE_STATUS,
         ),
     )
-
-
-class OptKey(enum.Enum):
-    UNITS = "units"
-    HEADLOSS = "headloss"
-    DEMAND_MODEL = "demand model"
-    MINIMUM_PRESSURE = "minimum pressure"
-    REQUIRED_PRESSURE = "required pressure"
-    PRESSURE_EXPONENT = "pressure exponent"
-    DEMAND_MULTIPLIER = "demand multiplier"
-    PATTERN = "pattern"
-    EMITTER_EXPONENT = "emitter exponent"
-    QUALITY = "quality"
-    DIFFUSIVITY = "diffusivity"
-    DURATION = "duration"
-    QUALITY_TIMESTEP = "quality timestep"
 
 
 def _list_to_timedelta(parts: Sequence[str]) -> datetime.timedelta:
@@ -365,30 +410,51 @@ def _list_to_timedelta(parts: Sequence[str]) -> datetime.timedelta:
         raise ValueError
 
 
-EMPTY_DEFAULT = tuple([None])
-
-
 @dataclasses.dataclass
 class OptData:
-    units: Sequence = tuple([FlowUnit.GPM.value])
-    headloss: Sequence = tuple([HeadlossFormula.HAZEN_WILLIAMS.value])
+    units: Sequence = (None,)
+    headloss: Sequence = (None,)
 
-    demand_model: Sequence = tuple([DemandType.FIXED.value])
-    minimum_pressure: Sequence = tuple([0])
-    required_prewsure: Sequence = tuple([None])
-    pressure_expontent: Sequence = tuple([0.5])
+    demand_model: Sequence = (None,)
+    minimum_pressure: Sequence = (None,)
+    required_pressure: Sequence = (None,)
+    pressure_exponent: Sequence = (None,)
 
-    demand_multiplier: Sequence = tuple([1.0])
-    pattern: Sequence = tuple(["1"])
+    demand_multiplier: Sequence = (None,)
+    pattern: Sequence = (None,)
+
+    emitter_exponent: Sequence = (None,)
+    quality: Sequence = (None,)
+    diffusivity: Sequence = (None,)
+    tolerance: Sequence = (None,)
 
 
 @dataclasses.dataclass
 class TimeData:
-    duration: Sequence = tuple([None])
+    duration: Sequence = (None,)
 
 
-def _fill_dataclass(dclass: Any, data_lines: list[list[str]]) -> None:
-    field_names = [f.name for f in dataclasses.fields(dclass)]
+@dataclasses.dataclass
+class ReactionData:
+    order_bulk: Sequence = (None,)
+    order_wall: Sequence = (None,)
+    order_tank: Sequence = (None,)
+    global_bulk: Sequence = (None,)
+    global_wall: Sequence = (None,)
+    limiting_potential: Sequence = (None,)
+    roughness_correlation: Sequence = (None,)
+
+
+@dataclasses.dataclass
+class EnergyData:
+    global_price: Sequence = (None,)
+    global_pattern: Sequence = (None,)
+    global_effic: Sequence = (None,)
+    demand_charge: Sequence = (None,)
+
+
+def _fill_dataclass(dclass: Any, data_lines: Iterable[Sequence[str]]) -> None:
+    field_names = set([f.name for f in dataclasses.fields(dclass)])
     for line in data_lines:
         key2 = "_".join(line[:2]).lower()
         if key2 in field_names and len(line) > 2:
@@ -401,61 +467,72 @@ def _fill_dataclass(dclass: Any, data_lines: list[list[str]]) -> None:
 
 
 def _read_options(
-    options_lines: list[list[str]],
-    times_lines: list[list[str]],
-    energy_lines: list[list[str]],
-    reactions_lines: list[list[str]],
-    patterns: dict[str, Pattern],
+    options_lines: Iterable[Sequence[str]],
+    times_lines: Iterable[Sequence[str]],
+    energy_lines: Iterable[Sequence[str]],
+    reactions_lines: Iterable[Sequence[str]],
+    patterns: Mapping[str, Pattern],
 ) -> ModelOptions:
-    all_lines = options_lines + times_lines + energy_lines + reactions_lines
-
     opt_data = OptData()
     _fill_dataclass(opt_data, options_lines)
     times_data = TimeData()
     _fill_dataclass(times_data, times_lines)
-
-    opt_dict: dict[OptKey, list[str]] = {}
-    for line in all_lines:
-        # prefer two word keys if they exist
-        key2 = " ".join(line[:2]).lower()
-        if key2 in [opt_key.value for opt_key in OptKey]:
-            opt_dict[OptKey(key2)] = line[2:]
-            continue
-
-        key = line[0].lower()
-        if key in [opt_key.value for opt_key in OptKey]:
-            opt_dict[OptKey(key)] = line[1:]
+    energy_data = EnergyData()
+    _fill_dataclass(energy_data, energy_lines)
+    reaction_data = ReactionData()
+    _fill_dataclass(reaction_data, reactions_lines)
 
     flow_unit = FlowUnit(opt_data.units[0] or FlowUnit.GPM)
     headloss = HeadlossFormula(opt_data.headloss[0] or HeadlossFormula.HAZEN_WILLIAMS)
 
-    demand_model = DemandType(opt_data.demand_model[0])
+    demand_model = DemandType(opt_data.demand_model[0] or DemandType.FIXED)
 
-    minimum_pressure = float(opt_data.minimum_pressure[0])
-    required_pressure = float(opt_data.required_prewsure[0] or minimum_pressure + 0.1)
-    pressure_exponent = float(opt_data.pressure_expontent[0])
+    minimum_pressure = float(opt_data.minimum_pressure[0] or 0.0)
+    required_pressure = float(opt_data.required_pressure[0] or minimum_pressure + 0.1)
+    pressure_exponent = float(opt_data.pressure_exponent[0] or 0.5)
 
-    demand_multiplier = float(opt_data.demand_multiplier[0])
-    default_pattern = patterns.get(opt_data.pattern[0], Pattern())
+    demand_multiplier = float(opt_data.demand_multiplier[0] or 1.0)
+    default_pattern = patterns.get(opt_data.pattern[0] or "1", Pattern())
 
-    emitter_exponent = float(opt_dict[OptKey.EMITTER_EXPONENT][0]) if OptKey.EMITTER_EXPONENT in opt_dict else 0.5
+    emitter_exponent = float(opt_data.emitter_exponent[0] or 0.5)
 
-    relative_diffusivity = float(opt_dict[OptKey.DIFFUSIVITY][0] if OptKey.DIFFUSIVITY in opt_dict else 0.0)
+    relative_diffusivity = float(opt_data.diffusivity[0] or 0.0)
 
-    if OptKey.QUALITY in opt_dict:
-        if opt_dict[OptKey.QUALITY][0].upper() not in QualityParameter.__members__:
+    if opt_data.quality[0] is not None:
+        if opt_data.quality[0].upper() not in QualityParameter.__members__:
             quality_value = QualityParameter.CHEMICAL
         else:
-            quality_value = QualityParameter(opt_dict[OptKey.QUALITY][0].upper())
+            quality_value = QualityParameter(opt_data.quality[0].upper())
     else:
         quality_value = QualityParameter.NONE
 
-    trace_node = (
-        opt_dict[OptKey.QUALITY][1]
-        if quality_value is QualityParameter.TRACE and OptKey.QUALITY in opt_dict and len(opt_dict[OptKey.QUALITY]) > 1
-        else ""
-    )
+    trace_node = opt_data.quality[1] if quality_value is QualityParameter.TRACE and len(opt_data.quality) > 1 else ""
+    quality_tolerance = float(opt_data.tolerance[0] or 0.01)
+
     simulation_duration = _list_to_timedelta(times_data.duration) if times_data.duration[0] else datetime.timedelta(0)
+
+    energy_price = float(energy_data.global_price[0] or 0.0)
+    energy_pattern = (
+        patterns.get(energy_data.global_pattern[0], Pattern()) if energy_data.global_pattern[0] else Pattern()
+    )
+    energy_pump_efficiency = float(energy_data.global_effic[0] or 75)
+    energy_demand_charge = float(energy_data.demand_charge[0] or 0.0)
+
+    bulk_reaction_order = float(reaction_data.order_bulk[0] or 1.0)
+
+    wall_reaction_order_float = float(reaction_data.order_wall[0] or 1.0)
+    if wall_reaction_order_float == 1.0:
+        wall_reaction_order = WallReactionOrder.ONE
+    elif wall_reaction_order_float == 0.0:
+        wall_reaction_order = WallReactionOrder.ZERO
+    else:
+        raise ValueError(tr("Invalid wall reaction order value: {value}").format(value=reaction_data.order_wall[0]))
+
+    # tank_reaction_order = float(reaction_data.order_tank[0] or 1.0)
+    global_bulk_coefficient = float(reaction_data.global_bulk[0] or 0.0)
+    global_wall_coefficient = float(reaction_data.global_wall[0] or 0.0)
+    limiting_concentration = float(reaction_data.limiting_potential[0] or 0.0)
+    wall_coefficient_correlation = float(reaction_data.roughness_correlation[0] or 0.0)
 
     return ModelOptions(
         flow_unit=flow_unit,
@@ -469,25 +546,25 @@ def _read_options(
         required_pressure=required_pressure,
         pressure_exponent=pressure_exponent,
         energy_report=DEFAULT_OPTIONS.energy_report,
-        energy_price=DEFAULT_OPTIONS.energy_price,
-        energy_pattern=DEFAULT_OPTIONS.energy_pattern,
-        energy_pump_efficiency=DEFAULT_OPTIONS.energy_pump_efficiency,
-        energy_demand_charge=DEFAULT_OPTIONS.energy_demand_charge,
+        energy_price=energy_price,
+        energy_pattern=energy_pattern,
+        energy_pump_efficiency=energy_pump_efficiency,
+        energy_demand_charge=energy_demand_charge,
         quality_parameter=quality_value,
         mass_unit=DEFAULT_OPTIONS.mass_unit,
         relative_diffusivity=relative_diffusivity,
         trace_node=trace_node,
-        quality_tolerance=DEFAULT_OPTIONS.quality_tolerance,
-        bulk_reaction_order=DEFAULT_OPTIONS.bulk_reaction_order,
-        wall_reaction_order=DEFAULT_OPTIONS.wall_reaction_order,
-        global_bulk_coefficient=DEFAULT_OPTIONS.global_bulk_coefficient,
-        global_wall_coefficient=DEFAULT_OPTIONS.global_wall_coefficient,
-        limiting_concentration=DEFAULT_OPTIONS.limiting_concentration,
-        wall_coefficient_correlation=DEFAULT_OPTIONS.wall_coefficient_correlation,
+        quality_tolerance=quality_tolerance,
+        bulk_reaction_order=bulk_reaction_order,
+        wall_reaction_order=wall_reaction_order,
+        global_bulk_coefficient=global_bulk_coefficient,
+        global_wall_coefficient=global_wall_coefficient,
+        limiting_concentration=limiting_concentration,
+        wall_coefficient_correlation=wall_coefficient_correlation,
     )
 
 
-def _read_quality(quality_lines: list[list[str]]) -> dict[str, float]:
+def _read_quality(quality_lines: Iterable[Sequence[str]]) -> dict[str, float]:
     return {line[0]: float(line[1]) for line in quality_lines}
 
 
@@ -496,16 +573,23 @@ def _add_quality_to_nodes(nodes: dict[str, list], node_quality: dict[str, float]
         nodes[Field.INITIAL_QUALITY] = [node_quality.get(name) for name in nodes[Field.NAME]]
 
 
-def _get_network(sections: dict[Sections, list[list[str]]]) -> Network:
+def _get_network(sections: Mapping[Sections, Iterable[Sequence[str]]]) -> Network:
     network = Network()
 
     coordinate_tuples = [(line[0], (float(line[1]), float(line[2]))) for line in sections[Sections.COORDINATES]]
+
+    if not coordinate_tuples:
+        return network
 
     network.add_nodes_from_points(*zip(*coordinate_tuples))
 
     connections = [
         line[0:3] for line in [*sections[Sections.PIPES], *sections[Sections.PUMPS], *sections[Sections.VALVES]]
     ]
+
+    if not connections:
+        return network
+
     names, starts, ends = zip(*connections)
 
     vertices_dict: dict[str, list[tuple[float, float]]] = {}
@@ -539,15 +623,3 @@ class InpFileReadError(Exception):
 class InpFileNotFoundError(InpFileReadError, FileNotFoundError):
     def __init__(self, input_file: os.PathLike | str):
         super().__init__(tr(".inp file does not exist ({input_file})").format(input_file=str(input_file)))
-
-
-if __name__ == "__main__":
-    inp_path = Path(__file__).parent / "resources" / "examples" / "ky10.inp"
-    sections, network, dclass = read_inp_file(inp_path)
-    for section, lines in sections.items():
-        print(f"Section: {section}")
-        for line in list(lines.values()):
-            print(f"  {line}")
-        print()
-    print("Network:")
-    print(dclass)

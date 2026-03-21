@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from functools import lru_cache
 from types import MappingProxyType
-from typing import cast
 
-from qgis.core import QgsGeometry, QgsPoint, QgsPointXY
+from qgis.core import QgsGeometry
 
 from gusnet.spatial_index import SpatialIndex
 
@@ -32,10 +32,18 @@ class Network:
         self.link_start_nodes = MappingProxyType(self._link_start_nodes)
         self.link_end_nodes = MappingProxyType(self._link_end_nodes)
 
+        self._node_elevations: dict[str, float] = {}
         self._spatial_index: SpatialIndex | None = None
 
-    def add_node_geometries(self, names: Iterable[str], geometries: Iterable[QgsGeometry]) -> None:
+    def add_node_geometries(
+        self, names: Iterable[str], geometries: Iterable[QgsGeometry], elevations: Iterable[float] | None
+    ) -> None:
         coordinates = (_point_geometry_to_tuple(geom) for geom in geometries)
+
+        if elevations:
+            for geometry, elevation in zip(geometries, elevations):
+                if elevation is not None:
+                    geometry.get().addZValue(elevation)  # type: ignore[union-attr]
 
         self._add_nodes(names, coordinates, geometries)
 
@@ -69,13 +77,40 @@ class Network:
             part_iterator = zip(start_nodes, end_nodes, vertices)
 
         geometries = [
-            _create_line_geometry(node_coord_dict[start], node_coord_dict[end], middle_vertices)
+            _create_line_geometry(node_coord_dict[start], node_coord_dict[end], tuple(middle_vertices))
             if start and end
             else QgsGeometry()
             for start, end, middle_vertices in part_iterator
         ]
 
         self._add_links(names, vertices, start_nodes, end_nodes, geometries)
+
+    def add_elevations(self, node_elevations: Mapping[str, float]):
+        for node_name, node_geom in self._node_geometries.items():
+            try:
+                node_elevation = node_elevations[node_name]
+            except KeyError:
+                continue
+            node_point = node_geom.get()
+            node_point.addZValue(node_elevation)
+
+        for link_name, link_geom in self._link_geometries.items():
+            try:
+                start_z = node_elevations[self._link_start_nodes[link_name]]
+                end_z = node_elevations[self._link_end_nodes[link_name]]
+            except KeyError:
+                continue
+            line_string = link_geom.get()
+            line_string.addZValue(start_z)
+            line_string.setZAt(-1, end_z)
+
+            total_length = line_string.length()
+            gradient = (end_z - start_z) / total_length
+
+            for vertex_id in range(1, line_string.vertexCount() - 1):
+                incremental_length = link_geom.distanceToVertex(vertex_id)
+                interpolated_z = incremental_length * gradient + start_z
+                line_string.setZAt(vertex_id, interpolated_z)
 
     def _add_nodes(
         self, names: Iterable[str], coordinates: Iterable[tuple[float, float]], geometeries: Iterable[QgsGeometry]
@@ -117,28 +152,33 @@ class Network:
         return self._spatial_index
 
 
+@lru_cache(maxsize=10000)
 def _point_geometry_to_tuple(geometry: QgsGeometry) -> tuple[float, float]:
     try:
         point = geometry.constGet()
-        point = cast(QgsPoint, point)
-        return (point.x(), point.y())
+        return (point.x(), point.y())  # type: ignore[union-attr]
     except (AttributeError, TypeError, ValueError):
         return (math.nan, math.nan)
 
 
-def create_point_geometry(coord: tuple[float, float]) -> QgsGeometry:
-    return QgsGeometry.fromWkt(f"POINT ({coord[0]} {coord[1]})")
-
-
+@lru_cache(maxsize=10000)
 def _line_geometry_to_vertices(geometry: QgsGeometry) -> list[tuple[float, float]]:
     try:
+        if geometry.constGet().vertexCount() < 3:  # type: ignore[union-attr]
+            return []
         return [(v.x(), v.y()) for v in geometry.asPolyline()[1:-1]]
     except (TypeError, ValueError):
         return []
 
 
+@lru_cache(maxsize=10000)
+def create_point_geometry(coord: tuple[float, float]) -> QgsGeometry:
+    return QgsGeometry.fromWkt(f"POINT ({coord[0]} {coord[1]})")
+
+
+@lru_cache(maxsize=10000)
 def _create_line_geometry(
-    start: tuple[float, float], end: tuple[float, float], middle_vertices: Iterable[tuple[float, float]]
+    start: tuple[float, float], end: tuple[float, float], middle_vertices: tuple[tuple[float, float], ...]
 ) -> QgsGeometry:
-    points = [QgsPointXY(p[0], p[1]) for p in [start, *middle_vertices, end]]
-    return QgsGeometry.fromPolylineXY(points)
+    points = [start, *middle_vertices, end]
+    return QgsGeometry.fromWkt(f"LINESTRING ({', '.join(f'{p[0]} {p[1]}' for p in points)})")

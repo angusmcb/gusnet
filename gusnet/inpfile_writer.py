@@ -381,7 +381,7 @@ def inp_file_energy(
 ) -> Iterable[str] | None:
     lines = [
         f"GLOBAL PRICE {options.energy_price}",
-        f"GLOBAL EFFICIENCY {options.energy_pump_efficiency}",
+        f"GLOBAL EFFIC {options.energy_pump_efficiency}",
         f"DEMAND CHARGE {options.energy_demand_charge}",
     ]
     if options.energy_pattern:

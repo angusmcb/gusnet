@@ -91,7 +91,10 @@ def read(
     with profile(tr("Handling geometries")):
         net = Network()
         for layer, geometries in node_geometries.items():
-            net.add_node_geometries(node_attributes[layer][Field.NAME], geometries)
+            layer_attributes = node_attributes[layer]
+            elevations = layer_attributes.get(Field.ELEVATION, layer_attributes.get(Field.BASE_HEAD))
+            net.add_node_geometries(layer_attributes[Field.NAME], geometries, elevations)
+
         for layer, geometries in link_geometries.items():
             net.add_link_geometries(link_attributes[layer][Field.NAME], geometries)
 

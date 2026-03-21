@@ -123,14 +123,14 @@ def from_inp(
 
     """
 
-    attribute_tables, network, options = read_inp_file(inp_path)
+    model = read_inp_file(inp_path)
 
     crs_object = _get_crs(crs)
 
-    unit_names = SpecificUnitNames.from_options(options)
+    unit_names = SpecificUnitNames.from_options(model.options)
 
     map_layers: dict[str, QgsVectorLayer] = {}
-    for model_layer, attribute_df in attribute_tables.items():
+    for model_layer, attribute_df in model.attributes.items():
         layer_type = "Point" if model_layer.is_node else "LineString"
 
         layer = QgsVectorLayer(layer_type, model_layer.friendly_name, "memory")
@@ -140,12 +140,11 @@ def from_inp(
         if not data_provider:
             raise RuntimeError
 
-        qgs_fields = feature_writer.get_qgs_fields_from_options(options, model_layer)
+        qgs_fields = feature_writer.get_qgs_fields_from_options(model.options, model_layer)
 
         data_provider.addAttributes(qgs_fields)
 
-        geometries = network.node_geometries if model_layer.is_node else network.link_geometries
-
+        geometries = model.network.node_geometries if model_layer.is_node else model.network.link_geometries
         feature_writer.write(data_provider, qgs_fields, attribute_df, geometries)
 
         layer.updateFields()
