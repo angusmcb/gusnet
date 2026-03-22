@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         run: |
@@ -57,7 +57,7 @@ jobs:
         run: qgis --version
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         run: |
@@ -123,7 +123,7 @@ jobs:
       QGIS_PLUGIN_IN_CI: 1
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Choco install qgis
         uses: crazy-max/ghaction-chocolatey@v3
