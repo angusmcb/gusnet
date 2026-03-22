@@ -126,7 +126,7 @@ def test_load_inp_file(qgis_iface, qgis_new_project, clean_message_bar):
 
     assert len(QgsProject.instance().mapLayers()) == 6
 
-    assert qgis_iface.messageBar().currentItem().text() == "Loaded .inp file"
+    assert qgis_iface.messageBar().currentItem().text() == "Loaded 'ky10.inp'"
 
 
 def test_load_inp_file_bad_inp(qgis_iface, bad_inp, qgis_new_project, clean_message_bar):
