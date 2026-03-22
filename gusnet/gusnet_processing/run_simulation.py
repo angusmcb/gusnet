@@ -50,6 +50,7 @@ from gusnet.elements import (
     FlowUnit,
     HeadlossFormula,
     MassUnit,
+    Model,
     ModelLayer,
     ModelOptions,
     QualityParameter,
@@ -67,6 +68,7 @@ from gusnet.output_file_reader import BinFileError, read_output_file
 from gusnet.pattern_curve import Pattern
 from gusnet.profiler import profile
 from gusnet.settings import ProjectSettings, SettingKey
+from gusnet.statistics import ModelStatistics
 from gusnet.style import style
 from gusnet.units import SpecificUnitNames
 from gusnet.verify_model import VerificationError, verify_model
@@ -482,7 +484,8 @@ in other software.
             with profile(tr("Preparing Model"), 30, feedback):
                 model_options, network, elements = self._get_model(parameters, context)
 
-                # self._describe_model(model, feedback)
+            feedback.pushInfo(str(ModelStatistics.from_model(Model(network, model_options, elements))))
+
             temp_file_dir = Path(QgsProcessingUtils.tempFolder(context)) / f"gusnet_run_{uuid.uuid4().hex}"
             temp_file_dir.mkdir(parents=True, exist_ok=True)
             feedback.pushDebugInfo(tr("Using temporary folder: {folder}").format(folder=temp_file_dir))

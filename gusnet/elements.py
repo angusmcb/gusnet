@@ -7,14 +7,12 @@ Note:
 
 from __future__ import annotations
 
-import copy
 import dataclasses
 import datetime
 import sys
 from abc import abstractmethod
 from collections.abc import Collection, Mapping
 from enum import Enum, Flag, auto
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from qgis.core import Qgis, QgsProcessing
@@ -852,14 +850,14 @@ class Model:
     options: ModelOptions
     attributes: ModelAttributes
 
-    def __post_init__(self):
-        object.__setattr__(
-            self,
-            "attributes",
-            MappingProxyType(
-                {
-                    layer_type: MappingProxyType(copy.deepcopy(attributes))
-                    for layer_type, attributes in self.attributes.items()
-                }
-            ),
-        )
+    # def __post_init__(self):
+    #     object.__setattr__(
+    #         self,
+    #         "attributes",
+    #         MappingProxyType(
+    #             {
+    #                 layer_type: MappingProxyType(copy.deepcopy(attributes))
+    #                 for layer_type, attributes in self.attributes.items()
+    #             }
+    #         ),
+    #     )
