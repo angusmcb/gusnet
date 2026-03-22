@@ -11,6 +11,7 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsLayerTreeLayer,
     QgsLayerTreeNode,
+    QgsProcessing,
     QgsProcessingAlgorithm,
     QgsProcessingAlgRunnerTask,
     QgsProcessingContext,
@@ -318,7 +319,7 @@ class CantGetParametersException(BaseException):
 
 class TemporaryOutputLayerDefinition(QgsProcessingOutputLayerDefinition):
     def __init__(self):
-        super().__init__("TEMPORARY_OUTPUT", QgsProject.instance())
+        super().__init__(QgsProcessing.TEMPORARY_OUTPUT, QgsProject.instance())
 
 
 class GeopackageOutputLayerDefinition(QgsProcessingOutputLayerDefinition):
