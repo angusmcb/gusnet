@@ -5,9 +5,7 @@ filterwarnings = [
     'ignore: .*pkg_resources',
     'ignore:Use of .. or absolute path in a resource path is not allowed:DeprecationWarning'
 ]
-pythonpath = [
-  "."
-]
+
 markers = ["needs_wntr: requires wntr python package to test", "needs_pandas: requires pandas pythong package for test"]
 
 [tool.coverage.report]
