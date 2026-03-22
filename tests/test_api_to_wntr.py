@@ -841,6 +841,7 @@ def test_lots_of_patterns():
 def test_pattern_string_values(expected_value, demand_pattern_layers):
     wn = gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
+    print(wn.get_node("J1").demand_timeseries_list)
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "2"
     assert list(wn.patterns["2"].multipliers) == expected_value
 
@@ -883,6 +884,7 @@ def test_pattern_list_types(demand_pattern_layers):
 def test_pattern_list_values(pattern, demand_pattern_layers):
     wn = gusnet.to_wntr(demand_pattern_layers, "LPS", "H-W")
 
+    print(wn.get_node("J1").demand_timeseries_list)
     assert wn.get_node("J1").demand_timeseries_list[0].pattern_name == "2"
     assert list(wn.patterns["2"].multipliers) == pattern
 
