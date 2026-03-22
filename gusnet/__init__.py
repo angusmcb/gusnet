@@ -1,6 +1,5 @@
 __all__ = ["examples", "from_inp", "from_wntr", "from_wntr", "to_wntr"]
 
-import codecs
 import configparser
 import sys
 from pathlib import Path
@@ -20,8 +19,10 @@ if PACKAGE_DIRECTORY not in sys.path:
 
 
 _cp = configparser.ConfigParser()
-with codecs.open(str(Path(__file__).parent / "metadata.txt"), "r", "utf8") as f:
+_metadata_path = Path(__file__).parent / "metadata.txt"
+with _metadata_path.open("r", encoding="utf8") as f:
     _cp.read_file(f)
+
 __version__ = _cp.get("general", "version")
 
 
