@@ -1102,9 +1102,11 @@ def test_null_geometry_point(simple_layers):
     with edit(layer):
         feature = QgsFeature()
         feature.setAttributes(["JX", 1])
+        feature.setGeometry(QgsGeometry.fromWkt("POINT (0 0)"))
         layer.dataProvider().addFeature(feature)
         feature = QgsFeature()
         feature.setAttributes(["JXX", 1])
+        feature.setGeometry(QgsGeometry.fromWkt("POINT (1 1)"))
         layer.dataProvider().addFeature(feature)
 
     with pytest.raises(OrphanJunctionsError, match="JX"):
