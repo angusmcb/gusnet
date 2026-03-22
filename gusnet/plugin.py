@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-import importlib
 import math
-import sys
 import typing
 from pathlib import Path
 
@@ -13,6 +11,7 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsLayerTreeLayer,
     QgsLayerTreeNode,
+    QgsProcessing,
     QgsProcessingAlgorithm,
     QgsProcessingAlgRunnerTask,
     QgsProcessingContext,
@@ -21,7 +20,6 @@ from qgis.core import (
     QgsProject,
     QgsRasterLayer,
     QgsSettings,
-    QgsTask,
 )
 from qgis.gui import QgisInterface, QgsLayerTreeViewIndicator, QgsProjectionSelectionDialog
 from qgis.PyQt.QtCore import QCoreApplication, QLocale, QObject, QSettings, QTranslator, pyqtSlot
@@ -41,7 +39,7 @@ from qgis.utils import iface
 
 import gusnet
 import gusnet.expressions
-from gusnet.dependencies import WntrInstaller
+from gusnet.dependencies import CheckAndFetchEpanetTask
 from gusnet.elements import FlowUnit, HeadlossFormula, ModelLayer, ResultLayer
 from gusnet.gusnet_processing.empty_model import TemplateLayers
 from gusnet.gusnet_processing.import_inp import ImportInp
@@ -64,7 +62,6 @@ class Plugin:
 
     def __init__(self) -> None:
         self.object = QWidget()
-        self.task_manager = QgsApplication.taskManager()
 
         self.init_translation()
 
@@ -182,33 +179,17 @@ class Plugin:
 
     def warm_up_wntr(self) -> None:
         """wntr is slow to load so start warming it up now !"""
-        task: QgsTask = QgsTask.fromFunction(
-            "Set up wntr",
-            import_wntr,
-            flags=QgsTask.Hidden | QgsTask.Silent,
-        )
-        task.taskCompleted.connect(self.show_welcome_message)
-        task.taskTerminated.connect(self.install_wntr)
-
-        self.task_manager.addTask(task)
-
-        if self.TESTING:
-            assert task.waitForFinished()  # noqa: S101
-
-    def install_wntr(self) -> None:
-        task: QgsTask = QgsTask.fromFunction(
-            tr("Installing WNTR"),
-            lambda _: WntrInstaller.install_wntr(),
-            flags=QgsTask.Silent,
-        )
+        task = CheckAndFetchEpanetTask()
         task.taskCompleted.connect(self.show_welcome_message)
         task.taskTerminated.connect(
             lambda: iface.messageBar().pushMessage(
-                tr("Failed to install WNTR. Please check your internet connection."), level=Qgis.MessageLevel.Critical
+                tr("Failed to fetch EPANET. Please check your internet connection."), level=Qgis.MessageLevel.Critical
             )
         )
 
-        self.task_manager.addTask(task)
+        if task_manager := QgsApplication.taskManager():
+            task_manager.addTask(task)
+            self._task_manager = task_manager  # prevent garbage collection
 
         if self.TESTING:
             assert task.waitForFinished()  # noqa: S101
@@ -239,7 +220,7 @@ class Plugin:
         with contextlib.suppress(ModuleNotFoundError, AttributeError):
             import console
 
-            console.console_sci._init_statements.extend(["import gusnet", "import wntr"])  # noqa: SLF001
+            console.console_sci._init_statements.extend(["import gusnet"])  # noqa: SLF001
 
 
 class ProcessingRunnerAction(QAction):
@@ -292,6 +273,8 @@ class ProcessingRunnerAction(QAction):
         else:
             self.on_executed_with_error()
 
+        QgsApplication.messageLog().logMessage(tr("Gusnet:\n" + self.feedback.textLog()), level=Qgis.MessageLevel.Info)
+
         self.setEnabled(True)
 
     def on_executed_successfully(self, results):
@@ -304,11 +287,11 @@ class ProcessingRunnerAction(QAction):
     def on_executed_with_error(self):
         self.display_error(self.feedback.errors[0], self.feedback.textLog())
 
-        QgsApplication.messageLog().logMessage(
-            self.feedback.errors[0] + "\n" + self.feedback.textLog(),
-            MESSAGE_CATEGORY,
-            Qgis.MessageLevel.Critical,
-        )
+        # QgsApplication.messageLog().logMessage(
+        #     self.feedback.errors[0] + "\n" + self.feedback.textLog(),
+        #     MESSAGE_CATEGORY,
+        #     Qgis.MessageLevel.Critical,
+        # )
 
     def display_error(self, error_text: str, show_more: str | None = None) -> None:
         params = {"title": tr("Error"), "text": error_text, "level": Qgis.MessageLevel.Critical, "duration": 0}
@@ -324,7 +307,7 @@ class ProcessingRunnerAction(QAction):
             iface.messageBar().pushMessage(
                 title=title,
                 text=self.success_message,
-                showMore=self.feedback.textLog(),
+                showMore=self.feedback.simple_text_log(),
                 level=level,
                 duration=0,
             )
@@ -336,7 +319,7 @@ class CantGetParametersException(BaseException):
 
 class TemporaryOutputLayerDefinition(QgsProcessingOutputLayerDefinition):
     def __init__(self):
-        super().__init__("TEMPORARY_OUTPUT", QgsProject.instance())
+        super().__init__(QgsProcessing.TEMPORARY_OUTPUT, QgsProject.instance())
 
 
 class GeopackageOutputLayerDefinition(QgsProcessingOutputLayerDefinition):
@@ -412,10 +395,12 @@ class LoadTemplateToGeopackageAction(ProcessingRunnerAction):
 class LoadInpAction(ProcessingRunnerAction):
     def __init__(self):
         super().__init__(ImportInp())
-        self.success_message = tr("Loaded .inp file")
 
     def get_parameters(self) -> dict:
         filepath = self.get_filepath()
+
+        file_name = Path(filepath).name
+        self.success_message = tr("Loaded '{file_name}'").format(file_name=file_name)
 
         crs = self.get_crs()
 
@@ -489,19 +474,31 @@ class ProcessingFeedbackWithLogging(QgsProcessingFeedback):
     def __init__(self, logFeedback: bool = True):  # noqa
         self.errors: list[str] = []
         self.warnings: list[str] = []
+        self.info: list[str] = []
         super().__init__(logFeedback)
 
-    def reportError(self, error: str | None, fatalError: bool = False):  # noqa N802
-        if error:
-            self.errors.append(error)
-
+    def reportError(self, error: str, fatalError: bool = False):  # noqa N802
+        self.errors.append(error)
         super().reportError(error, fatalError)
 
-    def pushWarning(self, warning: str | None):  # noqa N802
-        if warning:
-            self.warnings.append(warning)
-
+    def pushWarning(self, warning: str):  # noqa N802
+        self.warnings.append(warning)
         super().pushWarning(warning)
+
+    def pushInfo(self, info: str):  # noqa N802
+        self.info.append(info)
+        super().pushInfo(info)
+
+    def simple_text_log(self) -> str:
+        log = ""
+        if self.errors:
+            log += tr("Errors:\n") + "\n".join(self.errors) + "\n\n"
+        if self.warnings:
+            log += tr("Warnings:\n") + "\n".join(self.warnings) + "\n\n"
+        if self.info:
+            log += tr("Info:\n") + "\n".join(self.info) + "\n\n"
+
+        return log
 
 
 class OpenSettingsAction(QAction):
@@ -515,21 +512,6 @@ class OpenSettingsAction(QAction):
         import processing
 
         processing.execAlgorithmDialog(RunSimulation())  # type: ignore
-
-
-def import_wntr(_: QgsTask):
-    """Pre-import wntr to speed up loading"""
-
-    if "wntr" in sys.modules:
-        import wntr
-
-        importlib.reload(wntr)
-
-    import wntr  # type: ignore
-
-    if not Path(wntr.__file__).exists():
-        msg = "File missing - probably due to plugin upgrade"
-        raise ImportError(msg)
 
 
 class IconWithLogo(QIcon):

@@ -27,6 +27,7 @@ from qgis.core import (
 )
 
 from gusnet.elements import (
+    CurveType,
     Field,
     FieldGroup,
     MapFieldType,
@@ -100,7 +101,7 @@ class _FieldStyler:
 
             return QgsEditorWidgetSetup("ValueMap", {"map": value_map})
 
-        if self.field.type in [SimpleFieldType.STR, SimpleFieldType.PATTERN, SimpleFieldType.CURVE]:
+        if self.field.type in [SimpleFieldType.STR, SimpleFieldType.PATTERN] or isinstance(self.field.type, CurveType):
             return QgsEditorWidgetSetup("TextEdit", {"IsMultiline": False, "UseHtml": False})
 
         raise KeyError  # pragma: no cover
@@ -127,7 +128,7 @@ class _FieldStyler:
         if self.field.type in MapFieldType:
             return QgsDefaultValue(f"'{next(iter(self.field.type.value)).value}'")
 
-        if self.field.type in [SimpleFieldType.STR, SimpleFieldType.PATTERN, SimpleFieldType.CURVE]:
+        if self.field.type in [SimpleFieldType.STR, SimpleFieldType.PATTERN] or isinstance(self.field.type, CurveType):
             return QgsDefaultValue("''")  # because 'NULL' doesn't look nice
 
         return QgsDefaultValue()
@@ -193,7 +194,7 @@ class _FieldStyler:
                 ),
             )
 
-        if self.field.type is SimpleFieldType.CURVE:
+        if isinstance(self.field.type, CurveType):
             return (f"gusnet_check_curve({self.field.value}) IS NOT false", curve_message)
 
         return None, None

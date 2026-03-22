@@ -11,31 +11,29 @@
 
 from __future__ import annotations
 
-import dataclasses
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from qgis.core import (
     QgsProcessingContext,
     QgsProcessingException,
     QgsProcessingFeedback,
     QgsProcessingParameterCrs,
-    QgsProcessingParameterEnum,
     QgsProcessingParameterFeatureSink,
     QgsProcessingParameterFile,
 )
 from qgis.PyQt.QtGui import QIcon
 
-from gusnet.elements import FlowUnit, ModelLayer, ModelOptions
-from gusnet.gusnet_processing.common import CommonProcessingBase, profile
+from gusnet.elements import Model, ModelLayer
+from gusnet.feature_writer import get_qgs_fields_from_options, write
+from gusnet.gusnet_processing.common import CommonProcessingBase
 from gusnet.i18n import tr
-from gusnet.interface import Writer, options_from_wn, options_to_wn
+from gusnet.inpfile_reader import InpFileReadError, read_inp_file
+from gusnet.profiler import profile
 from gusnet.settings import SettingKey
 from gusnet.units import SpecificUnitNames, UnitNames
-
-if TYPE_CHECKING:  # pragma: no cover
-    import wntr
+from gusnet.verify_model import VerificationError, verify_model
 
 
 class ImportInp(CommonProcessingBase):
@@ -77,14 +75,14 @@ class ImportInp(CommonProcessingBase):
         param.setGuiDefaultValueOverride("ProjectCrs")
         self.addParameter(param)
 
-        self.addParameter(
-            QgsProcessingParameterEnum(
-                self.UNITS,
-                tr("Units to to convert to (leave blank to use .inp file units)"),
-                options=[fu.friendly_name for fu in FlowUnit],
-                optional=True,
-            )
-        )
+        # self.addParameter(
+        #     QgsProcessingParameterEnum(
+        #         self.UNITS,
+        #         tr("Units to to convert to (leave blank to use .inp file units)"),
+        #         options=[fu.friendly_name for fu in FlowUnit],
+        #         optional=True,
+        #     )
+        # )
 
         for layer in ModelLayer:
             self.addParameter(QgsProcessingParameterFeatureSink(layer.name, layer.friendly_name))
@@ -102,77 +100,59 @@ class ImportInp(CommonProcessingBase):
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        feedback: QgsProcessingFeedback,
+        feedback: QgsProcessingFeedback | None,
     ) -> dict[str, str]:
-        with profile(tr("Verifying Dependencies"), 10, feedback):
-            self._check_wntr()
+        if not feedback:
+            feedback = QgsProcessingFeedback()
 
-        with profile(tr("Loading INP File"), 40, feedback):
+        with profile(tr("Loading INP File"), 30, feedback):
             input_file = self.parameterAsFile(parameters, self.INPUT, context)
-            wn = self._load_inp(input_file)
 
-        options = options_from_wn(wn)
+            try:
+                model = read_inp_file(input_file)
+            except InpFileReadError as e:
+                raise QgsProcessingException(e) from e
 
-        options = self._set_flow_unit(parameters, context, options)
+            try:
+                verify_model(model.attributes, model.network)
+            except VerificationError as e:
+                feedback.pushWarning(tr("Model verification failed: {message}").format(message=str(e)))
 
-        options_to_wn(options, wn)
+            # options = self._set_flow_unit(parameters, context, options)
 
-        self._describe_model(wn, feedback)
+            # self._describe_model(model.wn, feedback)
 
-        feedback.pushInfo(
-            tr("Will output with the following units: {flow_unit}").format(flow_unit=options.flow_unit.friendly_name)
-        )
+            feedback.pushInfo(
+                tr("Will output with the following units: {flow_unit}").format(
+                    flow_unit=model.options.flow_unit.friendly_name
+                )
+            )
 
-        self._options_to_save = options
-
+        self._options_to_save = model.options
         self._settings = {SettingKey.MODEL_LAYERS: {}}
 
         with profile(tr("Creating Outputs"), 80, feedback):
-            network_writer = Writer(wn)
-
-            # this is just to give a little user output
-            # extra_analysis_type_names = [
-            #     str(atype.name)
-            #     for atype in [FieldGroup.ENERGY, FieldGroup.WATER_QUALITY_ANALYSIS, FieldGroup.PRESSURE_DEPENDENT_DEMAND]  # noqa: E501
-            #     if network_model.field_groups is not None and atype in network_model.field_groups
-            # ]
-            # if len(extra_analysis_type_names):
-            #     feedback.pushInfo("Will include columns for analysis types: " + ", ".join(extra_analysis_type_names))
             group_name = tr("Model Layers ({filename})").format(filename=Path(input_file).stem)
-            units = SpecificUnitNames.from_options(options)
-            outputs = self._write_to_sinks(parameters, context, network_writer, group_name, units)
+            units = SpecificUnitNames.from_options(model.options)
+            outputs = self._write_to_sinks(parameters, context, model, group_name, units)
 
         return outputs
 
-    def _load_inp(self, input_file: str) -> wntr.network.WaterNetworkModel:
-        import wntr
+    # def _set_flow_unit(
+    #     self, parameters: dict[str, Any], context: QgsProcessingContext, options: ModelOptions
+    # ) -> ModelOptions:
+    #     if parameters.get(self.UNITS) is not None:
+    #         unit_enum_int = self.parameterAsEnum(parameters, self.UNITS, context)
+    #         flow_unit = list(FlowUnit)[unit_enum_int]
+    #         options = dataclasses.replace(options, flow_unit=flow_unit)
 
-        try:
-            wn: wntr.network.WaterNetworkModel = wntr.network.read_inpfile(input_file)
-        except FileNotFoundError as e:
-            msg = tr(".inp file does not exist ({input_file})").format(input_file=input_file)
-            raise QgsProcessingException(msg) from e
-        except wntr.epanet.exceptions.EpanetException as e:
-            msg = tr("error reading .inp file: {e}").format(e=e)
-            raise QgsProcessingException(msg) from e
-
-        return wn
-
-    def _set_flow_unit(
-        self, parameters: dict[str, Any], context: QgsProcessingContext, options: ModelOptions
-    ) -> ModelOptions:
-        if parameters.get(self.UNITS) is not None:
-            unit_enum_int = self.parameterAsEnum(parameters, self.UNITS, context)
-            flow_unit = list(FlowUnit)[unit_enum_int]
-            options = dataclasses.replace(options, flow_unit=flow_unit)
-
-        return options
+    #     return options
 
     def _write_to_sinks(
         self,
         parameters: dict[str, Any],
         context: QgsProcessingContext,
-        network_writer: Writer,
+        model: Model,
         group_name: str,
         units: UnitNames | None,
     ) -> dict[str, str]:
@@ -183,15 +163,17 @@ class ImportInp(CommonProcessingBase):
         warnings.filterwarnings("ignore", "Normalized/laundered field name:", RuntimeWarning)
 
         outputs: dict[str, str] = {}
-        layers: dict[ModelLayer, str] = {}
         for layer in ModelLayer:
-            fields = network_writer.get_qgsfields(layer)
-            (sink, outputs[layer.name]) = self.parameterAsSink(
-                parameters, layer.name, context, fields, layer.qgs_wkb_type, crs
-            )
-            layers[layer] = outputs[layer.name]
-            network_writer.write(layer, sink)
+            attribute_table = model.attributes.get(layer)
 
-        self._setup_postprocessing(context, layers, group_name, False, unit_names=units)
+            fields = get_qgs_fields_from_options(model.options, layer)
+
+            (sink, outputs[layer]) = self.parameterAsSink(parameters, layer, context, fields, layer.wkb_type, crs)
+
+            geometries = model.network.node_geometries if layer.is_node else model.network.link_geometries
+            if sink and attribute_table is not None:
+                write(sink, fields, attribute_table, geometries)
+
+        self._setup_postprocessing(context, outputs, group_name, False, unit_names=units)
 
         return outputs

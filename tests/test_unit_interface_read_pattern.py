@@ -1,13 +1,13 @@
-import pytest
+# import pytest
 
-from gusnet.interface import _Patterns
+# from gusnet.interface import _Patterns
 
 
-@pytest.fixture
-def wn():
-    import wntr
+# @pytest.fixture
+# def wn():
+#     import wntr
 
-    return wntr.network.WaterNetworkModel()
+#     return wntr.network.WaterNetworkModel()
 
 
 # @pytest.mark.parametrize(
@@ -30,20 +30,20 @@ def wn():
 #     assert _Patterns.read_pattern(pattern_in) == expected_output
 
 
-def test_patterns_add(wn):
-    patterns = _Patterns(wn)
-    pattern_name = patterns.add("1 2 3")
-    assert pattern_name == "2"
+# def test_patterns_add(wn):
+#     patterns = _Patterns(wn)
+#     pattern_name = patterns.add("1 2 3")
+#     assert pattern_name == "2"
 
 
-def test_patterns_get(wn):
-    patterns = _Patterns(wn)
-    pattern_name = patterns.add("1 2 3")
-    pattern = patterns.get_str_or_none(pattern_name)
-    assert pattern == "1.0 2.0 3.0"
+# def test_patterns_get(wn):
+#     patterns = _Patterns(wn)
+#     pattern_name = patterns.add("1 2 3")
+#     pattern = patterns.get_str_or_none(pattern_name)
+#     assert pattern == "1.0 2.0 3.0"
 
 
-def test_patterns_add_empty(wn):
-    patterns = _Patterns(wn)
-    pattern_name = patterns.add("")
-    assert pattern_name is None
+# def test_patterns_add_empty(wn):
+#     patterns = _Patterns(wn)
+#     pattern_name = patterns.add("")
+#     assert pattern_name is None

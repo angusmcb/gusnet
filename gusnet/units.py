@@ -1,19 +1,37 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import dataclasses
+from typing import TYPE_CHECKING, TypeVar
 
 from gusnet.elements import FlowUnit, HeadlossFormula, MassUnit, ModelOptions, Parameter, WallReactionOrder
 from gusnet.i18n import tr
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import numpy as np
     import pandas as pd
 
+    NumberType = TypeVar("NumberType", float, np.ndarray, pd.Series, pd.DataFrame)
 
-_TRADITIONAL_FLOW_UNITS = {FlowUnit.CFS, FlowUnit.GPM, FlowUnit.MGD, FlowUnit.IMGD, FlowUnit.AFD}
+
+@dataclasses.dataclass()
+class _UnitBase:
+    flow_units: FlowUnit
+    headloss_formula: HeadlossFormula
+    mass_unit: MassUnit | None = MassUnit.MG
+    wall_reaction_order: WallReactionOrder | None = WallReactionOrder.ONE
+
+    traditional: bool = dataclasses.field(init=False)
+
+    def __post_init__(self):
+        self.traditional = self.flow_units.is_traditional
+
+    @classmethod
+    def from_options(cls, options: ModelOptions):
+        return cls(options.flow_unit, options.headloss_formula, options.mass_unit, options.wall_reaction_order)
 
 
-class Converter:
+@dataclasses.dataclass()
+class Converter(_UnitBase):
     """Manages conversion to and from SI units
 
     Args:
@@ -21,46 +39,23 @@ class Converter:
         headloss_formula: Used to determine how to handle conversion of the roughness coefficient
     """
 
-    def __init__(
-        self,
-        flow_units: FlowUnit,
-        headloss_formula: HeadlossFormula,
-        mass_unit: MassUnit | None = MassUnit.MG,
-        wall_reaction_order: WallReactionOrder | None = WallReactionOrder.ONE,
-    ):
-        self.flow_units = flow_units
-        self.headloss_formula = headloss_formula
-        self.mass_unit = mass_unit
-        self.wall_reaction_order = wall_reaction_order
+    flow_unit_factor: float = dataclasses.field(init=False)
+    mass_unit_factor: float = dataclasses.field(init=False)
 
-        self.traditional = self.flow_units in _TRADITIONAL_FLOW_UNITS
+    def __post_init__(self):
+        super().__post_init__()
         self.flow_unit_factor = self._flow_unit_factor()
         self.mass_unit_factor = self._mass_unit_factor()
 
-    @classmethod
-    def from_options(cls, options: ModelOptions):
-        return cls(options.flow_unit, options.headloss_formula, options.mass_unit, options.wall_reaction_order)
-
-    def to_si(
-        self,
-        value: float | np.ndarray[float] | pd.Series[float] | pd.DataFrame,
-        parameter: Parameter,
-    ) -> float | np.ndarray[float] | pd.Series[float] | pd.DataFrame:
+    def to_si(self, value: NumberType, parameter: Parameter) -> NumberType:
         factor = self._factor(parameter)
         return value * factor
 
-    def from_si(
-        self,
-        value: float | np.ndarray[float] | pd.Series[float] | pd.DataFrame,
-        parameter: Parameter,
-    ) -> float | np.ndarray[float] | pd.Series[float] | pd.DataFrame:
+    def from_si(self, value: NumberType, parameter: Parameter) -> NumberType:
         factor = self._factor(parameter)
         return value / factor
 
-    def _factor(
-        self,
-        parameter: Parameter,
-    ) -> float:
+    def _factor(self, parameter: Parameter) -> float:
         # [Parameter.TANK_DIAMETER, Parameter.ELEVATION, Parameter.HYDRAULIC_HEAD, Parameter.LENGTH]:
         if parameter is Parameter.LENGTH:
             if self.traditional:
@@ -253,7 +248,7 @@ class UnitNames:
         raise ValueError(parameter)  # pragma: no cover
 
 
-class SpecificUnitNames(Converter, UnitNames):
+class SpecificUnitNames(_UnitBase, UnitNames):
     def flow_unit_name(self) -> str:
         """str: The name of the flow unit"""
 
@@ -279,7 +274,7 @@ class SpecificUnitNames(Converter, UnitNames):
             return tr("imp gal/day")
         if flow_unit is FlowUnit.AFD:
             return tr("Acre-ft/day")
-        raise ValueError
+        raise ValueError  # pragma: no cover
 
     def mass_unit_name(self):
         mass_unit = self.mass_unit
@@ -289,10 +284,7 @@ class SpecificUnitNames(Converter, UnitNames):
             return tr("ug")
         raise ValueError(mass_unit)  # pragma: no cover
 
-    def get(
-        self,
-        parameter: Parameter,
-    ) -> str:
+    def get(self, parameter: Parameter) -> str:
         if parameter is Parameter.FLOW:
             return self.flow_unit_name()
 

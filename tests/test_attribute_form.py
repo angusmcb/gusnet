@@ -3,7 +3,9 @@ from pytest_qgis import QgisBot
 from qgis.core import QgsGeometry
 
 import gusnet.expressions  # noqa: F401
-from gusnet import from_qgis, to_qgis
+from gusnet import from_wntr, to_wntr
+
+pytestmark = [pytest.mark.needs_wntr]
 
 
 @pytest.fixture(scope="class")
@@ -12,7 +14,7 @@ def template_layers():
 
     wn = wntr.network.WaterNetworkModel()
     wn.options.quality.parameter = "CHEMICAL"
-    layers = to_qgis(wn)
+    layers = from_wntr(wn, crs="EPSG:9001")
     for layer in layers.values():
         layer.startEditing()
     return layers
@@ -78,7 +80,7 @@ def test_creates_valid_model(qgis_bot: QgisBot, template_layers):
         template_layers["PUMPS"], QgsGeometry.fromWkt("LINESTRING (0 2, 0 3)")
     )
 
-    wn2 = from_qgis(template_layers, units="LPS", headloss="H-W")
+    wn2 = to_wntr(template_layers, units="LPS", headloss_formula="H-W")
 
     assert wn2.num_nodes == 4
     assert wn2.num_links == 3

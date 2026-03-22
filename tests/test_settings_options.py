@@ -1,7 +1,9 @@
+import datetime
+
 from qgis.core import QgsExpressionContextUtils, QgsProject
 
 from gusnet.elements import (
-    DefaultOptions,
+    DEFAULT_OPTIONS,
     DemandType,
     FlowUnit,
     HeadlossFormula,
@@ -14,20 +16,15 @@ from gusnet.pattern_curve import Pattern
 from gusnet.settings import ProjectSettings
 
 
-def setup_module(module):
-    # ensure fresh project for tests in this module
-    QgsProject.instance().clear()
-
-
-def test_save_options_and_load_roundtrip():
-    QgsProject.instance().clear()
+def test_save_options_and_load_roundtrip(qgis_new_project):
     settings = ProjectSettings(project=QgsProject.instance())
 
     options = ModelOptions(
         flow_unit=FlowUnit.CFS,
         headloss_formula=HeadlossFormula.DARCY_WEISBACH,
-        simulation_duration=1.0,
+        simulation_duration=datetime.timedelta(hours=5),
         demand_multiplier=-2.0,
+        default_pattern=Pattern([3, 2, 1]),
         emitter_exponent=1.0,
         demand_type=DemandType.PRESSURE_DEPENDENT,
         minimum_pressure=0.1,
@@ -60,8 +57,7 @@ def test_save_options_and_load_roundtrip():
     assert loaded == options
 
 
-def test_load_options_partial_values_use_defaults():
-    QgsProject.instance().clear()
+def test_load_options_partial_values_use_defaults(qgis_new_project):
     # only set flow_unit variable directly in project scope
     # save the enum as save_options would (enum.value)
     QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), "gusnet_flow_unit", FlowUnit.GPM.value)
@@ -71,7 +67,7 @@ def test_load_options_partial_values_use_defaults():
 
     assert loaded.flow_unit == FlowUnit.GPM
     # other fields should be defaults from ModelOptions
-    defaults = DefaultOptions()
+    defaults = DEFAULT_OPTIONS
     assert loaded.headloss_formula == defaults.headloss_formula
     assert loaded.demand_type == defaults.demand_type
     assert loaded.emitter_exponent == defaults.emitter_exponent

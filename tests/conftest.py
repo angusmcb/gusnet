@@ -18,8 +18,14 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from qgis.core import QgsProject
 from qgis.gui import QgsLayerTreeView, QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
+
+
+@pytest.fixture
+def qgis_new_project(qgis_new_project):
+    QgsProject.instance().clear()
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -49,14 +55,14 @@ def processing(qgis_processing):
     return processing
 
 
-@pytest.fixture(autouse=True, scope="session")
-def check_wntr():
-    from gusnet.dependencies import WntrInstaller
+# @pytest.fixture(autouse=True, scope="session")
+# def check_wntr():
+#     from gusnet.dependencies import WntrInstaller
 
-    try:
-        import wntr  # noqa F401
-    except ImportError:
-        WntrInstaller.install_wntr()
+#     try:
+#         import wntr
+#     except ImportError:
+#         WntrInstaller.install_wntr()
 
 
 @pytest.fixture

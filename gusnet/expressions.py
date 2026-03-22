@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, Any
 
 from qgis.core import QgsExpression, QgsExpressionContext, QgsFeature, qgsfunction
 
-import gusnet.interface
 from gusnet.i18n import tr
-from gusnet.pattern_curve import Pattern
+from gusnet.pattern_curve import Curve, Pattern
 
 if TYPE_CHECKING:  # pragma: no cover
     from qgis.PyQt.QtCore import QDateTime
@@ -94,15 +93,15 @@ def gusnet_check_pattern(pattern, feature, parent, context):  # noqa ARG001
     </ul>
     """
 
+    if pattern is None:
+        return None
+
     try:
         pattern = Pattern(pattern)
     except ValueError:
         return False
 
-    if not pattern:
-        return None
-    else:
-        return True
+    return bool(pattern) or None
 
 
 @qgsfunction(group=GROUP, referenced_columns=[])
@@ -122,11 +121,11 @@ def gusnet_check_curve(curve):
     </ul>
     """
     try:
-        curve = gusnet.interface._Curves.read_curve(curve)  # noqa: SLF001
-    except gusnet.interface.CurveReadError:
+        curve = Curve(curve)
+    except ValueError:
         return False
 
-    if curve is None:
+    if not curve:
         return None
     else:
         return True

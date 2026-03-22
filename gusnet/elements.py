@@ -8,12 +8,17 @@ Note:
 from __future__ import annotations
 
 import dataclasses
+import datetime
 import sys
+from abc import abstractmethod
+from collections.abc import Collection, Mapping
 from enum import Enum, Flag, auto
+from typing import TYPE_CHECKING, Any
 
-from qgis.core import QgsProcessing, QgsWkbTypes
+from qgis.core import Qgis, QgsProcessing
 
 from gusnet.i18n import tr
+from gusnet.network import Network
 from gusnet.pattern_curve import Pattern
 
 if sys.version_info >= (3, 11):
@@ -22,7 +27,16 @@ else:
     from gusnet.strenum import StrEnum
 
 
-class FlowUnit(Enum):
+class EnumWithName(Enum):
+    """Abstract enum for value maps"""
+
+    @property
+    @abstractmethod
+    def friendly_name(self):
+        """A human readable name for the enum value"""
+
+
+class FlowUnit(EnumWithName):
     LPS = "LPS"
     LPM = "LPM"
     MLD = "MLD"
@@ -59,8 +73,16 @@ class FlowUnit(Enum):
 
         raise ValueError  # pragma: no cover
 
+    @property
+    def is_traditional(self) -> bool:
+        """Is the flow unit a traditional US unit?"""
+        return self in _TRADITIONAL_FLOW_UNITS
 
-class MassUnit(Enum):
+
+_TRADITIONAL_FLOW_UNITS = {FlowUnit.CFS, FlowUnit.GPM, FlowUnit.MGD, FlowUnit.IMGD, FlowUnit.AFD}
+
+
+class MassUnit(EnumWithName):
     MG = "mg/L"
     UG = "ug/L"
 
@@ -74,7 +96,7 @@ class MassUnit(Enum):
         raise ValueError  # pragma: no cover
 
 
-class HeadlossFormula(Enum):
+class HeadlossFormula(EnumWithName):
     HAZEN_WILLIAMS = "H-W"
     DARCY_WEISBACH = "D-W"
     CHEZY_MANNING = "C-M"
@@ -90,7 +112,7 @@ class HeadlossFormula(Enum):
         raise ValueError  # pragma: no cover
 
 
-class DemandType(Enum):
+class DemandType(EnumWithName):
     FIXED = "DDA"
     PRESSURE_DEPENDENT = "PDA"
 
@@ -103,7 +125,7 @@ class DemandType(Enum):
         raise ValueError
 
 
-class QualityParameter(Enum):
+class QualityParameter(EnumWithName):
     NONE = "NONE"
     AGE = "AGE"
     CHEMICAL = "CHEMICAL"
@@ -122,15 +144,7 @@ class QualityParameter(Enum):
         raise ValueError  # pragma: no cover
 
 
-class _AbstractValueMap(Enum):
-    """Abstract enum for value maps"""
-
-    @property
-    def friendly_name(self):
-        """To be implemented by subclasses"""
-
-
-class PumpTypes(_AbstractValueMap):
+class PumpTypes(EnumWithName):
     POWER = "POWER"
     HEAD = "HEAD"
 
@@ -143,7 +157,7 @@ class PumpTypes(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class TankMixingModel(_AbstractValueMap):
+class TankMixingModel(EnumWithName):
     FULLY_MIXED = "MIXED"
     MIX2 = "2COMP"
     FIFO = "FIFO"
@@ -162,7 +176,7 @@ class TankMixingModel(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class InitialStatus(_AbstractValueMap):
+class InitialStatus(EnumWithName):
     OPEN = "Open"
     CLOSED = "Closed"
 
@@ -175,7 +189,7 @@ class InitialStatus(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class ValveStatus(_AbstractValueMap):
+class ValveStatus(EnumWithName):
     ACTIVE = "Active"
     OPEN = "Open"
     CLOSED = "Closed"
@@ -191,7 +205,7 @@ class ValveStatus(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class ValveType(_AbstractValueMap):
+class ValveType(EnumWithName):
     PRV = "PRV"
     PSV = "PSV"
     PBV = "PBV"
@@ -228,7 +242,7 @@ class ValveType(_AbstractValueMap):
         raise ValueError  # pragma: no cover
 
 
-class WallReactionOrder(_AbstractValueMap):
+class WallReactionOrder(EnumWithName):
     ZERO = 0
     ONE = 1
 
@@ -256,7 +270,6 @@ class SimpleFieldType(FieldType):
     STR = auto()
     BOOL = auto()
     PATTERN = auto()
-    CURVE = auto()
 
 
 class Parameter(FieldType):
@@ -285,38 +298,20 @@ class Parameter(FieldType):
     CURRENCY = auto()
 
 
+class CurveType(FieldType):
+    HEAD = "HEAD", (Parameter.FLOW, Parameter.HYDRAULIC_HEAD)
+    EFFICIENCY = "EFFICIENCY", (Parameter.FLOW, Parameter.UNITLESS)  # flow vs percentage
+    VOLUME = "VOLUME", (Parameter.LENGTH, Parameter.VOLUME)
+    HEADLOSS = "HEADLOSS", (Parameter.FLOW, Parameter.HYDRAULIC_HEAD)
+
+
 class FieldGroup(Flag):
     BASE = auto()
     WATER_QUALITY_ANALYSIS = auto()
-    PRESSURE_DEPENDENT_DEMAND = auto()
     ENERGY = auto()
     EXTRA = auto()
     REQUIRED = auto()
     LIST_IN_EXTENDED_PERIOD = auto()
-
-
-class LayerType(Flag):
-    JUNCTIONS = auto()
-    RESERVOIRS = auto()
-    TANKS = auto()
-    PIPES = auto()
-    PUMPS = auto()
-    VALVES = auto()
-    NODES = JUNCTIONS | RESERVOIRS | TANKS
-    LINKS = PIPES | PUMPS | VALVES
-    ALL = NODES | LINKS
-
-    @property
-    def friendly_name(self):
-        return self.name.title()
-
-    @property
-    def qgs_wkb_type(self):
-        return QgsWkbTypes.Point if self in LayerType.NODES else QgsWkbTypes.LineString
-
-    @property
-    def acceptable_processing_vectors(self):
-        return [QgsProcessing.TypeVectorPoint] if self in LayerType.NODES else [QgsProcessing.TypeVectorLine]
 
 
 class _AbstractLayer(StrEnum):
@@ -328,13 +323,15 @@ class _AbstractLayer(StrEnum):
         return "RESULT_" + self.name
 
     @property
-    def is_node(self) -> bool:
-        msg = "is_node must be implemented in subclasses"
-        raise NotImplementedError(msg)
+    def is_node(self) -> bool:  # pragma: no cover
+        raise NotImplementedError
 
     @property
-    def qgs_wkb_type(self):
-        return QgsWkbTypes.Point if self.is_node else QgsWkbTypes.LineString
+    def wkb_type(self) -> Qgis.WkbType:
+        return Qgis.WkbType.Point if self.is_node else Qgis.WkbType.LineString
+
+    def wq_fields(self) -> list[Field]:
+        raise NotImplementedError
 
 
 class ModelLayer(_AbstractLayer):
@@ -397,9 +394,6 @@ class ModelLayer(_AbstractLayer):
                 Field.DEMAND_PATTERN,
                 Field.EMITTER_COEFFICIENT,
                 Field.INITIAL_QUALITY,
-                Field.MINIMUM_PRESSURE,
-                Field.REQUIRED_PRESSURE,
-                Field.PRESSURE_EXPONENT,
             ],
             ModelLayer.TANKS: [
                 Field.NAME,
@@ -496,11 +490,12 @@ class ResultLayer(_AbstractLayer):
         ]
 
 
-class Field(Enum):
+class Field(StrEnum):
     def __new__(cls, *args):
-        obj = object.__new__(cls)
-        obj._value_ = args[0]
-        return obj
+        value = str(args[0])
+        member = str.__new__(cls, value)
+        member._value_ = value
+        return member
 
     def __init__(self, *args):
         self._type = args[1]
@@ -528,12 +523,12 @@ class Field(Enum):
     PRESSURE_SETTING = "pressure_setting", Parameter.PRESSURE, FieldGroup.BASE
     FLOW_SETTING = "flow_setting", Parameter.FLOW, FieldGroup.BASE
     THROTTLE_SETTING = "throttle_setting", Parameter.UNITLESS, FieldGroup.BASE
-    HEADLOSS_CURVE = "headloss_curve", SimpleFieldType.CURVE, FieldGroup.BASE
+    HEADLOSS_CURVE = "headloss_curve", CurveType.HEADLOSS, FieldGroup.BASE
 
     DIAMETER = "diameter", Parameter.PIPE_DIAMETER, FieldGroup.BASE | FieldGroup.REQUIRED
     TANK_DIAMETER = "tank_diameter", Parameter.TANK_DIAMETER, FieldGroup.BASE | FieldGroup.REQUIRED
-    MIN_VOL = "min_vol", Parameter.VOLUME, FieldGroup.BASE
-    VOL_CURVE = "vol_curve", SimpleFieldType.CURVE, FieldGroup.BASE
+    MIN_VOL = "min_vol", Parameter.VOLUME, FieldGroup.BASE | FieldGroup.REQUIRED
+    VOL_CURVE = "vol_curve", CurveType.VOLUME, FieldGroup.BASE
     OVERFLOW = "overflow", SimpleFieldType.BOOL, FieldGroup.BASE
     BASE_HEAD = "base_head", Parameter.ELEVATION, FieldGroup.BASE | FieldGroup.REQUIRED
     HEAD_PATTERN = "head_pattern", SimpleFieldType.PATTERN, FieldGroup.BASE
@@ -542,7 +537,7 @@ class Field(Enum):
     MINOR_LOSS = "minor_loss", Parameter.UNITLESS, FieldGroup.BASE
     CHECK_VALVE = "check_valve", SimpleFieldType.BOOL, FieldGroup.BASE
     PUMP_TYPE = "pump_type", MapFieldType.PUMP_TYPE, FieldGroup.BASE | FieldGroup.REQUIRED
-    PUMP_CURVE = "pump_curve", SimpleFieldType.CURVE, FieldGroup.BASE
+    PUMP_CURVE = "pump_curve", CurveType.HEAD, FieldGroup.BASE
     POWER = "power", Parameter.POWER, FieldGroup.BASE
     BASE_SPEED = "base_speed", Parameter.FRACTION, FieldGroup.BASE
     SPEED_PATTERN = "speed_pattern", SimpleFieldType.PATTERN, FieldGroup.BASE
@@ -555,11 +550,7 @@ class Field(Enum):
     BULK_COEFF = "bulk_coeff", Parameter.BULK_REACTION_COEFFICIENT, FieldGroup.WATER_QUALITY_ANALYSIS
     WALL_COEFF = "wall_coeff", Parameter.WALL_REACTION_COEFFICIENT, FieldGroup.WATER_QUALITY_ANALYSIS
 
-    MINIMUM_PRESSURE = "minimum_pressure", Parameter.PRESSURE, FieldGroup.PRESSURE_DEPENDENT_DEMAND
-    REQUIRED_PRESSURE = "required_pressure", Parameter.PRESSURE, FieldGroup.PRESSURE_DEPENDENT_DEMAND
-    PRESSURE_EXPONENT = "pressure_exponent", Parameter.UNITLESS, FieldGroup.PRESSURE_DEPENDENT_DEMAND
-
-    EFFICIENCY_CURVE = "efficiency_curve", SimpleFieldType.CURVE, FieldGroup.ENERGY
+    EFFICIENCY_CURVE = "efficiency_curve", CurveType.EFFICIENCY, FieldGroup.ENERGY
     ENERGY_PRICE = "energy_price", Parameter.CURRENCY, FieldGroup.ENERGY
     ENERGY_PATTERN = "energy_pattern", SimpleFieldType.PATTERN, FieldGroup.ENERGY
 
@@ -654,12 +645,6 @@ class Field(Enum):
             return tr("Bulk Reaction Rate Coefficient")
         if self is Field.WALL_COEFF:
             return tr("Wall Reaction Rate Coefficient")
-        if self is Field.MINIMUM_PRESSURE:
-            return tr("Minimum Pressure")
-        if self is Field.REQUIRED_PRESSURE:
-            return tr("Required Pressure")
-        if self is Field.PRESSURE_EXPONENT:
-            return tr("Pressure Exponent")
         if self is Field.EFFICIENCY_CURVE:
             return tr("Efficiency Curve")
         if self is Field.ENERGY_PATTERN:
@@ -761,12 +746,6 @@ class Field(Enum):
             return tr("Bulk reaction rate coefficient for water quality analysis")
         if self is Field.WALL_COEFF:
             return tr("Wall reaction rate coefficient for water quality analysis")
-        if self is Field.MINIMUM_PRESSURE:
-            return tr("Minimum pressure for pressure-dependent demand")
-        if self is Field.REQUIRED_PRESSURE:
-            return tr("Required pressure for full demand delivery in pressure-dependent demand")
-        if self is Field.PRESSURE_EXPONENT:
-            return tr("Pressure exponent for demand calculation in pressure-dependent demand")
         if self is Field.EFFICIENCY_CURVE:
             return tr("Pump efficiency curve (flow vs efficiency) for energy use analysis")
         if self is Field.ENERGY_PATTERN:
@@ -800,8 +779,9 @@ class ModelOptions:
     flow_unit: FlowUnit
     headloss_formula: HeadlossFormula
 
-    simulation_duration: float  # hours
+    simulation_duration: datetime.timedelta
     demand_multiplier: float
+    default_pattern: Pattern
     emitter_exponent: float
 
     demand_type: DemandType
@@ -829,32 +809,55 @@ class ModelOptions:
     wall_coefficient_correlation: float
 
 
-class DefaultOptions(ModelOptions):
-    def __new__(cls):
-        return ModelOptions(
-            flow_unit=FlowUnit.LPS,
-            headloss_formula=HeadlossFormula.HAZEN_WILLIAMS,
-            simulation_duration=0.0,
-            demand_multiplier=1.0,
-            emitter_exponent=0.5,
-            demand_type=DemandType.FIXED,
-            minimum_pressure=0.0,
-            required_pressure=0.1,
-            pressure_exponent=0.5,
-            energy_report=False,
-            energy_price=0.0,
-            energy_pattern=Pattern(),
-            energy_pump_efficiency=75.0,
-            energy_demand_charge=0.0,
-            quality_parameter=QualityParameter.NONE,
-            mass_unit=MassUnit.MG,
-            relative_diffusivity=1.0,
-            trace_node="",
-            quality_tolerance=0.01,
-            bulk_reaction_order=1.0,
-            wall_reaction_order=WallReactionOrder.ONE,
-            global_bulk_coefficient=0.0,
-            global_wall_coefficient=0.0,
-            limiting_concentration=0.0,
-            wall_coefficient_correlation=0.0,
-        )
+DEFAULT_OPTIONS = ModelOptions(
+    flow_unit=FlowUnit.LPS,
+    headloss_formula=HeadlossFormula.HAZEN_WILLIAMS,
+    simulation_duration=datetime.timedelta(0),
+    demand_multiplier=1.0,
+    default_pattern=Pattern(),
+    emitter_exponent=0.5,
+    demand_type=DemandType.FIXED,
+    minimum_pressure=0.0,
+    required_pressure=0.1,
+    pressure_exponent=0.5,
+    energy_report=False,
+    energy_price=0.0,
+    energy_pattern=Pattern(),
+    energy_pump_efficiency=75.0,
+    energy_demand_charge=0.0,
+    quality_parameter=QualityParameter.NONE,
+    mass_unit=MassUnit.MG,
+    relative_diffusivity=1.0,
+    trace_node="",
+    quality_tolerance=0.01,
+    bulk_reaction_order=1.0,
+    wall_reaction_order=WallReactionOrder.ONE,
+    global_bulk_coefficient=0.0,
+    global_wall_coefficient=0.0,
+    limiting_concentration=0.0,
+    wall_coefficient_correlation=0.0,
+)
+
+
+if TYPE_CHECKING:
+    LayerAttributes = Mapping[Field | str, Collection[Any]]
+    ModelAttributes = Mapping[ModelLayer, LayerAttributes]
+
+
+@dataclasses.dataclass(frozen=True)
+class Model:
+    network: Network
+    options: ModelOptions
+    attributes: ModelAttributes
+
+    # def __post_init__(self):
+    #     object.__setattr__(
+    #         self,
+    #         "attributes",
+    #         MappingProxyType(
+    #             {
+    #                 layer_type: MappingProxyType(copy.deepcopy(attributes))
+    #                 for layer_type, attributes in self.attributes.items()
+    #             }
+    #         ),
+    #     )

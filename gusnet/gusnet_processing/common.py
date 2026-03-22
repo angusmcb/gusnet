@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import functools
 import logging
-from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from qgis.core import (
-    QgsApplication,
     QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingException,
@@ -52,14 +49,16 @@ class CommonProcessingBase(QgsProcessingAlgorithm):
 
     def canExecute(self):  # noqa: N802
         try:
-            import wntr  # noqa: F401
+            import gusnet_epanet  # noqa: F401
         except ImportError:
-            msg = tr("WNTR cannot be loaded. Please wait a minute then try again, or consult our help site.")
+            msg = tr(
+                "EPANET cannot be loaded. Please wait a minute then try again, restart QGIS, or consult our help site."
+            )
             return False, msg
 
         return True, ""
 
-    def _check_wntr(self) -> None:
+    def _check_can_execute(self) -> None:
         can_execute, message = self.canExecute()
         if not can_execute:
             raise QgsProcessingException(message)
@@ -112,32 +111,3 @@ class ModelLayerPostProcessor(QgsProcessingLayerPostProcessorInterface):
 
         if self.make_editable:
             layer.startEditing()
-
-
-PROFILER_GROUP_NAME = "Gusnet"
-
-
-@contextmanager
-def profile(name: str, percentage: int | None = None, feedback: QgsProcessingFeedback | None = None):
-    """
-    Context manager to profile a block of code in processing.
-    """
-
-    if feedback and feedback.isCanceled():
-        raise QgsProcessingException(tr("Execution of script cancelled by user"))
-
-    if feedback:
-        feedback.setProgressText(name)
-        # this is to ensure that feedback goes to min 5% straight away rather than waiting at 100
-        feedback.setProgress(feedback.progress() + 5)
-
-    qgs_profiler = QgsApplication.profiler()
-    qgs_profiler.start(name, PROFILER_GROUP_NAME)
-
-    try:
-        yield functools.partial(profile, feedback=feedback)
-
-        if feedback and percentage:
-            feedback.setProgress(percentage)
-    finally:
-        qgs_profiler.end(PROFILER_GROUP_NAME)

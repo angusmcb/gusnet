@@ -3,7 +3,7 @@ name: Tests
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the wanted branches
-on: [push]
+on: push
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -24,18 +24,48 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         run: |
           apt-get update
           apt-get -y install python3-pandas
           apt-get -y install python3-networkx
-          pip3 install -r requirements-ci-tests.txt
+          pip3 install pytest-qgis
+          pip3 install wntr --no-deps
 
       - name: Run Tests
         run: xvfb-run -s '+extension GLX -screen 0 1024x768x24' python3 -m pytest -v
 
+
+
+  linux_docker_no_deps_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        docker_tags: ['final-3_34_0','ltr', 'stable', 'latest']
+      fail-fast: false
+
+    container:
+      image: qgis/qgis:${{ matrix.docker_tags }}
+      env:
+        QGIS_PLUGIN_IN_CI: 1
+        PIP_BREAK_SYSTEM_PACKAGES: 1
+
+    steps:
+      - name: QGIS Version Information
+        run: qgis --version
+
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup Environment
+        run: |
+          apt-get update
+          pip3 install pytest-qgis
+
+      - name: Run Tests
+        run: xvfb-run -s '+extension GLX -screen 0 1024x768x24' python3 -m pytest -v --doctest-glob='' -m "not needs_wntr and not needs_pandas"
 
 
   # linux_tests:
@@ -79,32 +109,46 @@ jobs:
   #         flags: unittests
   #         fail_ci_if_error: false # set to true when upload is working
   #         verbose: false
+  #
 
   windows_choco:
     runs-on: windows-latest
     strategy:
       matrix:
         # does not work with 3.28.0 due to missing geopandas
-        qgis_version: ['3.34.0','3.40.0','3.44.0']
+        # '3.34.0', broken in choco
+        qgis_version: ['3.40.0','3.44.0','4.0.0']
       fail-fast: false
     env:
       QGIS_PLUGIN_IN_CI: 1
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Choco install qgis
         uses: crazy-max/ghaction-chocolatey@v3
         with:
           args: install qgis --version=${{ matrix.qgis_version }} -y
 
-      - name: Setup Environmment
+      - name: Setup Pytest-QGIS
         shell: pwsh
         run: |
           $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
-          python-qgis.bat -m pip install -r requirements-ci-tests.txt
+          python-qgis.bat -m pip install pytest-qgis
 
-      - name: Run Tests
+      - name: Run Tests Without Wntr
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
+          python-qgis.bat -m pytest -v -m "not needs_wntr and not needs_pandas"
+
+      - name: Setup Wntr
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
+          python-qgis.bat -m pip install wntr
+
+      - name: Run Tests With Wntr
         shell: pwsh
         run: |
           $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"

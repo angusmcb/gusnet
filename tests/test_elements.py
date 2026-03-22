@@ -68,6 +68,7 @@ def test_field_types(field: Field):
 
 
 @pytest.mark.parametrize("flow_unit", list(FlowUnit))
+@pytest.mark.needs_wntr
 def test_check_flow_unit_valid_in_wntr(flow_unit: FlowUnit):
     import wntr
 
@@ -80,6 +81,7 @@ def test_check_flow_unit_valid_in_wntr(flow_unit: FlowUnit):
 
 @pytest.mark.filterwarnings("ignore:Changing the headloss")
 @pytest.mark.parametrize("headloss_formula", list(HeadlossFormula))
+@pytest.mark.needs_wntr
 def test_check_headloss_formula_valid_in_wntr(headloss_formula: HeadlossFormula):
     import wntr
 
@@ -95,3 +97,10 @@ def test_layer_str_enum():
     assert str(ModelLayer.JUNCTIONS) == "JUNCTIONS"
     assert ModelLayer.JUNCTIONS == "JUNCTIONS"
     assert isinstance(ModelLayer.JUNCTIONS, str)
+
+
+def test_field_str_enum():
+    assert hash(Field.LENGTH) == hash("length")
+    assert str(Field.LENGTH) == "length"
+    assert Field.LENGTH == "length"
+    assert isinstance(Field.LENGTH, str)

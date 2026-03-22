@@ -40,6 +40,26 @@ def test_processing_alg_loaded(algorithm: str, provider: Provider) -> None:
     assert provider.algorithm(algorithm)
 
 
+def test_processing_algorithm_display_name(provider: Provider) -> None:
+    for alg in provider.algorithms():
+        display_name = alg.displayName()
+        assert isinstance(display_name, str)
+        assert len(display_name) > 0
+
+
+def test_processing_algorithm_icons(provider: Provider, assert_valid_qicon: Callable[[QIcon], None]) -> None:
+    for alg in provider.algorithms():
+        icon = alg.icon()
+        assert_valid_qicon(icon)
+
+
+def test_processing_short_help_string(provider: Provider) -> None:
+    for alg in provider.algorithms():
+        help_string = alg.shortHelpString()
+        assert isinstance(help_string, str)
+        assert len(help_string) > 0
+
+
 def test_register_processing_provider(provider: Provider) -> None:
     registry = QgsProcessingRegistry()
     registry.addProvider(provider)

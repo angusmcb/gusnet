@@ -8,7 +8,6 @@ pip-tools
 pytest
 pytest-cov
 pytest-qgis
-pytest-mock
 
 # Linting and formatting
 pre-commit
