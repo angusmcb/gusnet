@@ -272,6 +272,8 @@ class ProcessingRunnerAction(QAction):
         else:
             self.on_executed_with_error()
 
+        QgsApplication.messageLog().logMessage(tr("Gusnet:\n" + self.feedback.textLog()), level=Qgis.MessageLevel.Info)
+
         self.setEnabled(True)
 
     def on_executed_successfully(self, results):
@@ -304,7 +306,7 @@ class ProcessingRunnerAction(QAction):
             iface.messageBar().pushMessage(
                 title=title,
                 text=self.success_message,
-                showMore=self.feedback.textLog(),
+                showMore=self.feedback.simple_text_log(),
                 level=level,
                 duration=0,
             )
@@ -482,6 +484,14 @@ class ProcessingFeedbackWithLogging(QgsProcessingFeedback):
             self.warnings.append(warning)
 
         super().pushWarning(warning)
+
+    def simple_text_log(self) -> str:
+        log = ""
+        if self.errors:
+            log += tr("Errors:\n") + "\n".join(self.errors) + "\n"
+        if self.warnings:
+            log += tr("Warnings:\n") + "\n".join(self.warnings)
+        return log
 
 
 class OpenSettingsAction(QAction):

@@ -121,6 +121,8 @@ def _get_epanet_cdll() -> CDLL:
     else:
         epanet_path = libraries_path / "glnx" / f"lib{libname}.so"
 
+    logger.debug(f"Loading EPANET library from path: {epanet_path}")
+
     if not epanet_path.exists():
         raise EpanetNotFoundError
 

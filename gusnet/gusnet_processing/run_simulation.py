@@ -589,12 +589,18 @@ def logger_to_feedback(logger_name: str, feedback: QgsProcessingFeedback | None)
 
     class FeedbackHandler(logging.Handler):
         def emit(self, record):
-            feedback.pushWarning(record.getMessage())
+            if record.levelno >= logging.WARNING:
+                feedback.pushWarning(record.getMessage())
+            elif record.levelno >= logging.INFO:
+                feedback.pushInfo(record.getMessage())
+            else:
+                feedback.pushDebugInfo(record.getMessage())
 
     logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.DEBUG)
     logger.propagate = False
+
     logging_handler = FeedbackHandler()
-    logging_handler.setLevel("INFO")
     logger.addHandler(logging_handler)
 
     try:
