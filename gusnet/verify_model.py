@@ -96,7 +96,6 @@ def verify_model(layers: Mapping[ModelLayer, Mapping[str, Iterable]], network: N
                     [Curve(val) for val in layer_dict[field] if val is not None]
                 except ValueError as e:
                     errors.append(CurveError(layer, field, e))
-
     if ModelLayer.VALVES in layers:
         try:
             _check_valve_settings(layers[ModelLayer.VALVES])
@@ -118,6 +117,11 @@ def verify_model(layers: Mapping[ModelLayer, Mapping[str, Iterable]], network: N
     try:
         _check_link_connects_to_nodes(network)
     except VerificationError as e:
+        errors.append(e)
+
+    try:
+        _check_no_overlapping_nodes(network)
+    except OverlappingNodesError as e:
         errors.append(e)
 
     try:
@@ -239,7 +243,7 @@ def _check_required_field(df: Mapping[str, Iterable], layer: ModelLayer, field: 
         RequiredFieldError: If the required field is missing.
     """
 
-    if field not in df or any(val is None for val in df[field]):
+    if df and (field not in df or any(val is None for val in df[field])):
         raise RequiredFieldError(layer, field)
 
 
@@ -373,6 +377,9 @@ def _check_valve_settings(valve_dict: Mapping[str, Iterable]) -> None:
 
 
 def _check_pump_parameters(pump_dict: Mapping[str, Iterable]) -> None:
+    if not pump_dict:
+        return
+
     if Field.PUMP_TYPE not in pump_dict:
         raise PumpTypeError
 
@@ -477,6 +484,39 @@ class OrphanJunctionsError(VerificationError):
     def __init__(self, orphan_nodes: list[str]):
         super().__init__(
             tr("The following junctions are not connected to any links: {nodes}").format(nodes=", ".join(orphan_nodes))
+        )
+
+
+def _check_no_overlapping_nodes(network: Network) -> None:
+    if len(set(network.node_coordinates.values())) == len(network.node_coordinates):
+        return
+
+    seen_coords = []
+    duplicate_coords = []
+    for coords in network.node_coordinates.values():
+        if coords in seen_coords:
+            duplicate_coords.append(coords)
+        else:
+            seen_coords.append(coords)
+
+    duplicate_node_names: list[list[str]] = []
+
+    for duplicate in set(duplicate_coords):
+        duplicate_node_names.append([name for name, coord in network.node_coordinates.items() if coord == duplicate])
+
+    if duplicate_node_names:
+        raise OverlappingNodesError(duplicate_node_names)
+
+
+class OverlappingNodesError(VerificationError):
+    """Raised when there are multiple nodes with the same coordinates."""
+
+    def __init__(self, node_names: list[list[str]]):
+        node_string = "; ".join([", ".join(group) for group in node_names])
+        super().__init__(
+            tr(
+                "The following nodes have overlapping coordinates - it will not be possible to know which node each link connects to: {nodes}"  # noqa: E501
+            ).format(nodes=node_string)
         )
 
 
