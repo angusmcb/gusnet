@@ -170,7 +170,7 @@ def _line_geometry_to_vertices(geometry: QgsGeometry) -> list[tuple[float, float
         if geometry.constGet().vertexCount() < 3:  # type: ignore[union-attr]
             return []
         return [(v.x(), v.y()) for v in geometry.asPolyline()[1:-1]]
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, AttributeError):
         return []
 
 
