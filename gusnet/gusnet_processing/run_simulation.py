@@ -454,11 +454,10 @@ class RunSimulation(_ModelCreatorAlgorithm):
     def shortHelpString(self):  # noqa N802
         return tr("""
 This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps), \
-combine them with the chosen options, and run a simulation on WNTR.
+combine them with the chosen options, and run a simulation using EPANET. \
+The results will be loaded as new layers in QGIS, and a summary of the model \
 The output files are a layer of 'nodes' (junctions, tanks, reservoirs) and \
 'links' (pipes, valves, pumps).
-Optionally, you can also output an EPANET '.inp' file which can be run / viewed \
-in other software.
             """)
 
     def icon(self):
@@ -535,10 +534,7 @@ class ExportInpFile(_ModelCreatorAlgorithm):
     def shortHelpString(self):  # noqa N802
         return tr("""
 This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps), \
-combine them with the chosen options, and run a simulation on WNTR.
-The output files are a layer of 'nodes' (junctions, tanks, reservoirs) and \
-'links' (pipes, valves, pumps).
-Optionally, you can also output an EPANET '.inp' file which can be run / viewed \
+combine them with the chosen options, and produce an EPANET '.inp' file which can be run / viewed \
 in other software.
             """)
 
