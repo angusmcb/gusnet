@@ -43,3 +43,9 @@ unfixable = [
 [[tool.mypy.overrides]]
 module = ["qgis.*", "osgeo.*","wntr.*","geopandas.*","shapely.*"]
 ignore_missing_imports = true
+
+
+[tool.qgis-plugin-ci]
+plugin_path = "gusnet"
+github_organization_slug = "angusmcb"
+project_slug = "gusnet"
