@@ -33,6 +33,7 @@ from gusnet.inpfile_reader import InpFileReadError, read_inp_file
 from gusnet.profiler import profile
 from gusnet.settings import SettingKey
 from gusnet.units import SpecificUnitNames, UnitNames
+from gusnet.verify_model import VerificationError, verify_model
 
 
 class ImportInp(CommonProcessingBase):
@@ -111,6 +112,11 @@ class ImportInp(CommonProcessingBase):
                 model = read_inp_file(input_file)
             except InpFileReadError as e:
                 raise QgsProcessingException(e) from e
+
+            try:
+                verify_model(model.attributes, model.network)
+            except VerificationError as e:
+                feedback.pushWarning(tr("Model verification failed: {message}").format(message=str(e)))
 
             # options = self._set_flow_unit(parameters, context, options)
 
