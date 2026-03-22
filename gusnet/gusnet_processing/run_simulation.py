@@ -225,11 +225,11 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
 
         self.add_param_enum(self.WALL_REACTION_ORDER, tr("Wall reaction order"), WallReactionOrder, advanced=True)
 
-        param = QgsProcessingParameterNumber(self.GLOBAL_BULK_COEFFICIENT, tr("Global bulk coefficient"), minValue=0)
+        param = QgsProcessingParameterNumber(self.GLOBAL_BULK_COEFFICIENT, tr("Global bulk coefficient"))
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(param)
 
-        param = QgsProcessingParameterNumber(self.GLOBAL_WALL_COEFFICIENT, tr("Global wall coefficient"), minValue=0)
+        param = QgsProcessingParameterNumber(self.GLOBAL_WALL_COEFFICIENT, tr("Global wall coefficient"))
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(param)
 
