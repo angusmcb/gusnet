@@ -386,7 +386,7 @@ class WntrWrapper:
         timeseries_list: list[list | float] = []
 
         for base_val, pattern_name in zip(df[Field.BASE_DEMAND], df[Field.DEMAND_PATTERN]):
-            has_base_demand = not math.isnan(base_val) and base_val is not pd.NA
+            has_base_demand = pd.notna(base_val)
             has_pattern = isinstance(pattern_name, Pattern)
             if has_base_demand or has_pattern:
                 base_val = base_val if has_base_demand else 0.0
