@@ -216,13 +216,13 @@ def to_wntr(
     all_crs = [layer.sourceCrs().authid() for layer in layers.values() if layer.sourceCrs().isValid()]
 
     if len(all_crs) == 0:
-        logger.warn(tr("No valid CRS found on input layers. Pipe lengths will not be calculated."))
+        logger.warning(tr("No valid CRS found on input layers. Pipe lengths will not be calculated."))
 
     elif len(all_crs) != len(layers):
-        logger.warn(tr("Some input layers do not have a valid CRS. Pipe lengths may not be calculated correctly."))
+        logger.warning(tr("Some input layers do not have a valid CRS. Pipe lengths may not be calculated correctly."))
 
     if len(set(all_crs)) > 1:
-        logger.warn(tr("Multiple different CRSs found on input layers."))
+        logger.warning(tr("Multiple different CRSs found on input layers."))
 
     crs = QgsCoordinateReferenceSystem(all_crs[0]) if all_crs else None
 
