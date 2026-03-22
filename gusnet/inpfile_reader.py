@@ -236,9 +236,7 @@ def _read_tanks(
 
     if tanks:
         mixing_type = {parts[0]: parts[1] for parts in mixing_data}
-        comp_ratio = {
-            parts[0]: float(parts[2]) for parts in mixing_data if len(parts) > 2 and parts[1].upper() == "2COMP"
-        }
+        comp_ratio = {parts[0]: parts[2] for parts in mixing_data if len(parts) > 2 and parts[1].upper() == "2COMP"}
 
         tanks[Field.MIXING_MODEL] = [mixing_type.get(name) for name in tanks[Field.NAME]]
         tanks[Field.MIXING_FRACTION] = [comp_ratio.get(name) for name in tanks[Field.NAME]]
