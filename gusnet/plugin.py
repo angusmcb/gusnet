@@ -395,10 +395,12 @@ class LoadTemplateToGeopackageAction(ProcessingRunnerAction):
 class LoadInpAction(ProcessingRunnerAction):
     def __init__(self):
         super().__init__(ImportInp())
-        self.success_message = tr("Loaded .inp file")
 
     def get_parameters(self) -> dict:
         filepath = self.get_filepath()
+
+        file_name = Path(filepath).name
+        self.success_message = tr("Loaded '{file_name}'").format(file_name=file_name)
 
         crs = self.get_crs()
 
@@ -472,26 +474,30 @@ class ProcessingFeedbackWithLogging(QgsProcessingFeedback):
     def __init__(self, logFeedback: bool = True):  # noqa
         self.errors: list[str] = []
         self.warnings: list[str] = []
+        self.info: list[str] = []
         super().__init__(logFeedback)
 
-    def reportError(self, error: str | None, fatalError: bool = False):  # noqa N802
-        if error:
-            self.errors.append(error)
-
+    def reportError(self, error: str, fatalError: bool = False):  # noqa N802
+        self.errors.append(error)
         super().reportError(error, fatalError)
 
-    def pushWarning(self, warning: str | None):  # noqa N802
-        if warning:
-            self.warnings.append(warning)
-
+    def pushWarning(self, warning: str):  # noqa N802
+        self.warnings.append(warning)
         super().pushWarning(warning)
+
+    def pushInfo(self, info: str):  # noqa N802
+        self.info.append(info)
+        super().pushInfo(info)
 
     def simple_text_log(self) -> str:
         log = ""
         if self.errors:
-            log += tr("Errors:\n") + "\n".join(self.errors) + "\n"
+            log += tr("Errors:\n") + "\n".join(self.errors) + "\n\n"
         if self.warnings:
-            log += tr("Warnings:\n") + "\n".join(self.warnings)
+            log += tr("Warnings:\n") + "\n".join(self.warnings) + "\n\n"
+        if self.info:
+            log += tr("Info:\n") + "\n".join(self.info) + "\n\n"
+
         return log
 
 
