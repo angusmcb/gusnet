@@ -43,7 +43,10 @@ class Network:
         if elevations:
             for geometry, elevation in zip(geometries, elevations):
                 if elevation is not None:
-                    geometry.get().addZValue(elevation)  # type: ignore[union-attr]
+                    try:
+                        geometry.get().addZValue(float(elevation))  # type: ignore[union-attr]
+                    except TypeError:
+                        continue
 
         self._add_nodes(names, coordinates, geometries)
 
