@@ -105,22 +105,15 @@ def run_analysis(
 
 
 def _get_epanet_cdll() -> CDLL:
-    try:
-        import gusnet_epanet
-    except ImportError as e:
-        raise EpanetNotFoundError from e
-
-    libraries_path = Path(gusnet_epanet.__file__).parent
-
-    libname = "epanet2"
     ops = platform.system().lower()
     if ops in ["windows"]:
-        epanet_path = libraries_path / "win" / f"{libname}.dll"
+        extension = "win"
     elif ops in ["darwin"]:
-        epanet_path = libraries_path / "mac" / f"lib{libname}.dylib"
+        extension = "mac"
     else:
-        epanet_path = libraries_path / "glnx" / f"lib{libname}.so"
+        extension = "lnxx"
 
+    epanet_path = Path(__file__).parent / "resources" / "epanet" / ("libepanet2." + extension)
     logger.debug(f"Loading EPANET library from path: {epanet_path}")
 
     if not epanet_path.exists():
