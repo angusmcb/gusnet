@@ -31,6 +31,7 @@ jobs:
           apt-get update
           apt-get -y install python3-pandas
           apt-get -y install python3-networkx
+          pip3 install six
           pip3 install pytest-qgis
           pip3 install wntr --no-deps
 
