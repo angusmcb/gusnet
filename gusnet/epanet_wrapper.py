@@ -111,7 +111,7 @@ def _get_epanet_cdll() -> CDLL:
     elif ops in ["darwin"]:
         extension = "mac"
     else:
-        extension = "lnxx"
+        extension = "lnx"
 
     epanet_path = Path(__file__).parent / "resources" / "epanet" / ("libepanet2." + extension)
     logger.debug(f"Loading EPANET library from path: {epanet_path}")
