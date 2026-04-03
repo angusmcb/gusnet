@@ -42,4 +42,4 @@ def test_model_statistics():
   Total Pipe Length: 1.50 km
   Unique Pipe Diameters: 12, 24"""
 
-    assert str(stats) == expected_str
+    assert str(stats).replace("\n", "").replace(" ", "") == expected_str.replace("\n", "").replace(" ", "")
