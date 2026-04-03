@@ -419,7 +419,6 @@ class LoadExampleAction(LoadInpAction):
         self.setText(tr("Load Example"))
         self.setIcon(QIcon())
         self.setToolTip(tr("Load an example network"))
-        self.success_message = tr("Example loaded with Open Street Map background")
 
     def get_crs(self) -> QgsCoordinateReferenceSystem:
         return QgsCoordinateReferenceSystem("EPSG:3089")
@@ -453,6 +452,9 @@ class LoadExampleAction(LoadInpAction):
     def on_executed_successfully(self, results) -> None:
         self.set_transform_context()
         self.load_osm()
+        self.success_message = tr(
+            "Example loaded with Open Street Map background. Now run it by pressing the lightning icon."
+        )
         super().on_executed_successfully(results)
 
 
