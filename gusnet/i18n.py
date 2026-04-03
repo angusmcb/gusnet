@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import gettext
-import re
 from pathlib import Path
 
 DOMAIN = "gusnet"
@@ -31,34 +30,14 @@ def set_locale(lang_code: str | None) -> None:
     )
 
 
-def _qt_style_plural_message(text: str) -> tuple[str, str]:
-    """Convert Qt-style '(s)' placeholders into singular/plural strings."""
+def tr(text: str) -> str:
+    """Get translated text from gettext catalogs."""
 
-    singular = text.replace("(s)", "")
-    plural = re.sub(r"\(s\)", "s", text)
-    return singular, plural
+    return _translation.gettext(text)
 
 
-def tr(
-    text: str,
-    disambiguation: str = "",  # noqa: ARG001
-    n=-1,
-    context: str = "@default",  # noqa: ARG001
-) -> str:
-    """Get translated text from gettext catalogs.
-
-    :param text: String for translation.
-    :param context: Context of the translation.
-    :param n: Optional quantity for pluralized strings.
-
-    :returns: Translated version of message.
-    """
-    if n == -1:
-        return _translation.gettext(text)
-
-    singular, plural = _qt_style_plural_message(text)
-    translated = _translation.ngettext(singular, plural, n)
-    return translated.replace("%n", str(n))
+def trn(singular, plural, count, **kwargs):
+    return _translation.ngettext(singular, plural, count).format(count=count, **kwargs)
 
 
 set_locale("en")

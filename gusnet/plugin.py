@@ -45,7 +45,7 @@ from gusnet.gusnet_processing.empty_model import TemplateLayers
 from gusnet.gusnet_processing.import_inp import ImportInp
 from gusnet.gusnet_processing.provider import Provider
 from gusnet.gusnet_processing.run_simulation import RunSimulation
-from gusnet.i18n import set_locale, tr
+from gusnet.i18n import set_locale, tr, trn
 from gusnet.settings import ProjectSettings, SettingKey
 
 MESSAGE_CATEGORY = "Gusnet"
@@ -679,12 +679,12 @@ class DurationSettingMenu(SettingMenu):
         self.setup_action(0, tr("Single period simulation"))
 
         for hour in range(1, 25):
-            self.setup_action(hour, tr("%n hour(s)", "", hour))
+            self.setup_action(hour, trn("1 hour", "{count} hours", count=hour))
 
     def update_checked(self):
         current_duration = math.floor(ProjectSettings().get(SettingKey.SIMULATION_DURATION, 0))
 
         if current_duration not in self.actions:
-            self.setup_action(current_duration, tr("%n hour(s)", "", current_duration))
+            self.setup_action(current_duration, trn("1 hour", "{count} hours", count=current_duration))
 
         self.actions[current_duration].setChecked(True)
