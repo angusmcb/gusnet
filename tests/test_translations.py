@@ -1,9 +1,6 @@
-from pathlib import Path
-
 import pytest
-from qgis.PyQt.QtCore import QCoreApplication, QLocale, QTranslator
 
-from gusnet.i18n import tr
+from gusnet.i18n import set_locale, tr
 
 
 @pytest.fixture
@@ -13,13 +10,8 @@ def locale():
 
 @pytest.fixture
 def translator(locale):
-    qgis_locale = QLocale(locale)
-    locale_path = str(Path(__file__).parent.parent / "gusnet" / "resources" / "i18n")
-    translator = QTranslator()
-    translator.load(qgis_locale, "", "", locale_path)
-    QCoreApplication.installTranslator(translator)
-    yield
-    QCoreApplication.removeTranslator(translator)  # not strictly needed
+    set_locale(locale)
+    return
 
 
 @pytest.mark.parametrize(
@@ -77,7 +69,8 @@ def test_numerus_translation_pipes(num_pipes, expected_message, translator):
         ("ar", "تشغيل المحاكاة"),
     ],
 )
-def test_run_simulation_translation(translator, expected_message):
+def test_run_simulation_translation(locale, expected_message):
+    set_locale(locale)
     translated_message = tr("Run Simulation")
 
     assert translated_message == expected_message

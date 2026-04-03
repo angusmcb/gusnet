@@ -42,6 +42,48 @@ WNTR itself has some python dependencies. A warning will appear when running any
 * On *Windows* all dependencies are already included within QGIS.
 * For *Linux / Mac* you will need to ensure that the following python packages are installed: Numpy, Scipy, Pandas, NetworkX,  Matplotlib and Geopandas. Exactly how to do this depends on your system and how you have installed QGIS.
 
+## Translations (gettext / pybabel)
+
+Translations are managed with gettext catalogs (`.po` / `.mo`) using `pybabel`. Source strings are extracted from all Python files under `gusnet/` and use the existing `tr(...)` wrapper.
+
+### Prerequisites
+
+Install Babel in your active environment:
+
+```bash
+pip install Babel
+```
+
+### Workflow
+
+Run all translation steps:
+
+```bash
+python build_translations.py all
+```
+
+Or run individual steps:
+
+```bash
+# Extract template catalog
+python build_translations.py extract
+
+# Initialize new locale catalogs (only if missing)
+python build_translations.py init --locales fr es de it pt nl ar en
+
+# Update existing locale catalogs from the latest template
+python build_translations.py update --locales fr es de it pt nl ar en
+
+# Compile .po files to .mo files
+python build_translations.py compile
+```
+
+Catalog locations:
+
+* Template: `gusnet/resources/i18n/messages.pot`
+* Locales: `gusnet/resources/i18n/locales/<locale>/LC_MESSAGES/gusnet.po`
+* Compiled: `gusnet/resources/i18n/locales/<locale>/LC_MESSAGES/gusnet.mo`
+
 ## Usage
 
 ### Key Principles

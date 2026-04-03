@@ -22,7 +22,7 @@ from qgis.core import (
     QgsSettings,
 )
 from qgis.gui import QgisInterface, QgsLayerTreeViewIndicator, QgsProjectionSelectionDialog
-from qgis.PyQt.QtCore import QCoreApplication, QLocale, QObject, QSettings, QTranslator, pyqtSlot
+from qgis.PyQt.QtCore import QLocale, QObject, QSettings, pyqtSlot
 
 # from qgis.processing import execAlgorithmDialog for qgis 3.40 onwards
 from qgis.PyQt.QtGui import QIcon, QPainter
@@ -45,7 +45,7 @@ from gusnet.gusnet_processing.empty_model import TemplateLayers
 from gusnet.gusnet_processing.import_inp import ImportInp
 from gusnet.gusnet_processing.provider import Provider
 from gusnet.gusnet_processing.run_simulation import RunSimulation
-from gusnet.i18n import tr
+from gusnet.i18n import set_locale, tr
 from gusnet.settings import ProjectSettings, SettingKey
 
 MESSAGE_CATEGORY = "Gusnet"
@@ -68,12 +68,8 @@ class Plugin:
         self.menu = tr("Gusnet")
 
     def init_translation(self):
-        lang_code = QSettings().value("locale/userLocale", "en")
-        qgis_locale = QLocale(lang_code)
-        locale_path = str(Path(__file__).parent / "resources" / "i18n")
-        translator = QTranslator(self.object)
-        translator.load(qgis_locale, "", "", locale_path)
-        QCoreApplication.installTranslator(translator)
+        lang_code: str = QgsSettings().value("locale/userLocale", QLocale().name())[0:2]
+        set_locale(lang_code)
 
     def initProcessing(self):  # noqa N802
         self.provider = Provider()
