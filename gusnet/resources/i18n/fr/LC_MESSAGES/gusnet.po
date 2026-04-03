@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-03 18:58+0200\n"
+"POT-Creation-Date: 2026-04-03 20:55+0200\n"
 "PO-Revision-Date: 2026-04-03 16:08+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -256,7 +256,7 @@ msgstr "Vanne polyvalente"
 
 #: gusnet/elements.py:252
 msgid "Zero"
-msgstr "Zero"
+msgstr "Zéro"
 
 #: gusnet/elements.py:254
 msgid "One"
@@ -690,137 +690,6 @@ msgstr "Concentration de qualité de l’eau"
 msgid "Rate of water quality reaction"
 msgstr "Taux de réaction de la qualité de l’eau"
 
-#: gusnet/elements.py:792
-msgid "Flow units for the model"
-msgstr "Unités de débit du modèle"
-
-#: gusnet/elements.py:794
-msgid ""
-"Flow units will determine the units of other units used in the model as "
-"well. Selecting a metric-based unit set means everything will be metric, "
-"wheras selecting an imperial measure means everything will be imperial."
-msgstr ""
-"Les unités de débit déterminent aussi les unités des autres grandeurs du "
-"modèle. En choisissant un système métrique, tout sera en métrique ; en "
-"choisissant un système impérial, tout sera en impérial."
-
-#: gusnet/elements.py:801
-msgid "Formula to use for headloss calculations"
-msgstr "Formule à utiliser pour les calculs de perte de charge"
-
-#: gusnet/elements.py:807
-msgid "Duration of the simulation in hours (or 0 for single period)"
-msgstr "Durée de la simulation en heures (ou 0 pour une seule période)"
-
-#: gusnet/elements.py:815
-msgid "Global multiplier for all demands in the model"
-msgstr "Multiplicateur global pour toutes les demandes du modèle"
-
-#: gusnet/elements.py:824
-msgid "Default pattern to use for any pattern fields left blank"
-msgstr "Motif par défaut à utiliser pour les champs de motif laissés vides"
-
-#: gusnet/elements.py:831
-msgid "Exponent for emitter calculations"
-msgstr "Exposant pour les calculs d'émetteur"
-
-#: gusnet/elements.py:842
-msgid "Whether to model demands as fixed or pressure dependent"
-msgstr ""
-"Indique si les demandes sont modélisées comme fixes ou dépendantes de la "
-"pression"
-
-#: gusnet/elements.py:848
-msgid "Minimum pressure for pressure dependent demand calculations"
-msgstr "Pression minimale pour les calculs de demande dépendante de la pression"
-
-#: gusnet/elements.py:855
-msgid "Required pressure for pressure dependent demand calculations"
-msgstr "Pression requise pour les calculs de demande dépendante de la pression"
-
-#: gusnet/elements.py:862
-msgid "Exponent for pressure dependent demand calculations"
-msgstr "Exposant pour les calculs de demande dépendante de la pression"
-
-#: gusnet/elements.py:878
-msgid "Price of energy per kW hour for energy calculations"
-msgstr "Prix de l'énergie par kWh pour les calculs énergétiques"
-
-#: gusnet/elements.py:885
-msgid "Pattern of price multiplier to use for energy calculations"
-msgstr "Motif de multiplicateur de prix à utiliser pour les calculs énergétiques"
-
-#: gusnet/elements.py:891
-msgid "Global efficiency of pumps for energy calculations - as a percentage"
-msgstr ""
-"Efficacité globale des pompes pour les calculs énergétiques - en "
-"pourcentage"
-
-#: gusnet/elements.py:898
-msgid "Demand charge for energy calculations"
-msgstr "Tarif de puissance pour les calculs énergétiques"
-
-#: gusnet/elements.py:908
-msgid "Type of water quality analysis to do"
-msgstr "Type d'analyse de qualité de l'eau à effectuer"
-
-#: gusnet/elements.py:914
-msgid "Mass unit to use for water quality analysis"
-msgstr "Unité de masse à utiliser pour l'analyse de qualité de l'eau"
-
-#: gusnet/elements.py:920
-msgid "Relative diffusivity for water quality analysis"
-msgstr "Diffusivité relative pour l'analyse de qualité de l'eau"
-
-#: gusnet/elements.py:927
-msgid "Node to track for trace analysis (if quality parameter is TRACE)"
-msgstr ""
-"Nœud à suivre pour l'analyse de traceur (si le paramètre de qualité est "
-"TRACE)"
-
-#: gusnet/elements.py:933
-msgid "Tolerance for water quality convergence in extended period simulations"
-msgstr ""
-"Tolérance de convergence de la qualité de l'eau dans les simulations de "
-"longue durée"
-
-#: gusnet/elements.py:941
-msgid "Order of the bulk reaction for water quality analysis"
-msgstr "Ordre de la réaction en masse pour l'analyse de la qualité de l'eau"
-
-#: gusnet/elements.py:948
-msgid "Order of the wall reaction for water quality analysis"
-msgstr "Ordre de la réaction de paroi pour l'analyse de la qualité de l'eau"
-
-#: gusnet/elements.py:954
-msgid "Global bulk coefficient for water quality analysis"
-msgstr ""
-"Coefficient global de réaction en masse pour l'analyse de la qualité de "
-"l'eau"
-
-#: gusnet/elements.py:961
-msgid "Global wall coefficient for water quality analysis"
-msgstr ""
-"Coefficient global de réaction de paroi pour l'analyse de la qualité de "
-"l'eau"
-
-#: gusnet/elements.py:970
-msgid ""
-"Limiting concentration for water quality analysis (concentration below "
-"which reactions are assumed to stop)"
-msgstr ""
-"Concentration limite pour l'analyse de la qualité de l'eau (concentration"
-" en dessous de laquelle les réactions sont supposées s'arrêter)"
-
-#: gusnet/elements.py:979
-msgid ""
-"Correlation for calculating wall reaction coefficient based on pipe "
-"diameter (if 0, wall coefficient will be constant)"
-msgstr ""
-"Corrélation pour calculer le coefficient de réaction de paroi en fonction"
-" du diamètre de la canalisation (si 0, le coefficient de paroi sera "
-"constant)"
-
 #: gusnet/epanet_wrapper.py:171
 msgid ""
 "System hydraulically unbalanced - convergence to a hydraulic solution was"
@@ -1212,7 +1081,7 @@ msgstr "pieds"
 
 #: gusnet/feature_reader.py:286
 msgid "metres"
-msgstr "metres"
+msgstr "mètres"
 
 #: gusnet/feature_reader.py:296
 #, python-brace-format
@@ -1243,8 +1112,8 @@ msgstr[0] ""
 "Impossible de calculer la longueur d'une canalisation (probablement à "
 "cause d’un problème avec le système de coordonnées sélectionné)"
 msgstr[1] ""
-"Impossible de calculer la longueur de {count} canalisations (probablement "
-"à cause d’un problème avec le système de coordonnées sélectionné)"
+"Impossible de calculer la longueur de {count} canalisations (probablement"
+" à cause d’un problème avec le système de coordonnées sélectionné)"
 
 #: gusnet/feature_reader.py:401
 msgid "Geometry errors were found."
@@ -1274,143 +1143,143 @@ msgstr "Erreur de lecture du fichier d'entrée. {parent_error}"
 msgid ".inp file does not exist ({input_file})"
 msgstr "Le fichier .inp n’existe pas ({input_file})"
 
-#: gusnet/plugin.py:68
+#: gusnet/plugin.py:66
 msgid "Gusnet"
 msgstr "Gusnet"
 
-#: gusnet/plugin.py:157
+#: gusnet/gusnet_processing/run_simulation.py:176 gusnet/plugin.py:151
 msgid "Headloss Formula"
 msgstr "Formule de perte de charge"
 
-#: gusnet/plugin.py:158
+#: gusnet/gusnet_processing/run_simulation.py:174 gusnet/plugin.py:152
 msgid "Units"
 msgstr "Unités"
 
-#: gusnet/plugin.py:159
+#: gusnet/plugin.py:153
 msgid "Duration (hours)"
 msgstr "Durée (heures)"
 
-#: gusnet/plugin.py:160
+#: gusnet/plugin.py:154
 msgid "Demand Type"
 msgstr "Type de demande"
 
-#: gusnet/plugin.py:182
+#: gusnet/plugin.py:176
 msgid "Failed to fetch EPANET. Please check your internet connection."
 msgstr ""
 "Impossible de récupérer EPANET. Veuillez vérifier votre connexion "
 "Internet."
 
-#: gusnet/plugin.py:200
+#: gusnet/plugin.py:194
 msgid "Gusnet upgraded successfully"
 msgstr "Gusnet mis à niveau avec succès"
 
-#: gusnet/plugin.py:200
+#: gusnet/plugin.py:194
 msgid "Gusnet installed successfully"
 msgstr "Gusnet installé avec succès"
 
-#: gusnet/plugin.py:201
+#: gusnet/plugin.py:195
 msgid "Load an example to try me out"
 msgstr "Chargez un exemple pour me tester"
 
-#: gusnet/plugin.py:205 gusnet/plugin.py:425
+#: gusnet/plugin.py:199 gusnet/plugin.py:423
 msgid "Load Example"
 msgstr "Charger un exemple"
 
-#: gusnet/plugin.py:272
+#: gusnet/plugin.py:266
 msgid "Gusnet:\n"
 msgstr "Gusnet:"
 
-#: gusnet/plugin.py:293
+#: gusnet/plugin.py:287
 msgid "Error"
 msgstr "Erreur"
 
-#: gusnet/plugin.py:302
+#: gusnet/plugin.py:296
 msgid "Analysed with Warnings"
 msgstr "Analysé avec des avertissements"
 
-#: gusnet/plugin.py:302
+#: gusnet/plugin.py:296
 msgid "Success"
 msgstr "Succès"
 
-#: gusnet/plugin.py:329
+#: gusnet/plugin.py:323
 msgid "Run the simulation with the current settings."
 msgstr "Exécuter la simulation avec les paramètres actuels."
 
-#: gusnet/plugin.py:349
+#: gusnet/plugin.py:347
 #, python-brace-format
 msgid "Analysed using units '{units}' and headloss formula '{headloss_formula}'"
 msgstr ""
 "Analysé en utilisant les unités « {units} » et la formule de perte de "
 "charge « {headloss_formula} »"
 
-#: gusnet/plugin.py:358
+#: gusnet/plugin.py:356
 msgid "Create Template Memory Layers"
 msgstr "Créer des couches mémoire de modèle"
 
-#: gusnet/plugin.py:368
+#: gusnet/plugin.py:366
 msgid "Create Template Geopackage"
 msgstr "Créer un géopackage de modèle"
 
-#: gusnet/plugin.py:374
+#: gusnet/plugin.py:372
 msgid "Save Geopackage"
 msgstr "Enregistrer le Geopackage"
 
-#: gusnet/plugin.py:376
+#: gusnet/plugin.py:374
 msgid "Geopackage"
 msgstr "Geopackage"
 
-#: gusnet/plugin.py:395
+#: gusnet/plugin.py:393
 #, python-brace-format
 msgid "Loaded '{file_name}'"
 msgstr "« {file_name} » chargé"
 
-#: gusnet/plugin.py:406
+#: gusnet/plugin.py:404
 msgid "Choose Input File"
 msgstr "Choisir le fichier d’entrée"
 
-#: gusnet/plugin.py:406
+#: gusnet/plugin.py:404
 msgid "EPANET INP File"
 msgstr "Fichier INP EPANET"
 
-#: gusnet/plugin.py:427
+#: gusnet/plugin.py:425
 msgid "Load an example network"
 msgstr "Charger un réseau d’exemple"
 
-#: gusnet/plugin.py:428
+#: gusnet/plugin.py:426
 msgid "Example loaded with Open Street Map background"
 msgstr "Exemple chargé avec un fond Open Street Map"
 
-#: gusnet/plugin.py:453
+#: gusnet/plugin.py:451
 msgid "OpenStreetMap"
 msgstr "OpenStreetMap"
 
-#: gusnet/plugin.py:487
+#: gusnet/plugin.py:485
 msgid "Errors:\n"
 msgstr "Erreurs:\n"
 
-#: gusnet/plugin.py:489
+#: gusnet/plugin.py:487
 msgid "Warnings:\n"
 msgstr "Avertissements:\n"
 
-#: gusnet/plugin.py:491
+#: gusnet/plugin.py:489
 msgid "Info:\n"
 msgstr "Infos:\n"
 
-#: gusnet/plugin.py:498
+#: gusnet/plugin.py:496
 msgid "Change layers..."
 msgstr "Modifier les couches..."
 
-#: gusnet/plugin.py:499
+#: gusnet/plugin.py:497
 msgid "Open the settings dialog to change the model layers."
 msgstr ""
 "Ouvrir la boîte de dialogue des paramètres pour modifier les couches du "
 "modèle."
 
-#: gusnet/plugin.py:675
+#: gusnet/plugin.py:673
 msgid "Single period simulation"
 msgstr "Simulation d’une seule période"
 
-#: gusnet/plugin.py:678 gusnet/plugin.py:684
+#: gusnet/plugin.py:676 gusnet/plugin.py:682
 #, python-brace-format
 msgid "1 hour"
 msgid_plural "{count} hours"
@@ -1432,16 +1301,15 @@ msgstr ""
 
 #: gusnet/statistics.py:45
 msgid "Model Description:"
-msgstr ""
+msgstr "Description du modèle :"
 
 #: gusnet/statistics.py:57
-#, python-brace-format
 msgid "Total Pipe Length"
 msgstr "Longueur totale des canalisations"
 
 #: gusnet/statistics.py:58
 msgid "Unique Pipe Diameters"
-msgstr ""
+msgstr "Diamètres de canalisations uniques"
 
 #: gusnet/style.py:139
 #, python-brace-format
@@ -1893,53 +1761,53 @@ msgstr ""
 "Aucun résultat de simulation n'est disponible. Définissez d'abord les "
 "résultats."
 
-#: gusnet/wntr_wrapper.py:622
+#: gusnet/wntr_wrapper.py:624
 msgid "Network Summary"
 msgstr "Résumé du réseau"
 
-#: gusnet/wntr_wrapper.py:634
+#: gusnet/wntr_wrapper.py:636
 msgid "Pumps defined by power"
 msgstr "Pompes définies par la puissance"
 
-#: gusnet/wntr_wrapper.py:635
+#: gusnet/wntr_wrapper.py:637
 msgid "Pumps defined by head curve"
 msgstr "Pompes définies par la courbe de hauteur"
 
-#: gusnet/wntr_wrapper.py:643
+#: gusnet/wntr_wrapper.py:645
 msgid "Element"
 msgstr "Élément"
 
-#: gusnet/wntr_wrapper.py:643 gusnet/wntr_wrapper.py:684
+#: gusnet/wntr_wrapper.py:645 gusnet/wntr_wrapper.py:686
 msgid "Count"
 msgstr "Nombre"
 
-#: gusnet/wntr_wrapper.py:674
+#: gusnet/wntr_wrapper.py:676
 msgid "All Pipes"
 msgstr "Toutes les canalisations"
 
-#: gusnet/wntr_wrapper.py:685
+#: gusnet/wntr_wrapper.py:687
 msgid "Total"
 msgstr "Total"
 
-#: gusnet/wntr_wrapper.py:686 gusnet/wntr_wrapper.py:688
+#: gusnet/wntr_wrapper.py:688 gusnet/wntr_wrapper.py:690
 msgid "Min"
 msgstr "Min"
 
-#: gusnet/wntr_wrapper.py:687 gusnet/wntr_wrapper.py:689
+#: gusnet/wntr_wrapper.py:689 gusnet/wntr_wrapper.py:691
 msgid "Max"
 msgstr "Max"
 
-#: gusnet/wntr_wrapper.py:707
+#: gusnet/wntr_wrapper.py:709
 #, python-brace-format
 msgid "Total pipe length: {pipe_length} {unit}"
 msgstr "Longueur totale des canalisations : {pipe_length} {unit}"
 
-#: gusnet/wntr_wrapper.py:793
+#: gusnet/wntr_wrapper.py:796
 #, python-brace-format
 msgid "Error from WNTR. {exception_name}: {exception}"
 msgstr "Erreur de WNTR. {exception_name}: {exception}"
 
-#: gusnet/wntr_wrapper.py:801
+#: gusnet/wntr_wrapper.py:804
 #, python-brace-format
 msgid "Error from EPANET: {exception}"
 msgstr "Erreur d'EPANET : {exception}"
@@ -1961,14 +1829,11 @@ msgstr "Modèle WNTR créé. Le modèle contient:"
 msgid "Create Template Layers"
 msgstr "Créer des couches de modèle"
 
-#: gusnet/gusnet_processing/empty_model.py:36
+#: gusnet/gusnet_processing/empty_model.py:37
 msgid ""
-"\n"
-"        This will create a set of 'template' layers, which you can use "
-"for building your model.\n"
-"        You do not need to create or use all layers if not required for "
-"your model.\n"
-"        "
+"This will create a set of 'template' layers, which you can use for "
+"building your model. You do not need to create or use all layers if not "
+"required for your model."
 msgstr ""
 "Cela va créer un ensemble de couches « modèle » que vous pouvez utiliser "
 "pour construire votre modèle.\n"
@@ -1976,7 +1841,7 @@ msgstr ""
 "si elles ne sont pas nécessaires à votre modèle."
 
 #: gusnet/gusnet_processing/empty_model.py:45
-#: gusnet/gusnet_processing/import_inp.py:74
+#: gusnet/gusnet_processing/import_inp.py:72
 msgid "Coordinate Reference System (CRS)"
 msgstr "Système de coordonnées de référence (SCR)"
 
@@ -1993,20 +1858,15 @@ msgid "Model Layers"
 msgstr "Couches du modèle"
 
 #: gusnet/gusnet_processing/import_inp.py:51
-#: gusnet/gusnet_processing/import_inp.py:98
+#: gusnet/gusnet_processing/import_inp.py:96
 msgid "Import from Epanet INP file"
 msgstr "Importer depuis un fichier Epanet INP"
 
-#: gusnet/gusnet_processing/import_inp.py:54
+#: gusnet/gusnet_processing/import_inp.py:55
 msgid ""
-"\n"
-"            Import all junctions, tanks, reservoirs, pipes, pumps and "
-"valves from an EPANET inp file.\n"
-"            This will also save selected options from the .inp file.\n"
-"            All units will be converted into the unit set selected. If "
-"not selected, it will default             to the unit set in the .inp "
-"file.\n"
-"            "
+"Import all junctions, tanks, reservoirs, pipes, pumps and valves from an "
+"EPANET inp file. This will also save selected options from the .inp file."
+" "
 msgstr ""
 "Importe toutes les jonctions, les réservoirs, les bassins, les "
 "canalisations, les pompes et les vannes depuis un fichier INP EPANET.\n"
@@ -2016,71 +1876,167 @@ msgstr ""
 "sélectionné. Si rien n'est sélectionné, les unités du fichier .inp seront"
 " utilisées par défaut."
 
-#: gusnet/gusnet_processing/import_inp.py:68
+#: gusnet/gusnet_processing/import_inp.py:66
 msgid "Epanet Input File (.inp)"
 msgstr "Fichier d’entrée Epanet (.inp)"
 
-#: gusnet/gusnet_processing/import_inp.py:108
+#: gusnet/gusnet_processing/import_inp.py:106
 msgid "Loading INP File"
 msgstr "Chargement du fichier INP"
 
-#: gusnet/gusnet_processing/import_inp.py:119
+#: gusnet/gusnet_processing/import_inp.py:117
 #, python-brace-format
 msgid "Model verification failed: {message}"
 msgstr "La vérification du modèle a échoué : {message}"
 
-#: gusnet/gusnet_processing/import_inp.py:126
+#: gusnet/gusnet_processing/import_inp.py:124
 #, python-brace-format
 msgid "Will output with the following units: {flow_unit}"
 msgstr "Produira avec les unités suivantes : {flow_unit}"
 
-#: gusnet/gusnet_processing/import_inp.py:134
-#: gusnet/gusnet_processing/run_simulation.py:659
+#: gusnet/gusnet_processing/import_inp.py:132
+#: gusnet/gusnet_processing/run_simulation.py:561
 msgid "Creating Outputs"
 msgstr "Création des sorties"
 
-#: gusnet/gusnet_processing/import_inp.py:135
+#: gusnet/gusnet_processing/import_inp.py:133
 #, python-brace-format
 msgid "Model Layers ({filename})"
 msgstr "Couches du modèle ({filename})"
 
-#: gusnet/gusnet_processing/run_simulation.py:353
+#: gusnet/gusnet_processing/run_simulation.py:178
+msgid "Simulation duration in hours (or 0 for single period)"
+msgstr "Durée de la simulation en heures (ou 0 pour une seule période)"
+
+#: gusnet/gusnet_processing/run_simulation.py:180
+msgid "Demand type"
+msgstr "Type de demande"
+
+#: gusnet/gusnet_processing/run_simulation.py:182
+msgid "Demand Multiplier"
+msgstr "Multiplicateur de demande"
+
+#: gusnet/gusnet_processing/run_simulation.py:184
+msgid "Default Demand Pattern"
+msgstr "Modèle de demande"
+
+#: gusnet/gusnet_processing/run_simulation.py:188
+msgid "Emitter exponent"
+msgstr "Coefficient d’émetteur"
+
+#: gusnet/gusnet_processing/run_simulation.py:190
+msgid "Minimum pressure"
+msgstr "Niveau minimum"
+
+#: gusnet/gusnet_processing/run_simulation.py:192
+msgid "Required pressure"
+msgstr "Pression"
+
+#: gusnet/gusnet_processing/run_simulation.py:194
+msgid "Pressure exponent"
+msgstr "Demande dépendante de la pression"
+
+#: gusnet/gusnet_processing/run_simulation.py:196
+msgid "Energy price (per kWh)"
+msgstr "Prix de l’énergie"
+
+#: gusnet/gusnet_processing/run_simulation.py:199
+msgid "Energy price pattern"
+msgstr "Modèle énergétique"
+
+#: gusnet/gusnet_processing/run_simulation.py:203
+msgid "Pump efficiency (%)"
+msgstr "Courbe d’efficacité"
+
+#: gusnet/gusnet_processing/run_simulation.py:205
+msgid "Energy demand charge"
+msgstr "Tarif de demande energetique"
+
+#: gusnet/gusnet_processing/run_simulation.py:207
+msgid "Quality analysis"
+msgstr "Type d'analyse de qualité de l'eau à effectuer"
+
+#: gusnet/gusnet_processing/run_simulation.py:209
+msgid "Mass unit"
+msgstr "Unite de masse"
+
+#: gusnet/gusnet_processing/run_simulation.py:211
+msgid "Relative diffusivity"
+msgstr "Diffusivite relative"
+
+#: gusnet/gusnet_processing/run_simulation.py:216
+msgid "Trace node name"
+msgstr "Nœud traceur"
+
+#: gusnet/gusnet_processing/run_simulation.py:220
+msgid "Quality tolerance"
+msgstr "Tolerance de qualite"
+
+#: gusnet/gusnet_processing/run_simulation.py:224
+msgid "Bulk reaction order"
+msgstr "Taux de réaction"
+
+#: gusnet/gusnet_processing/run_simulation.py:228
+msgid "Wall reaction order"
+msgstr "Taux de réaction"
+
+#: gusnet/gusnet_processing/run_simulation.py:230
+msgid "Global bulk coefficient"
+msgstr ""
+"Coefficient global de réaction en masse pour l'analyse de la qualité de "
+"l'eau"
+
+#: gusnet/gusnet_processing/run_simulation.py:234
+msgid "Global wall coefficient"
+msgstr ""
+"Coefficient global de réaction de paroi pour l'analyse de la qualité de "
+"l'eau"
+
+#: gusnet/gusnet_processing/run_simulation.py:238
+msgid "Limiting concentration"
+msgstr "Concentration chimique"
+
+#: gusnet/gusnet_processing/run_simulation.py:243
+msgid "Wall coefficient correlation"
+msgstr "Correlation du coefficient de paroi"
+
+#: gusnet/gusnet_processing/run_simulation.py:283
 msgid "Simulation Results - Nodes"
 msgstr "Résultats de simulation - Nœuds"
 
-#: gusnet/gusnet_processing/run_simulation.py:356
+#: gusnet/gusnet_processing/run_simulation.py:286
 msgid "Simulation Results - Links"
 msgstr "Résultats de simulation - Liens"
 
-#: gusnet/gusnet_processing/run_simulation.py:452
+#: gusnet/gusnet_processing/run_simulation.py:354
 msgid "Reading features"
 msgstr "Lecture des entités"
 
-#: gusnet/gusnet_processing/run_simulation.py:456
+#: gusnet/gusnet_processing/run_simulation.py:358
 #, python-brace-format
 msgid "Error reading features: {exception}"
 msgstr "Erreur lors de la lecture des entités : {exception}"
 
-#: gusnet/gusnet_processing/run_simulation.py:458
+#: gusnet/gusnet_processing/run_simulation.py:360
 msgid "Verifying model"
 msgstr "Vérification du modèle"
 
-#: gusnet/gusnet_processing/run_simulation.py:462
+#: gusnet/gusnet_processing/run_simulation.py:364
 #, python-brace-format
 msgid "Error verifying model: {exception}"
 msgstr "Erreur lors de la vérification du modèle : {exception}"
 
-#: gusnet/gusnet_processing/run_simulation.py:504
+#: gusnet/gusnet_processing/run_simulation.py:406
 #, python-brace-format
 msgid "Simulation Results ({finish_time})"
 msgstr "Résultats de simulation ({finish_time})"
 
-#: gusnet/gusnet_processing/run_simulation.py:550
-#: gusnet/gusnet_processing/run_simulation.py:567
+#: gusnet/gusnet_processing/run_simulation.py:452
+#: gusnet/gusnet_processing/run_simulation.py:469
 msgid "Run Simulation"
 msgstr "Exécuter la simulation"
 
-#: gusnet/gusnet_processing/run_simulation.py:553
+#: gusnet/gusnet_processing/run_simulation.py:455
 msgid ""
 "\n"
 "This will take all of the model layers (junctions, tanks, reservoirs, "
@@ -2097,56 +2053,168 @@ msgstr ""
 "fichiers de sortie sont une couche de « nœuds » (jonctions, bassins, "
 "réservoirs) et une couche de « liens » (canalisations, vannes, pompes)."
 
-#: gusnet/gusnet_processing/run_simulation.py:577
+#: gusnet/gusnet_processing/run_simulation.py:479
 msgid "Verifying Dependencies"
 msgstr "Vérification des dépendances"
 
-#: gusnet/gusnet_processing/run_simulation.py:581
-#: gusnet/gusnet_processing/run_simulation.py:655
+#: gusnet/gusnet_processing/run_simulation.py:483
+#: gusnet/gusnet_processing/run_simulation.py:557
 msgid "Preparing Model"
 msgstr "Préparation du modèle"
 
-#: gusnet/gusnet_processing/run_simulation.py:588
+#: gusnet/gusnet_processing/run_simulation.py:490
 #, python-brace-format
 msgid "Using temporary folder: {folder}"
 msgstr "Utilisation du dossier temporaire : {folder}"
 
-#: gusnet/gusnet_processing/run_simulation.py:594
+#: gusnet/gusnet_processing/run_simulation.py:496
 msgid "Writing EPANET input file"
 msgstr "Écriture du fichier d'entrée EPANET"
 
-#: gusnet/gusnet_processing/run_simulation.py:597
+#: gusnet/gusnet_processing/run_simulation.py:499
 msgid "Run EPANET simulation"
 msgstr "Exécution de la simulation EPANET"
 
-#: gusnet/gusnet_processing/run_simulation.py:603
+#: gusnet/gusnet_processing/run_simulation.py:505
 msgid "Process results output file"
 msgstr "Traitement du fichier de sortie des résultats"
 
-#: gusnet/gusnet_processing/run_simulation.py:609
+#: gusnet/gusnet_processing/run_simulation.py:511
 msgid "Creating output layers"
 msgstr "Création des couches de sortie"
 
-#: gusnet/gusnet_processing/run_simulation.py:630
-#: gusnet/gusnet_processing/run_simulation.py:647
-msgid "Export Inp File"
-msgstr "Exporter le fichier Inp"
+#: gusnet/gusnet_processing/run_simulation.py:532
+msgid "Export to Epanet INP file"
+msgstr "Exporter vers un fichier Epanet INP"
 
-#: gusnet/gusnet_processing/run_simulation.py:634
-#, fuzzy
+#: gusnet/gusnet_processing/run_simulation.py:535
 msgid ""
+"\n"
 "This will take all of the model layers (junctions, tanks, reservoirs, "
-"pipes, valves, pumps),combine them with the chosen options, and produce "
-"an EPANET '.inp' file which can be run / viewed in other software."
+"pipes, valves, pumps), combine them with the chosen options, and produce "
+"an EPANET '.inp' file which can be run / viewed in other software.\n"
+"            "
 msgstr ""
 "Cela prend toutes les couches du modèle (jonctions, réservoirs, bassins, "
 "canalisations, vannes, pompes), les combine avec les options choisies, "
 "puis génère un fichier EPANET « .inp » qui peut être exécuté ou consulté "
 "dans d'autres logiciels."
 
-#: gusnet/gusnet_processing/run_simulation.py:644
+#: gusnet/gusnet_processing/run_simulation.py:546
 msgid "Output .inp file"
 msgstr "Fichier .inp de sortie"
 
+#: gusnet/gusnet_processing/run_simulation.py:549
+msgid "Export Inp File"
+msgstr "Exporter le fichier Inp"
+
 #~ msgid "%n hour(s)"
 #~ msgstr "%n heure"
+
+#~ msgid "Flow units for the model"
+#~ msgstr "Unités de débit du modèle"
+
+#~ msgid ""
+#~ "Flow units will determine the units "
+#~ "of other units used in the model"
+#~ " as well. Selecting a metric-based"
+#~ " unit set means everything will be"
+#~ " metric, wheras selecting an imperial "
+#~ "measure means everything will be "
+#~ "imperial."
+#~ msgstr ""
+#~ "Les unités de débit déterminent aussi"
+#~ " les unités des autres grandeurs du"
+#~ " modèle. En choisissant un système "
+#~ "métrique, tout sera en métrique ; "
+#~ "en choisissant un système impérial, tout"
+#~ " sera en impérial."
+
+#~ msgid "Formula to use for headloss calculations"
+#~ msgstr "Formule à utiliser pour les calculs de perte de charge"
+
+#~ msgid "Global multiplier for all demands in the model"
+#~ msgstr "Multiplicateur global pour toutes les demandes du modèle"
+
+#~ msgid "Default pattern to use for any pattern fields left blank"
+#~ msgstr "Motif par défaut à utiliser pour les champs de motif laissés vides"
+
+#~ msgid "Exponent for emitter calculations"
+#~ msgstr "Exposant pour les calculs d'émetteur"
+
+#~ msgid "Whether to model demands as fixed or pressure dependent"
+#~ msgstr ""
+#~ "Indique si les demandes sont modélisées"
+#~ " comme fixes ou dépendantes de la "
+#~ "pression"
+
+#~ msgid "Minimum pressure for pressure dependent demand calculations"
+#~ msgstr "Pression minimale pour les calculs de demande dépendante de la pression"
+
+#~ msgid "Required pressure for pressure dependent demand calculations"
+#~ msgstr "Pression requise pour les calculs de demande dépendante de la pression"
+
+#~ msgid "Exponent for pressure dependent demand calculations"
+#~ msgstr "Exposant pour les calculs de demande dépendante de la pression"
+
+#~ msgid "Price of energy per kW hour for energy calculations"
+#~ msgstr "Prix de l'énergie par kWh pour les calculs énergétiques"
+
+#~ msgid "Pattern of price multiplier to use for energy calculations"
+#~ msgstr ""
+#~ "Motif de multiplicateur de prix à "
+#~ "utiliser pour les calculs énergétiques"
+
+#~ msgid "Global efficiency of pumps for energy calculations - as a percentage"
+#~ msgstr ""
+#~ "Efficacité globale des pompes pour les"
+#~ " calculs énergétiques - en pourcentage"
+
+#~ msgid "Demand charge for energy calculations"
+#~ msgstr "Tarif de puissance pour les calculs énergétiques"
+
+#~ msgid "Mass unit to use for water quality analysis"
+#~ msgstr "Unité de masse à utiliser pour l'analyse de qualité de l'eau"
+
+#~ msgid "Relative diffusivity for water quality analysis"
+#~ msgstr "Diffusivité relative pour l'analyse de qualité de l'eau"
+
+#~ msgid "Node to track for trace analysis (if quality parameter is TRACE)"
+#~ msgstr ""
+#~ "Nœud à suivre pour l'analyse de "
+#~ "traceur (si le paramètre de qualité "
+#~ "est TRACE)"
+
+#~ msgid "Tolerance for water quality convergence in extended period simulations"
+#~ msgstr ""
+#~ "Tolérance de convergence de la qualité"
+#~ " de l'eau dans les simulations de "
+#~ "longue durée"
+
+#~ msgid "Order of the bulk reaction for water quality analysis"
+#~ msgstr "Ordre de la réaction en masse pour l'analyse de la qualité de l'eau"
+
+#~ msgid "Order of the wall reaction for water quality analysis"
+#~ msgstr "Ordre de la réaction de paroi pour l'analyse de la qualité de l'eau"
+
+#~ msgid ""
+#~ "Limiting concentration for water quality "
+#~ "analysis (concentration below which reactions"
+#~ " are assumed to stop)"
+#~ msgstr ""
+#~ "Concentration limite pour l'analyse de "
+#~ "la qualité de l'eau (concentration en"
+#~ " dessous de laquelle les réactions "
+#~ "sont supposées s'arrêter)"
+
+#~ msgid ""
+#~ "Correlation for calculating wall reaction "
+#~ "coefficient based on pipe diameter (if"
+#~ " 0, wall coefficient will be "
+#~ "constant)"
+#~ msgstr ""
+#~ "Corrélation pour calculer le coefficient "
+#~ "de réaction de paroi en fonction "
+#~ "du diamètre de la canalisation (si "
+#~ "0, le coefficient de paroi sera "
+#~ "constant)"

@@ -51,12 +51,10 @@ class ImportInp(CommonProcessingBase):
         return tr("Import from Epanet INP file")
 
     def shortHelpString(self):  # noqa N802
-        return tr("""
-            Import all junctions, tanks, reservoirs, pipes, pumps and valves from an EPANET inp file.
-            This will also save selected options from the .inp file.
-            All units will be converted into the unit set selected. If not selected, it will default \
-            to the unit set in the .inp file.
-            """)
+        return tr(
+            "Import all junctions, tanks, reservoirs, pipes, pumps and valves from an EPANET inp file. "
+            "This will also save selected options from the .inp file. "
+        )
 
     def icon(self):
         return QIcon(":images/themes/default/mActionFileOpen.svg")

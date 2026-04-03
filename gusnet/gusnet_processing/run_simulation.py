@@ -529,7 +529,7 @@ class ExportInpFile(_ModelCreatorAlgorithm):
         return "export"
 
     def displayName(self):  # noqa N802
-        return tr("Export Inp File")
+        return tr("Export to Epanet INP file")
 
     def shortHelpString(self):  # noqa N802
         return tr("""

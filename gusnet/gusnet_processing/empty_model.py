@@ -33,10 +33,10 @@ class TemplateLayers(CommonProcessingBase):
         return tr("Create Template Layers")
 
     def shortHelpString(self) -> str:  # noqa N802
-        return tr("""
-        This will create a set of 'template' layers, which you can use for building your model.
-        You do not need to create or use all layers if not required for your model.
-        """)
+        return tr(
+            "This will create a set of 'template' layers, which you can use for building your model. "
+            "You do not need to create or use all layers if not required for your model."
+        )
 
     def icon(self):
         return QIcon(":images/themes/default/mActionFileNew.svg")
