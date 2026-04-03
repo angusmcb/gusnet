@@ -84,8 +84,8 @@ def find_patterns(elements: Mapping[ModelLayer, Mapping], options: ModelOptions)
         patterns.append(options.default_pattern)
         first_pattern_name = 1
 
-    if options.energy_pattern:
-        patterns.append(options.energy_pattern)
+    if options.energy_price_pattern:
+        patterns.append(options.energy_price_pattern)
 
     for layer_dict in elements.values():
         for fieldname in layer_dict:
@@ -384,8 +384,8 @@ def inp_file_energy(
         f"GLOBAL EFFIC {options.energy_pump_efficiency}",
         f"DEMAND CHARGE {options.energy_demand_charge}",
     ]
-    if options.energy_pattern:
-        lines += [f"GLOBAL PATTERN {patterns[options.energy_pattern]}"]
+    if options.energy_price_pattern:
+        lines += [f"GLOBAL PATTERN {patterns[options.energy_price_pattern]}"]
 
     if pumps_dict is not None:
         if Field.ENERGY_PATTERN in pumps_dict:
@@ -462,9 +462,9 @@ def inp_file_options(options: ModelOptions, temp_hydraulics_file: os.PathLike | 
     trace_node = options.trace_node if options.quality_parameter is QualityParameter.TRACE else ""
 
     output = [
-        f"UNITS {options.flow_unit.value}",
+        f"UNITS {options.flow_units.value}",
         f"HEADLOSS {options.headloss_formula.value}",
-        f"DEMAND MODEL {options.demand_type.value}",
+        f"DEMAND MODEL {options.demand_model.value}",
         f"MINIMUM PRESSURE {options.minimum_pressure}",
         f"REQUIRED PRESSURE {options.required_pressure}",
         f"PRESSURE EXPONENT {options.pressure_exponent}",

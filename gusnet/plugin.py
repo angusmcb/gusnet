@@ -344,13 +344,9 @@ class RunAction(ProcessingRunnerAction):
 
         result_layers = {layer.results_name: TemporaryOutputLayerDefinition() for layer in ResultLayer}
 
-        self.set_success_message(saved_options.flow_unit, saved_options.headloss_formula)
+        self.set_success_message(saved_options.flow_units, saved_options.headloss_formula)
 
-        return {
-            **saved_params,
-            **result_layers,
-            **input_layers,
-        }
+        return {**saved_params, **result_layers, **input_layers}
 
     def set_success_message(self, units: FlowUnit, headloss_formula: HeadlossFormula) -> None:
         """Set the success message for this action."""

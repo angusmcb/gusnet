@@ -45,23 +45,22 @@ def wn():
 @pytest.fixture
 def opts():
     return ModelOptions(
-        flow_unit=FlowUnit.CFS,
+        flow_units=FlowUnit.CFS,
         headloss_formula=HeadlossFormula.DARCY_WEISBACH,
         simulation_duration=datetime.timedelta(hours=1.0),
         demand_multiplier=-2.0,
         default_pattern=Pattern([1.0, 0.0]),
         emitter_exponent=1.0,
-        demand_type=DemandType.PRESSURE_DEPENDENT,
+        demand_model=DemandType.PRESSURE_DEPENDENT,
         minimum_pressure=0.1,
         required_pressure=0.2,
         pressure_exponent=0.6,
-        energy_report=True,
         energy_price=0.1,
-        energy_pattern=Pattern([1, 2, 3]),
+        energy_price_pattern=Pattern([1, 2, 3]),
         energy_pump_efficiency=80.0,
         energy_demand_charge=2.0,
         quality_parameter=QualityParameter.CHEMICAL,
-        mass_unit=MassUnit.UG,
+        mass_units=MassUnit.UG,
         relative_diffusivity=1.1,
         trace_node="12",
         quality_tolerance=0.2,
@@ -98,17 +97,17 @@ def test_options_from_wn_reads_values(wn: wntr.network.WaterNetworkModel):
     # Call the function under test using the real object; let failures surface if code is incorrect
     opts = WntrWrapper(wn).options
 
-    assert opts.flow_unit is FlowUnit.GPM
+    assert opts.flow_units is FlowUnit.GPM
     assert opts.headloss_formula is HeadlossFormula.DARCY_WEISBACH
     assert opts.simulation_duration == datetime.timedelta(hours=3.0)
     assert pytest.approx(opts.demand_multiplier, rel=1e-6) == 1.5
     assert pytest.approx(opts.emitter_exponent, rel=1e-6) == 0.7
-    assert opts.demand_type is DemandType.PRESSURE_DEPENDENT
+    assert opts.demand_model is DemandType.PRESSURE_DEPENDENT
     assert pytest.approx(opts.minimum_pressure, rel=1e-6) == 6.5616797900  # CONVERSION
     assert pytest.approx(opts.required_pressure, rel=1e-6) == 13.1233595800  # CONVERSION
     assert pytest.approx(opts.pressure_exponent, rel=1e-6) == 1.2
     assert pytest.approx(opts.energy_price, rel=1e-6) == 0.11
-    assert opts.energy_pattern == Pattern([1, 2, 3])
+    assert opts.energy_price_pattern == Pattern([1, 2, 3])
     assert pytest.approx(opts.energy_pump_efficiency, rel=1e-6) == 0.9
     assert pytest.approx(opts.energy_demand_charge, rel=1e-6) == 5.0
 
@@ -117,13 +116,13 @@ def test_options_to_wn_writes_values(wn: wntr.network.WaterNetworkModel, opts: M
     WntrWrapper(wn).options = opts
 
     o = wn.options
-    assert o.hydraulic.inpfile_units == opts.flow_unit.name
+    assert o.hydraulic.inpfile_units == opts.flow_units.name
     assert o.hydraulic.headloss == opts.headloss_formula.value
     assert o.time.duration == int(opts.simulation_duration.total_seconds())
     assert pytest.approx(o.hydraulic.demand_multiplier, rel=1e-6) == opts.demand_multiplier
     assert pytest.approx(o.hydraulic.emitter_exponent, rel=1e-6) == opts.emitter_exponent
     # WNTR may represent demand model strings slightly differently; check for expected token
-    assert opts.demand_type.value in o.hydraulic.demand_model
+    assert opts.demand_model.value in o.hydraulic.demand_model
     assert pytest.approx(o.hydraulic.minimum_pressure, rel=1e-6) == opts.minimum_pressure / 3.28084
     assert pytest.approx(o.hydraulic.required_pressure, rel=1e-6) == opts.required_pressure / 3.28084
     assert pytest.approx(o.hydraulic.pressure_exponent, rel=1e-6) == opts.pressure_exponent
@@ -141,17 +140,17 @@ def test_options_round_trip(wn: wntr.network.WaterNetworkModel, opts: ModelOptio
     model.options = opts
     read_opts = model.options_from_wn()
 
-    assert read_opts.flow_unit is opts.flow_unit
+    assert read_opts.flow_units is opts.flow_units
     assert read_opts.headloss_formula is opts.headloss_formula
     assert read_opts.simulation_duration == opts.simulation_duration
     assert pytest.approx(read_opts.demand_multiplier, rel=1e-6) == opts.demand_multiplier
     assert pytest.approx(read_opts.emitter_exponent, rel=1e-6) == opts.emitter_exponent
-    assert read_opts.demand_type is opts.demand_type
+    assert read_opts.demand_model is opts.demand_model
     assert pytest.approx(read_opts.minimum_pressure, rel=1e-6) == opts.minimum_pressure
     assert pytest.approx(read_opts.required_pressure, rel=1e-6) == opts.required_pressure
     assert pytest.approx(read_opts.pressure_exponent, rel=1e-6) == opts.pressure_exponent
     assert pytest.approx(read_opts.energy_price, rel=1e-6) == opts.energy_price
-    assert read_opts.energy_pattern == opts.energy_pattern
+    assert read_opts.energy_price_pattern == opts.energy_price_pattern
     assert pytest.approx(read_opts.energy_pump_efficiency, rel=1e-6) == opts.energy_pump_efficiency
     assert pytest.approx(read_opts.energy_demand_charge, rel=1e-6) == opts.energy_demand_charge
 
@@ -176,28 +175,28 @@ def test_headloss_mappings(headloss, wn: wntr.network.WaterNetworkModel):
 def test_flowunit_mappings(flow_unit, wn: wntr.network.WaterNetworkModel):
     """Ensure all FlowUnit enum members round-trip through the wn options."""
 
-    opts = dataclasses.replace(DEFAULT_OPTIONS, flow_unit=flow_unit)
+    opts = dataclasses.replace(DEFAULT_OPTIONS, flow_units=flow_unit)
     model = WntrWrapper(wn)
     model.options = opts
 
     read_opts = model.options_from_wn()
 
     assert opts == read_opts
-    assert read_opts.flow_unit is flow_unit
+    assert read_opts.flow_units is flow_unit
 
 
 @pytest.mark.parametrize("demand", list(DemandType))
 def test_demandtype_mappings(demand, wn: wntr.network.WaterNetworkModel):
     """Ensure all DemandType enum members round-trip through the wn options."""
 
-    opts = dataclasses.replace(DEFAULT_OPTIONS, demand_type=demand)
+    opts = dataclasses.replace(DEFAULT_OPTIONS, demand_model=demand)
     model = WntrWrapper(wn)
     model.options = opts
 
     read_opts = model.options_from_wn()
 
     assert opts == read_opts
-    assert read_opts.demand_type is demand
+    assert read_opts.demand_model is demand
 
 
 def test_wn_defaults(wn: wntr.network.WaterNetworkModel):

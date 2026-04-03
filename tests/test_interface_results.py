@@ -234,7 +234,7 @@ def test_real_converter_flow_conversion_single_period():
     model._converter = Converter(
         FlowUnit.GPM,
         model.options.headloss_formula,
-        model.options.mass_unit,
+        model.options.mass_units,
         model.options.wall_reaction_order,
     )
 
@@ -271,7 +271,7 @@ def test_real_converter_flow_conversion_multi_period():
     model._converter = Converter(
         FlowUnit.GPM,
         model.options.headloss_formula,
-        model.options.mass_unit,
+        model.options.mass_units,
         model.options.wall_reaction_order,
     )
 

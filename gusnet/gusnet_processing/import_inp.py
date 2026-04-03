@@ -124,7 +124,7 @@ class ImportInp(CommonProcessingBase):
 
             feedback.pushInfo(
                 tr("Will output with the following units: {flow_unit}").format(
-                    flow_unit=model.options.flow_unit.friendly_name
+                    flow_unit=model.options.flow_units.friendly_name
                 )
             )
 

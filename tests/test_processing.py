@@ -117,9 +117,9 @@ def run_alg_params(import_layers, duration, units, headloss_formula):
         "RESULT_NODES": "TEMPORARY_OUTPUT",
         "RESULT_LINKS": "TEMPORARY_OUTPUT",
         "OUTPUT_INP": "TEMPORARY_OUTPUT",
-        "UNITS": units,
+        "FLOW_UNIT": units,
         "HEADLOSS_FORMULA": headloss_formula,
-        "DURATION": duration,
+        "SIMULATION_DURATION": duration,
         **import_layers,
     }
 
@@ -395,9 +395,9 @@ def test_run_link_fields(run_result):
 
 
 def test_run_negative_duration(processing, run_alg_params):
-    run_alg_params["DURATION"] = -1
+    run_alg_params["SIMULATION_DURATION"] = -1
 
-    with pytest.raises(QgsProcessingException, match="Incorrect parameter value for DURATION"):
+    with pytest.raises(QgsProcessingException, match="Incorrect parameter value for SIMULATION_DURATION"):
         processing.run(RunSimulation().create(), run_alg_params)
 
 

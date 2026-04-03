@@ -13,7 +13,7 @@ import sys
 from abc import abstractmethod
 from collections.abc import Collection, Mapping
 from enum import Enum, Flag, auto
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from qgis.core import Qgis, QgsProcessing
 
@@ -774,59 +774,234 @@ class Field(StrEnum):
         raise ValueError  # pragma: no cover
 
 
+class OptionsFieldMetadata(TypedDict, total=False):
+    description: str
+    advanced: bool
+    minimum: float
+    maximum: float
+    decimals: int
+    help_text: str
+
+
 @dataclasses.dataclass(frozen=True)
 class ModelOptions:
-    flow_unit: FlowUnit
-    headloss_formula: HeadlossFormula
+    """A frozen dataclass that stores the set of options that will be used for the model."""
 
-    simulation_duration: datetime.timedelta
-    demand_multiplier: float
-    default_pattern: Pattern
-    emitter_exponent: float
+    flow_units: FlowUnit = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Flow units for the model"),
+            help_text=tr(
+                "Flow units will determine the units of other units used in the model as well."
+                "Selecting a metric-based unit set means everything will be metric, wheras selecting an imperial measure means everything will be imperial."  # noqa: E501
+            ),
+        )
+    )
 
-    demand_type: DemandType
-    minimum_pressure: float
-    required_pressure: float
-    pressure_exponent: float
+    headloss_formula: HeadlossFormula = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Formula to use for headloss calculations"),
+        )
+    )
 
-    energy_report: bool
-    energy_price: float
-    energy_pattern: Pattern
-    energy_pump_efficiency: float
-    energy_demand_charge: float
+    simulation_duration: datetime.timedelta = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Duration of the simulation in hours (or 0 for single period)"),
+            minimum=0,
+            decimals=2,
+        )
+    )
 
-    quality_parameter: QualityParameter
-    mass_unit: MassUnit
-    relative_diffusivity: float
-    trace_node: str
-    quality_tolerance: float
+    demand_multiplier: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Global multiplier for all demands in the model"),
+            decimals=3,
+            minimum=0.001,
+            advanced=True,
+        )
+    )
 
-    bulk_reaction_order: float
-    wall_reaction_order: WallReactionOrder
-    global_bulk_coefficient: float
-    global_wall_coefficient: float
-    limiting_concentration: float
-    wall_coefficient_correlation: float
+    default_pattern: Pattern = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Default pattern to use for any pattern fields left blank"),
+            advanced=True,
+        )
+    )
+
+    emitter_exponent: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Exponent for emitter calculations"),
+            decimals=3,
+            minimum=0.001,
+            advanced=True,
+        )
+    )
+
+    ### FOR PRESSURE DEPENDENT DEMANDS
+
+    demand_model: DemandType = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Whether to model demands as fixed or pressure dependent"),
+            advanced=True,
+        )
+    )
+    minimum_pressure: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Minimum pressure for pressure dependent demand calculations"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+    required_pressure: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Required pressure for pressure dependent demand calculations"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+    pressure_exponent: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Exponent for pressure dependent demand calculations"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+
+    ### FOR ENERGY REPORTING
+
+    # energy_report: bool = dataclasses.field(
+    #     metadata=OptionsFieldMetadata(
+    #         description=tr("Whether to generate an energy report"),
+    #         advanced=True,
+    #     )
+    # )
+    energy_price: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Price of energy per kW hour for energy calculations"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+    energy_price_pattern: Pattern = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Pattern of price multiplier to use for energy calculations"),
+            advanced=True,
+        )
+    )
+    energy_pump_efficiency: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Global efficiency of pumps for energy calculations - as a percentage"),
+            decimals=1,
+            advanced=True,
+        )
+    )
+    energy_demand_charge: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Demand charge for energy calculations"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+
+    ### FOR WATER QUALITY
+
+    quality_parameter: QualityParameter = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Type of water quality analysis to do"),
+            advanced=True,
+        )
+    )
+    mass_units: MassUnit = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Mass unit to use for water quality analysis"),
+            advanced=True,
+        )
+    )
+    relative_diffusivity: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Relative diffusivity for water quality analysis"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+    trace_node: str = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Node to track for trace analysis (if quality parameter is TRACE)"),
+            advanced=True,
+        )
+    )
+    quality_tolerance: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Tolerance for water quality convergence in extended period simulations"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+
+    bulk_reaction_order: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Order of the bulk reaction for water quality analysis"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+    wall_reaction_order: WallReactionOrder = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Order of the wall reaction for water quality analysis"),
+            advanced=True,
+        )
+    )
+    global_bulk_coefficient: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Global bulk coefficient for water quality analysis"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+    global_wall_coefficient: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr("Global wall coefficient for water quality analysis"),
+            decimals=2,
+            advanced=True,
+        )
+    )
+
+    limiting_concentration: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr(
+                "Limiting concentration for water quality analysis (concentration below which reactions are assumed to stop)"  # noqa: E501
+            ),
+            decimals=2,
+            advanced=True,
+        )
+    )
+    wall_coefficient_correlation: float = dataclasses.field(
+        metadata=OptionsFieldMetadata(
+            description=tr(
+                "Correlation for calculating wall reaction coefficient based on pipe diameter (if 0, wall coefficient will be constant)"  # noqa: E501
+            ),
+            decimals=2,
+            advanced=True,
+        )
+    )
 
 
 DEFAULT_OPTIONS = ModelOptions(
-    flow_unit=FlowUnit.LPS,
+    flow_units=FlowUnit.LPS,
     headloss_formula=HeadlossFormula.HAZEN_WILLIAMS,
     simulation_duration=datetime.timedelta(0),
     demand_multiplier=1.0,
     default_pattern=Pattern(),
     emitter_exponent=0.5,
-    demand_type=DemandType.FIXED,
+    demand_model=DemandType.FIXED,
     minimum_pressure=0.0,
     required_pressure=0.1,
     pressure_exponent=0.5,
-    energy_report=False,
     energy_price=0.0,
-    energy_pattern=Pattern(),
+    energy_price_pattern=Pattern(),
     energy_pump_efficiency=75.0,
     energy_demand_charge=0.0,
     quality_parameter=QualityParameter.NONE,
-    mass_unit=MassUnit.MG,
+    mass_units=MassUnit.MG,
     relative_diffusivity=1.0,
     trace_node="",
     quality_tolerance=0.01,
