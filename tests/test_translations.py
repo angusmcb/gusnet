@@ -11,6 +11,8 @@ def locale():
 @pytest.fixture
 def translator(locale):
     set_locale(locale)
+    yield
+    set_locale(None)
     return
 
 
@@ -69,8 +71,7 @@ def test_numerus_translation_pipes(num_pipes, expected_message, translator):
         ("ar", "تشغيل المحاكاة"),
     ],
 )
-def test_run_simulation_translation(locale, expected_message):
-    set_locale(locale)
+def test_run_simulation_translation(translator, expected_message):
     translated_message = tr("Run Simulation")
 
     assert translated_message == expected_message
