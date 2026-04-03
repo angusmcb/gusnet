@@ -1,7 +1,6 @@
 __all__ = ["examples", "from_inp", "from_wntr", "from_wntr", "to_wntr"]
 
 import configparser
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -9,16 +8,14 @@ from qgis.core import QgsSettings
 from qgis.PyQt import QtCore
 from qgis.PyQt.QtCore import QLocale
 
-from gusnet.api import from_inp, from_wntr, to_wntr
-from gusnet.dependencies import PACKAGE_DIRECTORY
 from gusnet.i18n import set_locale
+
+set_locale(QgsSettings().value("locale/userLocale", QLocale().name()))
+
+from gusnet.api import from_inp, from_wntr, to_wntr  # noqa: E402
 
 if TYPE_CHECKING:  # pragma: no cover
     from qgis.gui import QgisInterface
-
-
-if PACKAGE_DIRECTORY not in sys.path:
-    sys.path.append(str(PACKAGE_DIRECTORY))
 
 
 _cp = configparser.ConfigParser()
@@ -27,9 +24,6 @@ with _metadata_path.open("r", encoding="utf8") as f:
     _cp.read_file(f)
 
 __version__ = _cp.get("general", "version")
-
-
-set_locale(QgsSettings().value("locale/userLocale", QLocale().name()))
 
 
 def _inp_path(example_name: str) -> str:
