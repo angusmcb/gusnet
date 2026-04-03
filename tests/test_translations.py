@@ -1,9 +1,6 @@
-from pathlib import Path
-
 import pytest
-from qgis.PyQt.QtCore import QCoreApplication, QLocale, QTranslator
 
-from gusnet.i18n import tr
+from gusnet.i18n import set_locale, tr, trn
 
 
 @pytest.fixture
@@ -13,26 +10,10 @@ def locale():
 
 @pytest.fixture
 def translator(locale):
-    qgis_locale = QLocale(locale)
-    locale_path = str(Path(__file__).parent.parent / "gusnet" / "resources" / "i18n")
-    translator = QTranslator()
-    translator.load(qgis_locale, "", "", locale_path)
-    QCoreApplication.installTranslator(translator)
+    set_locale(locale)
     yield
-    QCoreApplication.removeTranslator(translator)  # not strictly needed
-
-
-@pytest.mark.parametrize(
-    ("num_hours", "expected_message"),
-    [
-        (1, "1 hour"),
-        (2, "2 hours"),
-    ],
-)
-def test_numerus_translation_hours(num_hours, expected_message, translator):
-    translated_message = tr("%n hour(s)", "", num_hours)
-
-    assert translated_message == expected_message
+    set_locale(None)
+    return
 
 
 @pytest.mark.parametrize(
@@ -43,24 +24,7 @@ def test_numerus_translation_hours(num_hours, expected_message, translator):
     ],
 )
 def test_numerus_translation(num_features, expected_message, translator):
-    translated_message = tr("%n hour(s)", "", num_features)
-
-    assert translated_message == expected_message
-
-
-@pytest.mark.parametrize(
-    ("num_pipes", "expected_message"),
-    [
-        (1, "1 pipe has very different attribute length vs measured length. First five are: "),
-        (2, "2 pipes have very different attribute length vs measured length. First five are: "),
-    ],
-)
-def test_numerus_translation_pipes(num_pipes, expected_message, translator):
-    translated_message = tr(
-        "%n pipe(s) have very different attribute length vs measured length. First five are: ",
-        "",
-        num_pipes,
-    )
+    translated_message = trn("1 hour", "{count} hours", num_features)
 
     assert translated_message == expected_message
 

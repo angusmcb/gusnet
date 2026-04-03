@@ -1,5 +1,6 @@
 # Debugging
 debugpy
+Babel
 
 # Dependency maintenance
 pip-tools
@@ -29,3 +30,4 @@ myst-parser
 livereload
 sphinx-toolbox
 enum-tools
+qt

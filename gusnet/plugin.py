@@ -22,7 +22,7 @@ from qgis.core import (
     QgsSettings,
 )
 from qgis.gui import QgisInterface, QgsLayerTreeViewIndicator, QgsProjectionSelectionDialog
-from qgis.PyQt.QtCore import QCoreApplication, QLocale, QObject, QSettings, QTranslator, pyqtSlot
+from qgis.PyQt.QtCore import QObject, QSettings, pyqtSlot
 
 # from qgis.processing import execAlgorithmDialog for qgis 3.40 onwards
 from qgis.PyQt.QtGui import QIcon, QPainter
@@ -45,7 +45,7 @@ from gusnet.gusnet_processing.empty_model import TemplateLayers
 from gusnet.gusnet_processing.import_inp import ImportInp
 from gusnet.gusnet_processing.provider import Provider
 from gusnet.gusnet_processing.run_simulation import RunSimulation
-from gusnet.i18n import tr
+from gusnet.i18n import tr, trn
 from gusnet.settings import ProjectSettings, SettingKey
 
 MESSAGE_CATEGORY = "Gusnet"
@@ -63,17 +63,7 @@ class Plugin:
     def __init__(self) -> None:
         self.object = QWidget()
 
-        self.init_translation()
-
         self.menu = tr("Gusnet")
-
-    def init_translation(self):
-        lang_code = QSettings().value("locale/userLocale", "en")
-        qgis_locale = QLocale(lang_code)
-        locale_path = str(Path(__file__).parent / "resources" / "i18n")
-        translator = QTranslator(self.object)
-        translator.load(qgis_locale, "", "", locale_path)
-        QCoreApplication.installTranslator(translator)
 
     def initProcessing(self):  # noqa N802
         self.provider = Provider()
@@ -683,12 +673,12 @@ class DurationSettingMenu(SettingMenu):
         self.setup_action(0, tr("Single period simulation"))
 
         for hour in range(1, 25):
-            self.setup_action(hour, tr("%n hour(s)", "", hour))
+            self.setup_action(hour, trn("1 hour", "{count} hours", count=hour))
 
     def update_checked(self):
         current_duration = math.floor(ProjectSettings().get(SettingKey.SIMULATION_DURATION, 0))
 
         if current_duration not in self.actions:
-            self.setup_action(current_duration, tr("%n hour(s)", "", current_duration))
+            self.setup_action(current_duration, trn("1 hour", "{count} hours", count=current_duration))
 
         self.actions[current_duration].setChecked(True)

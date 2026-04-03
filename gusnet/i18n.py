@@ -1,22 +1,41 @@
-from qgis.PyQt.QtWidgets import QApplication
+from __future__ import annotations
+
+import gettext
+from pathlib import Path
+
+DOMAIN = "gusnet"
+LOCALE_DIR = Path(__file__).resolve().parent / "resources" / "i18n"
+
+_translation: gettext.NullTranslations = gettext.NullTranslations()
 
 
-def tr(
-    text: str,
-    disambiguation: str = "",
-    n=-1,
-    context: str = "@default",
-) -> str:
-    """Get the translation for a string using Qt translation API.
+def _normalize_languages(lang_code: str) -> list[str]:
+    primary = lang_code.lower().strip().split(".")[0].replace("-", "_")
+    short = primary.split("_")[0]
+    if primary == short:
+        return [primary]
+    return [primary, short]
 
-    We implement this ourselves since we do not inherit QObject.
 
-    :param text: String for translation.
-    :param args: arguments to use in formatting.
-    :param context: Context of the translation.
-    :param kwargs: keyword arguments to use in formatting.
+def set_locale(lang_code: str | None) -> None:
+    """Load gettext catalog for the given locale code."""
+    global _translation
 
-    :returns: Translated version of message.
-    """
-    # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-    return QApplication.translate(context, text, disambiguation, n)
+    _translation = gettext.translation(
+        DOMAIN,
+        localedir=str(LOCALE_DIR),
+        languages=_normalize_languages(lang_code or "en"),
+        fallback=True,
+    )
+
+
+def tr(text: str) -> str:
+    """Get translated text from gettext catalogs."""
+
+    return _translation.gettext(text)
+
+
+def trn(singular: str, plural: str, count: int, **kwargs) -> str:
+    """Get translated text with pluralization from gettext catalogs."""
+
+    return _translation.ngettext(singular, plural, count).format(count=count, **kwargs)

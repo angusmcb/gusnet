@@ -22,7 +22,7 @@ from qgis.core import (
 )
 
 from gusnet.elements import CurveType, Field, FlowUnit, ModelLayer, Parameter, SimpleFieldType
-from gusnet.i18n import tr
+from gusnet.i18n import tr, trn
 from gusnet.network import Network
 from gusnet.pattern_curve import Curve, Pattern
 from gusnet.profiler import profile
@@ -292,11 +292,12 @@ def _mismatch_warning(names: list, calculated_lengths: list, attribute_lengths: 
 
     mismatch_string = ", ".join(mismatch_string_list) + ("..." if len(mismatch) > 5 else "")
 
-    msg = tr(
-        "%n pipe(s) have very different attribute length vs measured length. This is pipe(s): {mismatches}",
-        "",
-        len(mismatch),
-    ).format(mismatches=mismatch_string)
+    msg = trn(
+        "A pipe has a different attribute length vs measured length. This is pipe: {mismatches}",
+        "{count} pipes have very different attribute length vs measured length. These are pipes: {mismatches}",
+        count=len(mismatch),
+        mismatches=mismatch_string,
+    )
 
     logger.warning(msg)
 
@@ -387,9 +388,9 @@ class ReadFeatureError(Exception):
 class PipeMeasuringError(ReadFeatureError):
     def __init__(self, number_of_problems: int):
         super().__init__(
-            tr(
-                "cannot calculate length of %n pipe(s) (probably due to a problem with the selected coordinate reference system)",  # noqa: E501
-                "",
+            trn(
+                "cannot calculate length of 1 pipe (probably due to a problem with the selected coordinate reference system)",  # noqa: E501
+                "cannot calculate length of {count} pipes (probably due to a problem with the selected coordinate reference system)",  # noqa: E501
                 number_of_problems,
             )
         )

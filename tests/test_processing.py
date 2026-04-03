@@ -417,7 +417,7 @@ def test_epanet_warning(run_result, feedback):
 
 @pytest.mark.parametrize("inp", ["single_pipe_warning.inp"])
 def test_pipe_length_warning(run_result, feedback):
-    expected_warning = r"1 pipe.*1000 metres vs 3618 metres"
+    expected_warning = r"A pipe.*1000 metres vs 3618 metres"
 
     assert any(re.search(expected_warning, s) for s in feedback.warnings), list(feedback.warnings)
 

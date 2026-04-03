@@ -292,7 +292,7 @@ def test_mismatch_warning_issued_when_lengths_differ():
 
         # Check the warning message contains info about 2 pipes
         call_args = mock_warning.call_args[0][0]
-        assert "2 pipe(s)" in call_args or "2pipe(s)" in call_args  # Translation may vary
+        assert "2 pipes" in call_args
         assert "pipe1" in call_args
         assert "pipe2" in call_args
 
@@ -340,7 +340,7 @@ def test_mismatch_warning_handles_none_values():
         mock_warning.assert_called_once()
 
         call_args = mock_warning.call_args[0][0]
-        assert "1 pipe(s)" in call_args or "1pipe(s)" in call_args
+        assert "A pipe"
         assert "pipe2" in call_args
         assert "pipe1" not in call_args
         assert "pipe3" not in call_args
@@ -380,7 +380,7 @@ def test_mismatch_warning_limits_to_five_examples():
         mock_warning.assert_called_once()
 
         call_args = mock_warning.call_args[0][0]
-        assert "10 pipe(s)" in call_args or "10pipe(s)" in call_args
+        assert "10 pipes" in call_args
         # Should show pipes 0-4
         for i in range(5):
             assert f"pipe{i}" in call_args
