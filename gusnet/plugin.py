@@ -478,11 +478,11 @@ class ProcessingFeedbackWithLogging(QgsProcessingFeedback):
     def simple_text_log(self) -> str:
         log = ""
         if self.errors:
-            log += tr("Errors:\n") + "\n".join(self.errors) + "\n\n"
+            log += tr("Errors:") + "\n" + "\n".join(self.errors) + "\n\n"
         if self.warnings:
-            log += tr("Warnings:\n") + "\n".join(self.warnings) + "\n\n"
+            log += tr("Warnings:") + "\n" + "\n".join(self.warnings) + "\n\n"
         if self.info:
-            log += tr("Info:\n") + "\n".join(self.info) + "\n\n"
+            log += "\n".join(self.info) + "\n\n"
 
         return log
 
