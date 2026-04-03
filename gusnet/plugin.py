@@ -5,6 +5,7 @@ import math
 import typing
 from pathlib import Path
 
+import qgis.utils
 from qgis.core import (
     Qgis,
     QgsApplication,
@@ -35,7 +36,6 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
     QWidget,
 )
-from qgis.utils import iface
 
 import gusnet
 import gusnet.expressions
@@ -54,7 +54,7 @@ VERSION_SETTING = "gusnet/version"
 
 LOGO_ICON = QIcon("gusnet:logo.svg")
 
-iface = typing.cast(QgisInterface, iface)
+iface = typing.cast(QgisInterface, qgis.utils.iface)
 
 
 class Plugin:
