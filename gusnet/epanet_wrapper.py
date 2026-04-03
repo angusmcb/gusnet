@@ -267,7 +267,9 @@ class EpanetError(EpanetWrapperError):
 
         error_text = get_epanet_error_message(errcode)
 
-        super().__init__(f"Error from EPANET. {error_text}")
+        super().__init__(
+            tr("Error from EPANET - {errcode} - {error_text}").format(error_text=error_text, errcode=errcode)
+        )
 
 
 class EpanetNotFoundError(EpanetWrapperError):
