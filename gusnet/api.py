@@ -65,7 +65,7 @@ def from_wntr(
     if not units:
         logger.warning(
             tr("No units specified. Will use the value from wn: {units_friendly_name}").format(
-                units_friendly_name=options.flow_unit.friendly_name
+                units_friendly_name=options.flow_units.friendly_name
             )
         )
 
@@ -200,7 +200,7 @@ def to_wntr(
 
         wntr_wrapper = WntrWrapper(wn)
 
-        options = dataclasses.replace(wntr_wrapper.options, flow_unit=unit)
+        options = dataclasses.replace(wntr_wrapper.options, flow_units=unit)
 
     else:
         if not headloss_formula:
@@ -209,7 +209,7 @@ def to_wntr(
 
         headloss_formula_enum = HeadlossFormula(headloss_formula.upper())
 
-        options = dataclasses.replace(DEFAULT_OPTIONS, headloss_formula=headloss_formula_enum, flow_unit=unit)
+        options = dataclasses.replace(DEFAULT_OPTIONS, headloss_formula=headloss_formula_enum, flow_units=unit)
 
         wn = wntr.network.WaterNetworkModel()
 

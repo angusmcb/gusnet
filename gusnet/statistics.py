@@ -23,7 +23,7 @@ class ModelStatistics:
     @classmethod
     def from_model(cls, model: Model) -> "ModelStatistics":
         pipe_length = math.fsum(model.attributes.get(ModelLayer.PIPES, {}).get(Field.LENGTH, []))
-        if model.options.flow_unit.is_traditional:
+        if model.options.flow_units.is_traditional:
             pipe_length_str = f"{pipe_length:.0f} ft" if pipe_length < 5280 else f"{pipe_length / 5280:.2f} miles"
         else:
             pipe_length_str = f"{pipe_length:.0f} m" if pipe_length < 1000 else f"{pipe_length / 1000:.2f} km"

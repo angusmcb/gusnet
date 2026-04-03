@@ -541,7 +541,7 @@ class WntrWrapper:
         converter = Converter(flow_unit, headloss_formula, mass_unit)
 
         return ModelOptions(
-            flow_unit=flow_unit,
+            flow_units=flow_unit,
             headloss_formula=headloss_formula,
             simulation_duration=datetime.timedelta(seconds=o.time.duration),
             demand_multiplier=o.hydraulic.demand_multiplier,
@@ -549,17 +549,16 @@ class WntrWrapper:
             if o.hydraulic.pattern in self.wn.pattern_name_list
             else Pattern(),
             emitter_exponent=o.hydraulic.emitter_exponent,
-            demand_type=DemandType(o.hydraulic.demand_model),
+            demand_model=DemandType(o.hydraulic.demand_model),
             minimum_pressure=converter.from_si(o.hydraulic.minimum_pressure, Parameter.HYDRAULIC_HEAD),
             required_pressure=converter.from_si(o.hydraulic.required_pressure, Parameter.HYDRAULIC_HEAD),
             pressure_exponent=o.hydraulic.pressure_exponent,
-            energy_report=str(o.report.energy).upper() == "YES",
             energy_price=float(o.energy.global_price),
-            energy_pattern=self.get_pattern(o.energy.global_pattern),
+            energy_price_pattern=self.get_pattern(o.energy.global_pattern),
             energy_pump_efficiency=float(o.energy.global_efficiency or 75),  # hacky fix
             energy_demand_charge=float(o.energy.demand_charge or 0.0),
             quality_parameter=QualityParameter(o.quality.parameter),
-            mass_unit=mass_unit,
+            mass_units=mass_unit,
             relative_diffusivity=o.quality.diffusivity,
             trace_node=(o.quality.trace_node or ""),
             quality_tolerance=o.quality.tolerance,
@@ -584,22 +583,21 @@ class WntrWrapper:
             )
             o.hydraulic.headloss = options.headloss_formula.value
 
-        o.hydraulic.inpfile_units = options.flow_unit.value
+        o.hydraulic.inpfile_units = options.flow_units.value
         o.time.duration = int(options.simulation_duration.total_seconds())
         o.hydraulic.demand_multiplier = options.demand_multiplier
         o.hydraulic.pattern = self.add_pattern(options.default_pattern) or "1"
         o.hydraulic.emitter_exponent = options.emitter_exponent
-        o.hydraulic.demand_model = options.demand_type.value
+        o.hydraulic.demand_model = options.demand_model.value
         o.hydraulic.minimum_pressure = converter.to_si(options.minimum_pressure, Parameter.HYDRAULIC_HEAD)
         o.hydraulic.required_pressure = converter.to_si(options.required_pressure, Parameter.HYDRAULIC_HEAD)
         o.hydraulic.pressure_exponent = options.pressure_exponent
-        o.report.energy = "YES" if options.energy_report else "NO"
         o.energy.global_price = options.energy_price
-        o.energy.global_pattern = self.add_pattern(options.energy_pattern)
+        o.energy.global_pattern = self.add_pattern(options.energy_price_pattern)
         o.energy.global_efficiency = options.energy_pump_efficiency
         o.energy.demand_charge = options.energy_demand_charge
         o.quality.parameter = options.quality_parameter.value
-        o.quality.inpfile_units = options.mass_unit.value
+        o.quality.inpfile_units = options.mass_units.value
         o.quality.diffusivity = options.relative_diffusivity
         o.quality.trace_node = options.trace_node or None
         o.quality.tolerance = options.quality_tolerance
@@ -780,8 +778,7 @@ def _get_field_groups(options: ModelOptions) -> FieldGroup:
     if options.quality_parameter is not QualityParameter.NONE:
         field_groups = field_groups | FieldGroup.WATER_QUALITY_ANALYSIS
 
-    if options.energy_report:
-        field_groups = field_groups | FieldGroup.ENERGY
+    field_groups = field_groups | FieldGroup.ENERGY
 
     return field_groups
 

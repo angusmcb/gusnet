@@ -90,8 +90,8 @@ def get_qgs_fields_from_options(options: ModelOptions, layer: ModelLayer | Resul
     if options.quality_parameter is not QualityParameter.NONE:
         field_groups = field_groups | FieldGroup.WATER_QUALITY_ANALYSIS
 
-    if options.energy_report:
-        field_groups = field_groups | FieldGroup.ENERGY
+    # if options.energy_report:
+    field_groups = field_groups | FieldGroup.ENERGY
 
     if layer:
         fields = [field for field in layer.wq_fields() if field.field_group & field_groups]

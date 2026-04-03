@@ -20,23 +20,22 @@ def test_save_options_and_load_roundtrip(qgis_new_project):
     settings = ProjectSettings(project=QgsProject.instance())
 
     options = ModelOptions(
-        flow_unit=FlowUnit.CFS,
+        flow_units=FlowUnit.CFS,
         headloss_formula=HeadlossFormula.DARCY_WEISBACH,
         simulation_duration=datetime.timedelta(hours=5),
         demand_multiplier=-2.0,
         default_pattern=Pattern([3, 2, 1]),
         emitter_exponent=1.0,
-        demand_type=DemandType.PRESSURE_DEPENDENT,
+        demand_model=DemandType.PRESSURE_DEPENDENT,
         minimum_pressure=0.1,
         required_pressure=0.2,
         pressure_exponent=0.6,
-        energy_report=True,
         energy_price=0.1,
-        energy_pattern=Pattern([1, 2, 3]),
+        energy_price_pattern=Pattern([1, 2, 3]),
         energy_pump_efficiency=80.0,
         energy_demand_charge=2.0,
         quality_parameter=QualityParameter.CHEMICAL,
-        mass_unit=MassUnit.UG,
+        mass_units=MassUnit.UG,
         relative_diffusivity=1.1,
         trace_node="12",
         quality_tolerance=0.2,
@@ -60,16 +59,16 @@ def test_save_options_and_load_roundtrip(qgis_new_project):
 def test_load_options_partial_values_use_defaults(qgis_new_project):
     # only set flow_unit variable directly in project scope
     # save the enum as save_options would (enum.value)
-    QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), "gusnet_flow_unit", FlowUnit.GPM.value)
+    QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), "gusnet_flow_units", FlowUnit.GPM.value)
 
     settings = ProjectSettings()
     loaded = settings.load_options()
 
-    assert loaded.flow_unit == FlowUnit.GPM
+    assert loaded.flow_units == FlowUnit.GPM
     # other fields should be defaults from ModelOptions
     defaults = DEFAULT_OPTIONS
     assert loaded.headloss_formula == defaults.headloss_formula
-    assert loaded.demand_type == defaults.demand_type
+    assert loaded.demand_model == defaults.demand_model
     assert loaded.emitter_exponent == defaults.emitter_exponent
     assert loaded.minimum_pressure == defaults.minimum_pressure
     assert loaded.required_pressure == defaults.required_pressure

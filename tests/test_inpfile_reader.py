@@ -112,8 +112,8 @@ PATTERN PATTERN2
     model = read_inp_file(file)
 
     assert model.options.headloss_formula == HeadlossFormula.DARCY_WEISBACH
-    assert model.options.flow_unit.name == "CFS"
-    assert model.options.demand_type.name == "PRESSURE_DEPENDENT"
+    assert model.options.flow_units.name == "CFS"
+    assert model.options.demand_model.name == "PRESSURE_DEPENDENT"
     assert model.options.quality_parameter.name == "CHEMICAL"
     assert model.options.default_pattern == Pattern((1.0, 0.5, 0.5, 1.0))
 

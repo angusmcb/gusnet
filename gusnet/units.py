@@ -27,7 +27,7 @@ class _UnitBase:
 
     @classmethod
     def from_options(cls, options: ModelOptions):
-        return cls(options.flow_unit, options.headloss_formula, options.mass_unit, options.wall_reaction_order)
+        return cls(options.flow_units, options.headloss_formula, options.mass_units, options.wall_reaction_order)
 
 
 @dataclasses.dataclass()

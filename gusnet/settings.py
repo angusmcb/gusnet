@@ -15,6 +15,13 @@ from gusnet.pattern_curve import Pattern
 
 logger = logging.getLogger(__name__)
 
+LEGACY_OPTION_NAMES = {
+    "flow_units": "flow_unit",
+    "demand_type": "demand_model",
+    "energy_pattern": "energy_price_pattern",
+    "mass_unit": "mass_units",
+}
+
 
 class SettingKey(str, Enum):
     """Enum of values that can be stored in project settings"""
@@ -128,7 +135,12 @@ class ProjectSettings:
             value = expression_context.variable(self.SETTING_PREFIX + field.name)
 
             if value is None:
-                continue
+                if field.name in LEGACY_OPTION_NAMES:
+                    legacy_name = LEGACY_OPTION_NAMES[field.name]
+                    value = expression_context.variable(self.SETTING_PREFIX + legacy_name)
+
+                if value is None:
+                    continue
 
             required_type = option_types[field.name]
 
