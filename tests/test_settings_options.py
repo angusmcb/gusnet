@@ -59,7 +59,7 @@ def test_save_options_and_load_roundtrip(qgis_new_project):
 def test_load_options_partial_values_use_defaults(qgis_new_project):
     # only set flow_unit variable directly in project scope
     # save the enum as save_options would (enum.value)
-    QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), "gusnet_flow_unit", FlowUnit.GPM.value)
+    QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), "gusnet_flow_units", FlowUnit.GPM.value)
 
     settings = ProjectSettings()
     loaded = settings.load_options()

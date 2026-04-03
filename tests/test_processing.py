@@ -117,7 +117,7 @@ def run_alg_params(import_layers, duration, units, headloss_formula):
         "RESULT_NODES": "TEMPORARY_OUTPUT",
         "RESULT_LINKS": "TEMPORARY_OUTPUT",
         "OUTPUT_INP": "TEMPORARY_OUTPUT",
-        "FLOW_UNIT": units,
+        "FLOW_UNITS": units,
         "HEADLOSS_FORMULA": headloss_formula,
         "SIMULATION_DURATION": duration,
         **import_layers,
@@ -266,6 +266,9 @@ def test_import_layers_pumps(import_layers):
         "base_speed",
         "speed_pattern",
         "initial_status",
+        "efficiency_curve",
+        "energy_price",
+        "energy_pattern",
     ]
 
 
