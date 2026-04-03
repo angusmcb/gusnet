@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-03 16:38+0200\n"
+"POT-Creation-Date: 2026-04-03 18:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1142,21 +1142,30 @@ msgstr ""
 #: gusnet/feature_reader.py:296
 #, python-brace-format
 msgid ""
-"%n pipe(s) have very different attribute length vs measured length. This "
-"is pipe(s): {mismatches}"
-msgstr ""
+"A pipe has a different attribute length vs measured length. This is pipe:"
+" {mismatches}"
+msgid_plural ""
+"{count} pipes have very different attribute length vs measured length. "
+"These are pipes: {mismatches}"
+msgstr[0] ""
+msgstr[1] ""
 
-#: gusnet/feature_reader.py:391
+#: gusnet/feature_reader.py:392
+#, python-brace-format
 msgid ""
-"cannot calculate length of %n pipe(s) (probably due to a problem with the"
-" selected coordinate reference system)"
-msgstr ""
+"cannot calculate length of 1 pipe (probably due to a problem with the "
+"selected coordinate reference system)"
+msgid_plural ""
+"cannot calculate length of {count} pipes (probably due to a problem with "
+"the selected coordinate reference system)"
+msgstr[0] ""
+msgstr[1] ""
 
-#: gusnet/feature_reader.py:400
+#: gusnet/feature_reader.py:401
 msgid "Geometry errors were found."
 msgstr ""
 
-#: gusnet/feature_reader.py:403
+#: gusnet/feature_reader.py:404
 #, python-brace-format
 msgid "In {layer} {number} features have invalid geometries: {names}"
 msgstr ""
@@ -1311,8 +1320,11 @@ msgid "Single period simulation"
 msgstr ""
 
 #: gusnet/plugin.py:678 gusnet/plugin.py:684
-msgid "%n hour(s)"
-msgstr ""
+#, python-brace-format
+msgid "1 hour"
+msgid_plural "{count} hours"
+msgstr[0] ""
+msgstr[1] ""
 
 #: gusnet/profiler.py:24
 msgid "Execution of script cancelled by user"
@@ -1323,6 +1335,18 @@ msgstr ""
 msgid ""
 "For the link '{link_name}', the closest node ({node_name}) is too far "
 "away to snap to."
+msgstr ""
+
+#: gusnet/statistics.py:45
+msgid "Model Description:"
+msgstr ""
+
+#: gusnet/statistics.py:57
+msgid "Total Pipe Length"
+msgstr ""
+
+#: gusnet/statistics.py:58
+msgid "Unique Pipe Diameters"
 msgstr ""
 
 #: gusnet/style.py:139
