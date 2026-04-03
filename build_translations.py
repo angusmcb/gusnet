@@ -11,7 +11,7 @@ SOURCE_DIR = ROOT / "gusnet"
 I18N_ROOT = SOURCE_DIR / "resources" / "i18n"
 LOCALES_DIR = I18N_ROOT
 TEMPLATE_PATH = I18N_ROOT / "messages.pot"
-DEFAULT_LOCALES = ["ar", "de", "en", "es", "fr", "it", "nl", "pt"]
+DEFAULT_LOCALES = ["ar", "de", "es", "fr", "it", "nl", "pt"]
 BABEL_CMD = "pybabel"
 
 
