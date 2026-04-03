@@ -22,7 +22,7 @@ from qgis.core import (
     QgsSettings,
 )
 from qgis.gui import QgisInterface, QgsLayerTreeViewIndicator, QgsProjectionSelectionDialog
-from qgis.PyQt.QtCore import QLocale, QObject, QSettings, pyqtSlot
+from qgis.PyQt.QtCore import QObject, QSettings, pyqtSlot
 
 # from qgis.processing import execAlgorithmDialog for qgis 3.40 onwards
 from qgis.PyQt.QtGui import QIcon, QPainter
@@ -45,7 +45,7 @@ from gusnet.gusnet_processing.empty_model import TemplateLayers
 from gusnet.gusnet_processing.import_inp import ImportInp
 from gusnet.gusnet_processing.provider import Provider
 from gusnet.gusnet_processing.run_simulation import RunSimulation
-from gusnet.i18n import set_locale, tr, trn
+from gusnet.i18n import tr, trn
 from gusnet.settings import ProjectSettings, SettingKey
 
 MESSAGE_CATEGORY = "Gusnet"
@@ -63,13 +63,7 @@ class Plugin:
     def __init__(self) -> None:
         self.object = QWidget()
 
-        self.init_translation()
-
         self.menu = tr("Gusnet")
-
-    def init_translation(self):
-        lang_code: str = QgsSettings().value("locale/userLocale", QLocale().name())[0:2]
-        set_locale(lang_code)
 
     def initProcessing(self):  # noqa N802
         self.provider = Provider()

@@ -5,10 +5,13 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from qgis.core import QgsSettings
 from qgis.PyQt import QtCore
+from qgis.PyQt.QtCore import QLocale
 
 from gusnet.api import from_inp, from_wntr, to_wntr
 from gusnet.dependencies import PACKAGE_DIRECTORY
+from gusnet.i18n import set_locale
 
 if TYPE_CHECKING:  # pragma: no cover
     from qgis.gui import QgisInterface
@@ -24,6 +27,9 @@ with _metadata_path.open("r", encoding="utf8") as f:
     _cp.read_file(f)
 
 __version__ = _cp.get("general", "version")
+
+
+set_locale(QgsSettings().value("locale/userLocale", QLocale().name()))
 
 
 def _inp_path(example_name: str) -> str:
