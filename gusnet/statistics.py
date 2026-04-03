@@ -2,6 +2,7 @@ import math
 from dataclasses import dataclass
 
 from gusnet.elements import Field, Model, ModelLayer
+from gusnet.i18n import tr
 
 
 @dataclass(frozen=True)
@@ -41,14 +42,20 @@ class ModelStatistics:
         )
 
     def __str__(self) -> str:
-        return f"""Model Description:
-        Junctions: {self.num_junctions}
-        Tanks: {self.num_tanks}
-        Reservoirs: {self.num_reservoirs}
-        Pipes: {self.num_pipes}
-        Valves: {self.num_valves}
-        Pumps: {self.num_pumps}
+        title = tr("Model Description:")
 
-        Total Pipe Length: {self.pipe_length}
-        Unique Pipe Diameters: {", ".join(self.pipe_diameters)}
-        """
+        counts = [
+            f"{ModelLayer.JUNCTIONS.friendly_name}: {self.num_junctions}",
+            f"{ModelLayer.TANKS.friendly_name}: {self.num_tanks}",
+            f"{ModelLayer.RESERVOIRS.friendly_name}: {self.num_reservoirs}",
+            f"{ModelLayer.PIPES.friendly_name}: {self.num_pipes}",
+            f"{ModelLayer.VALVES.friendly_name}: {self.num_valves}",
+            f"{ModelLayer.PUMPS.friendly_name}: {self.num_pumps}",
+        ]
+
+        pipe_data = [
+            f"{tr('Total Pipe Length')}: {self.pipe_length}",
+            f"{tr('Unique Pipe Diameters')}: {', '.join(self.pipe_diameters)}",
+        ]
+
+        return "\n  ".join([title, "", *counts, "", *pipe_data])
