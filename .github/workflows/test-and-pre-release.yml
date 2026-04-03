@@ -28,6 +28,7 @@ jobs:
 
       - name: Setup Environment
         run: |
+          rm -f /etc/apt/sources.list.d/nodesource.list || true
           apt-get update
           apt-get -y install python3-pandas
           apt-get -y install python3-networkx
@@ -62,7 +63,6 @@ jobs:
 
       - name: Setup Environment
         run: |
-          apt-get update
           pip3 install pytest-qgis
 
       - name: Run Tests
