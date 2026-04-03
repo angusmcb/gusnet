@@ -36,8 +36,7 @@ def tr(text: str) -> str:
     return _translation.gettext(text)
 
 
-def trn(singular, plural, count, **kwargs):
+def trn(singular: str, plural: str, count: int, **kwargs) -> str:
+    """Get translated text with pluralization from gettext catalogs."""
+
     return _translation.ngettext(singular, plural, count).format(count=count, **kwargs)
-
-
-set_locale("en")
