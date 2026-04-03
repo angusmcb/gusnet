@@ -476,8 +476,8 @@ The output files are a layer of 'nodes' (junctions, tanks, reservoirs) and \
         if not feedback:
             feedback = QgsProcessingFeedback()
 
-        with profile(tr("Verifying Dependencies"), 10, feedback):
-            self._check_can_execute()
+        # with profile(tr("Verifying Dependencies"), 10, feedback):
+        #     self._check_can_execute()
 
         with logger_to_feedback("gusnet", feedback):
             with profile(tr("Preparing Model"), 30, feedback):

@@ -94,7 +94,7 @@ class Plugin:
 
         self._append_console_statements()
 
-        self.warm_up_wntr()
+        self.show_welcome_message()
 
     def unload(self) -> None:
         """Removes the plugin menu item and icon from QGIS GUI."""
