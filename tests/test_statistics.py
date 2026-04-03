@@ -31,15 +31,15 @@ def test_model_statistics():
     assert stats.pipe_diameters == ["12", "24"]
 
     expected_str = """Model Description:
-        Junctions: 10
-        Tanks: 2
-        Reservoirs: 1
-        Pipes: 15
-        Valves: 3
-        Pumps: 4
 
-        Total Pipe Length: 1.50 km
-        Unique Pipe Diameters: 12, 24
-        """
+  Junctions: 10
+  Tanks: 2
+  Reservoirs: 1
+  Pipes: 15
+  Valves: 3
+  Pumps: 4
+
+  Total Pipe Length: 1.50 km
+  Unique Pipe Diameters: 12, 24"""
 
     assert str(stats) == expected_str
