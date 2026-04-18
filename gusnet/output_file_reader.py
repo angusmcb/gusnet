@@ -161,8 +161,8 @@ class OutputFile:
 
     def __init__(self, bin_file: Path | str) -> None:
         with Path(bin_file).open("rb") as f:
-            prelude_struct = Struct("<15i80s80s80s260s260s32s32s")
-            prelude_data = prelude_struct.unpack(f.read(prelude_struct.size))
+            prelude_int_struct = Struct("<15i")
+            prelude_data = prelude_int_struct.unpack(f.read(prelude_int_struct.size))
             (
                 magic_number,
                 self.version,
@@ -179,6 +179,14 @@ class OutputFile:
                 self.report_start_time,
                 self.report_time_step,
                 self.simulation_duration,
+            ) = prelude_data
+
+            if magic_number != MAGIC_NUMBER:
+                raise MagicNumberError
+
+            prelude_string_struct = Struct("<80s80s80s260s260s32s32s")
+
+            (
                 title1,
                 title2,
                 title3,
@@ -186,16 +194,12 @@ class OutputFile:
                 self.report_file,
                 self.chemical_name,
                 self.chemical_units,
-            ) = prelude_data
+            ) = [
+                s.decode("utf-8").rstrip("\x00")
+                for s in prelude_string_struct.unpack(f.read(prelude_string_struct.size))
+            ]
 
-            if magic_number != MAGIC_NUMBER:
-                raise MagicNumberError
-
-            self.title = (
-                title1.decode("utf-8").rstrip("\x00")
-                + title2.decode("utf-8").rstrip("\x00")
-                + title3.decode("utf-8").rstrip("\x00")
-            )
+            self.title = title1 + title2 + title3
 
             name_struct = Struct("<32s")
             name_size = name_struct.size
