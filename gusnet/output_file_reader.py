@@ -3,6 +3,7 @@ from __future__ import annotations
 import array
 import os
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from struct import Struct, unpack
 from types import MappingProxyType
@@ -110,11 +111,13 @@ class LinkResults(NamedTuple):
     velocity: array.array[float]
     headloss: array.array[float]
     quality: array.array[float]
+    status: array.array[float]
     setting: array.array[float]
     reaction_rate: array.array[float]
     friction_factor: array.array[float]
 
 
+@dataclass(init=False)
 class OutputFile:
     version: int
     num_nodes: int
@@ -228,7 +231,7 @@ class OutputFile:
 
             epilog_data = epilog_struct.unpack(f.read(epilog_struct.size))
             (
-                self.avg_source_inflow_rate,
+                self.avg_bulk_reaction_rate,
                 self.avg_wall_reaction_rate,
                 self.avg_tank_reaction_rate,
                 self.avg_source_inflow_rate,
