@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 import os
 import platform
@@ -39,8 +40,8 @@ def setup_types(epalib: CDLL) -> None:
     epalib.EN_solveH.errcheck = handle_error
     epalib.EN_solveQ.errcheck = handle_error
     epalib.EN_open.errcheck = handle_error
-    epalib.EN_runH.errcheck = handle_error
-    epalib.EN_runQ.errcheck = handle_error
+    epalib.EN_runH.errcheck = handle_error_with_time
+    epalib.EN_runQ.errcheck = handle_error_with_time
     epalib.EN_nextH.errcheck = handle_error
     epalib.EN_nextQ.errcheck = handle_error
     epalib.ENepanet.errcheck = handle_error
@@ -137,22 +138,45 @@ def create_project(enlib) -> Generator[c_uint64, None, None]:
         enlib.EN_deleteproject(ph)
 
 
-def handle_error(result, func, args):  # noqa: ARG001
-    if not result:
-        return result
+def handle_error(error_code, func, args):  # noqa: ARG001
+    if not error_code:
+        return error_code
 
-    if result > 100:
-        raise EpanetError(result)
+    if error_code > 100:
+        raise EpanetError(error_code)
     else:
-        log_epanet_warning(result)
+        warning_text = get_epanet_error_message(error_code)
+        logger.warning(
+            tr(
+                "EPANET returned warning code {error_code}: {warning_text}",
+                error_code=error_code,
+                warning_text=warning_text,
+            )
+        )
 
-    return result
+    return error_code
 
 
-def log_epanet_warning(error_code: int) -> None:
-    warning_text = get_epanet_error_message(error_code)
+def handle_error_with_time(error_code, func, args):  # noqa: ARG001
+    if not error_code:
+        return error_code
 
-    logger.warning(f"EPANET returned warning code {error_code}: {warning_text}")
+    time = datetime.timedelta(seconds=args[1].value)
+
+    if error_code > 100:
+        raise EpanetError(error_code, time)
+    else:
+        warning_text = get_epanet_error_message(error_code)
+        logger.warning(
+            tr(
+                "EPANET returned warning code {error_code} at simulation time {time}: {warning_text}",
+                error_code=error_code,
+                time=time,
+                warning_text=warning_text,
+            )
+        )
+
+    return error_code
 
 
 def get_epanet_error_message(errcode: int) -> str:
@@ -262,14 +286,23 @@ class EpanetWrapperError(Exception):
 class EpanetError(EpanetWrapperError):
     """Custom exception for EPANET errors."""
 
-    def __init__(self, errcode: int) -> None:
+    def __init__(self, errcode: int, time: datetime.timedelta | None = None) -> None:
         self.errcode = errcode
+        self.time = time
 
         error_text = get_epanet_error_message(errcode)
 
-        super().__init__(
-            tr("Error from EPANET - {errcode} - {error_text}").format(error_text=error_text, errcode=errcode)
-        )
+        if time:
+            super().__init__(
+                tr("EPANET returned error {errcode} at simulation time {time} - {error_text} at time {time}").format(
+                    error_text=error_text, errcode=errcode, time=time
+                )
+            )
+
+        else:
+            super().__init__(
+                tr("EPANET returned error {errcode} - {error_text}").format(error_text=error_text, errcode=errcode)
+            )
 
 
 class EpanetNotFoundError(EpanetWrapperError):
