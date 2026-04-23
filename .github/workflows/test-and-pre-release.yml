@@ -161,7 +161,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        qgis_version: ['3.44.1']
+        qgis_version: ['3.34.1']
       fail-fast: false
     env:
       QGIS_PLUGIN_IN_CI: 1
@@ -171,7 +171,7 @@ jobs:
 
       - name: Install QGIS with custom script
         shell: pwsh
-        run: .\.github\workflows\install-qgis344.ps1
+        run: .\.github\workflows\install-qgis334.ps1
 
       - name: Setup Pytest-QGIS
         shell: pwsh
