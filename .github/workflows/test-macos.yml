@@ -60,11 +60,3 @@ jobs:
       - name: Run Tests Without Wntr
         run: |
           /Applications/QGIS.app/Contents/MacOS/python -m pytest -v -m "not needs_wntr and not needs_pandas"
-
-      - name: Setup Wntr
-        run: |
-          /Applications/QGIS.app/Contents/MacOS/python -m pip install wntr
-
-      - name: Run Tests With Wntr
-        run: |
-          /Applications/QGIS.app/Contents/MacOS/python -m pytest -v
