@@ -17,7 +17,7 @@ $InstallArgs = @{
    validExitCodes = @(0)
 }
 
-$pp = Get-PackageParameters
+# $pp = Get-PackageParameters
 
 # QGIS install is best done with older versions uninstalled
 [array]$Keys = Get-UninstallRegistryKey -SoftwareName "QGIS *"
@@ -62,11 +62,13 @@ if ($Keys) {
 }
 if ($TargetKey) {
    $TargetShortVersion = [version](([version]$TargetVersion).tostring(2))
-   if ($pp.contains("Keep")) {
+   $KeepOldVersions = $false  # Set to $true if you want to keep old versions
+
+   if ($KeepOldVersions) {
       Write-Host "You have requested for this package to NOT uninstall any previous installs of QGIS." -ForegroundColor Cyan
    }
-   if ((-not $pp.contains("Keep")) -or ($TargetShortVersion -eq $PkgShortVersion)) {
-      if ($pp.contains("Keep")) {
+   if ((-not $KeepOldVersions) -or ($TargetShortVersion -eq $PkgShortVersion)) {
+      if ($KeepOldVersions) {
          Write-warning "Multiple installs of minor (xx.yy) releases are not possible.  Version $TargetVersion will be uninstalled."
       }
       Write-Host "Uninstalling older QGIS version $TargetVersion. Please wait." -ForegroundColor Cyan
