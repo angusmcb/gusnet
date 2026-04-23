@@ -28,14 +28,16 @@ jobs:
           # Mount the DMG
           hdiutil attach qgis.dmg
 
-          # Copy QGIS.app to Applications
-          sudo cp -R /Volumes/QGIS*/QGIS-final-${{ matrix.qgis_version }}.app /Applications/
-
-          # Rename to stable app bundle name
-          sudo mv /Applications/QGIS-final-${{ matrix.qgis_version }}.app /Applications/QGIS.app
+          # Find and copy the .app bundle from the mounted volume, renaming it to QGIS.app
+          QGIS_VOLUME=$(hdiutil info | grep "/Volumes/QGIS" | awk '{print $NF}')
+          echo "Mounted volume: $QGIS_VOLUME"
+          ls "$QGIS_VOLUME"
+          QGIS_APP=$(find "$QGIS_VOLUME" -maxdepth 1 -name "*.app" | head -n 1)
+          echo "Found app: $QGIS_APP"
+          sudo cp -R "$QGIS_APP" /Applications/QGIS.app
 
           # Unmount the DMG
-          hdiutil detach /Volumes/QGIS*
+          hdiutil detach "$QGIS_VOLUME"
 
           # Clean up
           rm qgis.dmg
