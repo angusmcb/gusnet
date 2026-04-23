@@ -189,7 +189,7 @@ jobs:
         shell: pwsh
         run: |
           $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
-          python-qgis.bat -m pip install wntr
+          python-qgis.bat -m pip install wntr==1.3.2
 
       - name: Run Tests With Wntr
         shell: pwsh
