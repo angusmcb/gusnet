@@ -171,7 +171,7 @@ jobs:
 
       - name: Install QGIS with custom script
         shell: pwsh
-        run: ./install-qgis344.ps1
+        run: .\.github\workflows\install-qgis344.ps1
 
       - name: Setup Pytest-QGIS
         shell: pwsh
