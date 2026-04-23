@@ -118,7 +118,7 @@ jobs:
       matrix:
         # does not work with 3.28.0 due to missing geopandas
         # '3.34.0', broken in choco
-        qgis_version: ['3.40.0','3.44.0','4.0.0']
+        qgis_version: ['3.40.0','3.44.0','4.0.1']
       fail-fast: false
     env:
       QGIS_PLUGIN_IN_CI: 1
