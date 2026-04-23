@@ -168,8 +168,7 @@ def handle_error_with_time(error_code, func, args):  # noqa: ARG001
     else:
         warning_text = get_epanet_error_message(error_code)
         logger.warning(
-            tr(
-                "EPANET returned warning code {error_code} at simulation time {time}: {warning_text}",
+            tr("EPANET returned warning code {error_code} at simulation time {time}: {warning_text}").format(
                 error_code=error_code,
                 time=time,
                 warning_text=warning_text,
