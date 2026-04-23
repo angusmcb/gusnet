@@ -92,3 +92,21 @@ def assert_valid_qicon():
         assert not pixmap.isNull()
 
     return _
+
+
+@pytest.fixture(autouse=True)
+def english_locale():
+    from gusnet.i18n import set_locale
+
+    set_locale("en")
+
+
+@pytest.fixture
+def french_locale():
+    from gusnet.i18n import set_locale
+
+    set_locale("fr")
+
+    yield
+
+    set_locale("en")

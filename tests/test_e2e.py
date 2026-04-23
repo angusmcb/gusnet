@@ -1,7 +1,6 @@
 import pytest
 from qgis.core import QgsCoordinateReferenceSystem, QgsExpressionContextUtils, QgsGeometry, QgsProject, QgsVectorLayer
 
-from gusnet.i18n import set_locale
 from gusnet.plugin import DurationSettingMenu, LoadTemplateToMemoryAction, Plugin, RunAction
 
 
@@ -34,8 +33,7 @@ def layer_to_dict_by_name(layer: QgsVectorLayer) -> dict[str, dict]:
 
 
 @pytest.mark.qgis_show_map(timeout=3, zoom_to_common_extent=True)
-def test_end_to_end(loaded_plugin, qgis_bot, qgis_new_project, qgis_processing) -> None:
-    set_locale("fr")
+def test_end_to_end(loaded_plugin, qgis_bot, qgis_new_project, qgis_processing, french_locale) -> None:
     project = QgsProject.instance()
     project.setCrs(QgsCoordinateReferenceSystem("EPSG:2056"))
 
