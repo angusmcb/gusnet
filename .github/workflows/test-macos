@@ -1,0 +1,70 @@
+# workflow name
+name: Tests
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the wanted branches
+on: push
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+  macos_qgis:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        qgis_version: [ '3_44_8', '4_0_1']
+      fail-fast: false
+    env:
+      QGIS_PLUGIN_IN_CI: 1
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Download and Install QGIS
+        run: |
+          # Download the DMG
+          curl -L -o qgis.dmg "https://download.osgeo.org/qgis/macos/pr/qgis_pr_final-${{ matrix.qgis_version }}.dmg"
+
+          # Mount the DMG
+          hdiutil attach qgis.dmg
+
+          # Copy QGIS.app to Applications
+          sudo cp -R /Volumes/QGIS*/QGIS-final-${{ matrix.qgis_version }}.app /Applications/
+
+          # Rename to stable app bundle name
+          sudo mv /Applications/QGIS-final-${{ matrix.qgis_version }}.app /Applications/QGIS.app
+
+          # Unmount the DMG
+          hdiutil detach /Volumes/QGIS*
+
+          # Clean up
+          rm qgis.dmg
+
+      - name: Verify QGIS Installation
+        run: |
+          ls -la /Applications/QGIS.app/Contents/MacOS/
+          /Applications/QGIS.app/Contents/MacOS/QGIS --version
+
+      - name: Setup Python Path for QGIS
+        run: |
+          # Add QGIS Python to PATH
+          echo "/Applications/QGIS.app/Contents/MacOS/bin" >> $GITHUB_PATH
+
+          # Set PYTHONPATH to include QGIS Python libraries
+          echo "PYTHONPATH=/Applications/QGIS.app/Contents/Resources/python" >> $GITHUB_ENV
+
+      - name: Setup Pytest-QGIS
+        run: |
+          /Applications/QGIS.app/Contents/MacOS/bin/python3 -m pip install pytest-qgis
+
+      - name: Run Tests Without Wntr
+        run: |
+          /Applications/QGIS.app/Contents/MacOS/bin/python3 -m pytest -v -m "not needs_wntr and not needs_pandas"
+
+      - name: Setup Wntr
+        run: |
+          /Applications/QGIS.app/Contents/MacOS/bin/python3 -m pip install wntr
+
+      - name: Run Tests With Wntr
+        run: |
+          /Applications/QGIS.app/Contents/MacOS/bin/python3 -m pytest -v
