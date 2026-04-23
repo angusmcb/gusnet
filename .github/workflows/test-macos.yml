@@ -43,28 +43,28 @@ jobs:
       - name: Verify QGIS Installation
         run: |
           ls -la /Applications/QGIS.app/Contents/MacOS/
-          /Applications/QGIS.app/Contents/MacOS/QGIS --version
+          /Applications/QGIS.app/Contents/MacOS/qgis_process --version
 
       - name: Setup Python Path for QGIS
         run: |
           # Add QGIS Python to PATH
-          echo "/Applications/QGIS.app/Contents/MacOS/bin" >> $GITHUB_PATH
+          echo "/Applications/QGIS.app/Contents/MacOS" >> $GITHUB_PATH
 
           # Set PYTHONPATH to include QGIS Python libraries
           echo "PYTHONPATH=/Applications/QGIS.app/Contents/Resources/python" >> $GITHUB_ENV
 
       - name: Setup Pytest-QGIS
         run: |
-          /Applications/QGIS.app/Contents/MacOS/bin/python3 -m pip install pytest-qgis
+          /Applications/QGIS.app/Contents/MacOS/python -m pip install pytest-qgis
 
       - name: Run Tests Without Wntr
         run: |
-          /Applications/QGIS.app/Contents/MacOS/bin/python3 -m pytest -v -m "not needs_wntr and not needs_pandas"
+          /Applications/QGIS.app/Contents/MacOS/python -m pytest -v -m "not needs_wntr and not needs_pandas"
 
       - name: Setup Wntr
         run: |
-          /Applications/QGIS.app/Contents/MacOS/bin/python3 -m pip install wntr
+          /Applications/QGIS.app/Contents/MacOS/python -m pip install wntr
 
       - name: Run Tests With Wntr
         run: |
-          /Applications/QGIS.app/Contents/MacOS/bin/python3 -m pytest -v
+          /Applications/QGIS.app/Contents/MacOS/python -m pytest -v
