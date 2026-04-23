@@ -25,8 +25,8 @@ jobs:
           # Download the DMG
           curl -fL -o qgis.dmg "https://www.qgis.org/downloads/macos/pr/qgis_pr_final-${{ matrix.qgis_version }}.dmg"
 
-          # Mount the DMG; hdiutil output is tab-separated so cut -f3- handles spaces in volume name
-          QGIS_VOLUME=$(hdiutil attach -nobrowse qgis.dmg | grep "Apple_HFS" | cut -f3-)
+          # Mount the DMG; grep for the tab-delimited /Volumes/ line to handle spaces in volume name
+          QGIS_VOLUME=$(hdiutil attach -nobrowse qgis.dmg | grep $'\t/Volumes/' | cut -f3-)
           echo "Mounted volume: $QGIS_VOLUME"
 
           # Find and copy the .app bundle, renaming it to QGIS.app
