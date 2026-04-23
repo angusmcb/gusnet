@@ -154,3 +154,45 @@ jobs:
         run: |
           $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
           python-qgis.bat -m pytest -v
+
+
+
+  windows_choco_oldversion:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        qgis_version: ['3.44.1']
+      fail-fast: false
+    env:
+      QGIS_PLUGIN_IN_CI: 1
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install QGIS with custom script
+        shell: pwsh
+        run: .install-qgis344.ps1
+
+      - name: Setup Pytest-QGIS
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
+          python-qgis.bat -m pip install pytest-qgis
+
+      - name: Run Tests Without Wntr
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
+          python-qgis.bat -m pytest -v -m "not needs_wntr and not needs_pandas"
+
+      - name: Setup Wntr
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
+          python-qgis.bat -m pip install wntr
+
+      - name: Run Tests With Wntr
+        shell: pwsh
+        run: |
+          $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
+          python-qgis.bat -m pytest -v
