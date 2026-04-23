@@ -641,7 +641,7 @@ class SettingMenu(QMenu):
 
         self.action_group = QActionGroup(self)
         self.action_group.triggered.connect(lambda action: ProjectSettings().set(setting, action.data()))  # type: ignore
-        self.actions = {}  # type: ignore
+        self.actions_registry: dict = {}
         self.setting_key = setting
 
         self.setup_actions()
@@ -655,12 +655,12 @@ class SettingMenu(QMenu):
     def setup_action(self, option, option_name: str):
         action = QAction(option_name, self.action_group, checkable=True)
         action.setData(option)
-        self.actions[option] = action
+        self.actions_registry[option] = action
         self.addAction(action)
 
     def update_checked(self):
         current_setting = ProjectSettings().get(self.setting_key, next(iter(self.setting_key.expected_type)))
-        self.actions[current_setting].setChecked(True)
+        self.actions_registry[current_setting].setChecked(True)
 
 
 class DurationSettingMenu(SettingMenu):
@@ -676,7 +676,7 @@ class DurationSettingMenu(SettingMenu):
     def update_checked(self):
         current_duration = math.floor(ProjectSettings().get(SettingKey.SIMULATION_DURATION, 0))
 
-        if current_duration not in self.actions:
+        if current_duration not in self.actions_registry:
             self.setup_action(current_duration, trn("1 hour", "{count} hours", count=current_duration))
 
-        self.actions[current_duration].setChecked(True)
+        self.actions_registry[current_duration].setChecked(True)

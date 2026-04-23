@@ -185,7 +185,7 @@ def test_setting_menu_headloss_formula_updates_setting(formula):
         setting=SettingKey.HEADLOSS_FORMULA,
     )
 
-    action = menu.actions[formula]
+    action = menu.actions_registry[formula]
     action.trigger()
     assert ProjectSettings().get(SettingKey.HEADLOSS_FORMULA) == formula
 
@@ -198,7 +198,7 @@ def test_setting_menu_flow_units_updates_setting(unit):
         parent=None,
         setting=SettingKey.FLOW_UNITS,
     )
-    action = menu.actions[unit]
+    action = menu.actions_registry[unit]
     action.trigger()
     assert ProjectSettings().get(SettingKey.FLOW_UNITS) == unit
 
@@ -214,7 +214,7 @@ def test_setting_menu_checkmarks_reflect_setting(qgis_iface):
     for formula in HeadlossFormula:
         ProjectSettings().set(SettingKey.HEADLOSS_FORMULA, formula)
         menu.update_checked()
-        for f, action in menu.actions.items():
+        for f, action in menu.actions_registry.items():
             if f == formula:
                 assert action.isChecked()
             else:
@@ -225,14 +225,14 @@ def test_duration_setting_menu_triggers_and_checkmarks(qgis_iface):
     """Test DurationSettingMenu triggers and checkmarks."""
     menu = DurationSettingMenu(title="Duration")
     # Test single period
-    menu.actions[0].trigger()
+    menu.actions_registry[0].trigger()
     assert ProjectSettings().get(SettingKey.SIMULATION_DURATION) == 0
     # Test several hours
     for hour in [1, 5, 10, 24]:
-        menu.actions[hour].trigger()
+        menu.actions_registry[hour].trigger()
         assert ProjectSettings().get(SettingKey.SIMULATION_DURATION) == hour
         menu.update_checked()
-        for h, action in menu.actions.items():
+        for h, action in menu.actions_registry.items():
             if h == hour:
                 assert action.isChecked()
             else:
@@ -240,4 +240,4 @@ def test_duration_setting_menu_triggers_and_checkmarks(qgis_iface):
     # Test dynamic addition for a duration not in actions
     ProjectSettings().set(SettingKey.SIMULATION_DURATION, 42)
     menu.update_checked()
-    assert menu.actions[42].isChecked()
+    assert menu.actions_registry[42].isChecked()

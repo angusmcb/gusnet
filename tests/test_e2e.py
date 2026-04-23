@@ -23,13 +23,13 @@ def line(*points: tuple[float, float]) -> QgsGeometry:
 
 
 def layer_to_dict(layer: QgsVectorLayer) -> list[dict]:
-    fnames = [field.name() for field in layer.fields()]
-    return [dict(zip(fnames, f.attributes())) for f in layer.getFeatures()]
+    fnames = [field.name() for field in layer.fields()]  # ignore:attr-defined
+    return [dict(zip(fnames, f.attributes())) for f in layer.getFeatures()]  # ignore:union-attr
 
 
 def layer_to_dict_by_name(layer: QgsVectorLayer) -> dict[str, dict]:
-    fnames = [field.name() for field in layer.fields()]
-    return {f["name"]: dict(zip(fnames, f.attributes())) for f in layer.getFeatures()}
+    fnames = [field.name() for field in layer.fields()]  # ignore:attr-defined
+    return {f["name"]: dict(zip(fnames, f.attributes())) for f in layer.getFeatures()}  # ignore:union-attr
 
 
 @pytest.mark.qgis_show_map(timeout=3, zoom_to_common_extent=True)
@@ -100,7 +100,7 @@ def test_end_to_end(loaded_plugin, qgis_bot, qgis_new_project, qgis_processing, 
     project.removeMapLayers([node_out_layer.id(), link_out_layer.id()])
 
     durations_menu = DurationSettingMenu()
-    durations_menu.actions[6].trigger()
+    durations_menu.actions_registry[6].trigger()
 
     QgsExpressionContextUtils.setProjectVariable(project, "gusnet_demand_multiplier", "1.1")
     QgsExpressionContextUtils.setProjectVariable(project, "gusnet_default_pattern", " 2.0 1 ")
