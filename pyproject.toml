@@ -49,3 +49,11 @@ ignore_missing_imports = true
 plugin_path = "gusnet"
 github_organization_slug = "angusmcb"
 project_slug = "gusnet"
+
+
+
+[[tool.babel.mappings]]
+method = "python"
+pattern = "gusnet/**.py"
+encoding = "utf-8"
+keywords = "tr trn:1,2"

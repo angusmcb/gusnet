@@ -7,7 +7,7 @@ init:
 	pybabel init -i $(POT_FILE) -d $(I18N_DIR) -l $(LANG)
 
 extract:
-	pybabel extract --add-location=file --omit-header -F babel.cfg -o $(POT_FILE) .
+	pybabel extract --add-location=file --omit-header -F pyproject.toml -o $(POT_FILE) .
 
 update: extract
 	pybabel update --ignore-pot-creation-date -i $(POT_FILE) -d $(I18N_DIR)
