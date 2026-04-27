@@ -18,1904 +18,1445 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: gusnet/api.py
 #, python-brace-format
 msgid "No units specified. Will use the value from wn: {units_friendly_name}"
 msgstr "Geen eenheden opgegeven. De waarde uit wn wordt gebruikt: {units_friendly_name}"
 
-#: gusnet/api.py
 msgid "Cannot set headloss formula when wn is set. Set the headloss in the wn.options.hydraulic.headloss instead"
 msgstr "Kan de drukverliesformule niet instellen wanneer wn is ingesteld. Stel de drukverlieswaarde in via wn.options.hydraulic.headloss."
 
-#: gusnet/api.py
 msgid "headloss must be set if wn is not set: possible values are: H-W, D-W, C-M"
 msgstr "hoogteverlies moet worden ingesteld als wn niet is ingesteld: mogelijke waarden zijn: H-W, D-W, C-M"
 
-#: gusnet/api.py
 msgid "No valid CRS found on input layers. Pipe lengths will not be calculated."
 msgstr "Geen geldig CRS gevonden in invoerlagen. Leidinglengtes worden niet berekend."
 
-#: gusnet/api.py
 msgid "Some input layers do not have a valid CRS. Pipe lengths may not be calculated correctly."
 msgstr "Sommige invoerlagen hebben geen geldig CRS. Leidinglengtes worden mogelijk niet correct berekend."
 
-#: gusnet/api.py
 msgid "Multiple different CRSs found on input layers."
 msgstr "Er zijn meerdere verschillende CRS gevonden in de invoerlagen."
 
-#: gusnet/api.py
 #, python-brace-format
 msgid "CRS {crs} is not valid."
 msgstr "CRS {crs} is niet geldig."
 
-#: gusnet/api.py
 #, python-brace-format
 msgid "{exception} is not a known set of units. Possible units are: "
 msgstr "{exception} is not a known set of units. Possible units are:"
 
-#: gusnet/api.py
 #, python-brace-format
 msgid "{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS', 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
 msgstr "{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS', 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
 
-#: gusnet/dependencies.py
 msgid "Fetching EPANET"
 msgstr "EPANET ophalen"
 
-#: gusnet/dependencies.py
 msgid "Took too long to fetch and install."
 msgstr "Het ophalen en installeren duurde te lang."
 
-#: gusnet/dependencies.py
 msgid "Couldn't find Python"
 msgstr "Kon Python niet vinden"
 
-#: gusnet/dependencies.py
 #, python-brace-format
 msgid "Couldn't fetch and install gusnet_epanet. {exception}"
 msgstr "Kon gusnet_epanet niet ophalen en installeren. {exception}"
 
-#: gusnet/dependencies.py
 #, python-brace-format
 msgid "Missing necessary python packages {missing_deps}. Please see help for how to fix this"
 msgstr "Noodzakelijke Python-pakketten ontbreken {missing_deps}. Raadpleeg de help om te zien hoe u dit kunt oplossen"
 
-#: gusnet/dependencies.py
 msgid "Fetching gusnet_epanet is already in progress. Please wait and try again."
 msgstr "Het ophalen van gusnet_epanet is al bezig. Wacht even en probeer opnieuw."
 
-#: gusnet/elements.py
 msgid "Litres per Second"
 msgstr "Liters per seconde"
 
-#: gusnet/elements.py
 msgid "Litres per Minute"
 msgstr "Liters per minuut"
 
-#: gusnet/elements.py
 msgid "Mega Litres Per Day"
 msgstr "Megaliters per dag"
 
-#: gusnet/elements.py
 msgid "Cubic Metres per Hour"
 msgstr "Kubieke meters per uur"
 
-#: gusnet/elements.py
 msgid "Cubic Metres per Day"
 msgstr "Kubieke meters per dag"
 
-#: gusnet/elements.py
 msgid "Cubic Feet per Second"
 msgstr "Kubieke voeten per seconde"
 
-#: gusnet/elements.py
 msgid "Gallons per Minute"
 msgstr "Gallons per minuut"
 
-#: gusnet/elements.py
 msgid "Mega Gallons per Day"
 msgstr "Megagallons per dag"
 
-#: gusnet/elements.py
 msgid "Imperial Mega Gallons per Day"
 msgstr "Imperiale megagallons per dag"
 
-#: gusnet/elements.py
 msgid "Acre-feet per Day"
 msgstr "Acre-voet per dag"
 
-#: gusnet/elements.py gusnet/units.py
 msgid "mg"
 msgstr "mg"
 
-#: gusnet/elements.py
 msgid "μg"
 msgstr "μg"
 
-#: gusnet/elements.py
 msgid "Hazen-Williams"
 msgstr "Hazen-Williams"
 
-#: gusnet/elements.py
 msgid "Darcy-Weisbach"
 msgstr "Darcy-Weisbach"
 
-#: gusnet/elements.py
 msgid "Chezy-Manning"
 msgstr "Chezy-Manning"
 
-#: gusnet/elements.py
 msgid "Fixed Demand"
 msgstr "Vaste vraag"
 
-#: gusnet/elements.py
 msgid "Pressure Dependent Demand"
 msgstr "Drukafhankelijke vraag"
 
-#: gusnet/elements.py
 msgid "None"
 msgstr "Geen"
 
-#: gusnet/elements.py
 msgid "Water Age"
 msgstr "Waterleeftijd"
 
-#: gusnet/elements.py
 msgid "Chemical Concentration"
 msgstr "Chemische concentratie"
 
-#: gusnet/elements.py
 msgid "Trace Node"
 msgstr "Tracer-knooppunt"
 
-#: gusnet/elements.py
 msgid "Power"
 msgstr "Vermogen"
 
-#: gusnet/elements.py
 msgid "Head"
 msgstr "Hoogte"
 
-#: gusnet/elements.py
 msgid "Fully Mixed"
 msgstr "Volledig gemengd"
 
-#: gusnet/elements.py
 msgid "Two Compartment Mixing"
 msgstr "Twee-compartimenten-menging"
 
-#: gusnet/elements.py
 msgid "First In First Out (FIFO)"
 msgstr "Eerst in eerst uit (FIFO)"
 
-#: gusnet/elements.py
 msgid "Last In First Out (LIFO)"
 msgstr "Laatst in eerst uit (LIFO)"
 
-#: gusnet/elements.py
 msgid "Open"
 msgstr "Open"
 
-#: gusnet/elements.py
 msgid "Closed"
 msgstr "Gesloten"
 
-#: gusnet/elements.py
 msgid "Active"
 msgstr "Actief"
 
-#: gusnet/elements.py
 msgid "Pressure Reducing Valve"
 msgstr "Drukreducerend ventiel"
 
-#: gusnet/elements.py
 msgid "Pressure Sustaining Valve"
 msgstr "Drukonderhoudend ventiel"
 
-#: gusnet/elements.py
 msgid "Pressure Breaking Valve"
 msgstr "Drukbrekend ventiel"
 
-#: gusnet/elements.py
 msgid "Flow Control Valve"
 msgstr "Stroomregelventiel"
 
-#: gusnet/elements.py
 msgid "Throttle Control Valve"
 msgstr "Gashendelregelventiel"
 
-#: gusnet/elements.py
 msgid "General Purpose Valve"
 msgstr "Algemeen gebruik ventiel"
 
-#: gusnet/elements.py
 msgid "Zero"
 msgstr "Nul"
 
-#: gusnet/elements.py
 msgid "One"
 msgstr "Een"
 
-#: gusnet/elements.py
 msgid "Junctions"
 msgstr "Knooppunten"
 
-#: gusnet/elements.py
 msgid "Reservoirs"
 msgstr "Reservoirs"
 
-#: gusnet/elements.py
 msgid "Tanks"
 msgstr "Tanks"
 
-#: gusnet/elements.py
 msgid "Pipes"
 msgstr "Leidingen"
 
-#: gusnet/elements.py
 msgid "Pumps"
 msgstr "Pompen"
 
-#: gusnet/elements.py
 msgid "Valves"
 msgstr "Ventielen"
 
-#: gusnet/elements.py
 msgid "Nodes"
 msgstr "Knooppunten"
 
-#: gusnet/elements.py
 msgid "Links"
 msgstr "Verbindingen"
 
-#: gusnet/elements.py
 msgid "Name"
 msgstr "Naam"
 
-#: gusnet/elements.py
 msgid "Elevation"
 msgstr "Hoogte"
 
-#: gusnet/elements.py
 msgid "Base Demand"
 msgstr "Basisvraag"
 
-#: gusnet/elements.py
 msgid "Demand Pattern"
 msgstr "Vraagpatroon"
 
-#: gusnet/elements.py
 msgid "Emitter Coefficient"
 msgstr "Emittercoëfficiënt"
 
-#: gusnet/elements.py
 msgid "Initial Level"
 msgstr "Initiële niveau"
 
-#: gusnet/elements.py
 msgid "Minimum Level"
 msgstr "Minimumniveau"
 
-#: gusnet/elements.py
 msgid "Maximum Level"
 msgstr "Maximumniveau"
 
-#: gusnet/elements.py
 msgid "Valve Type"
 msgstr "Ventieltype"
 
-#: gusnet/elements.py
 msgid "Pressure Setting (for PRVs, PBVs, and PSVs)"
 msgstr "Drukinstelling (voor PRV's, PBV's en PSV's)"
 
-#: gusnet/elements.py
 msgid "Flow Setting (for FCVs)"
 msgstr "Stroominstelling (voor FCV's)"
 
-#: gusnet/elements.py
 msgid "Throttle Setting (for TCVs)"
 msgstr "Gashendelinstelling (voor TCV's)"
 
-#: gusnet/elements.py
 msgid "Headloss Curve (for GPVs)"
 msgstr "Hoogteverliescurve (voor GPV's)"
 
-#: gusnet/elements.py
 msgid "Diameter"
 msgstr "Diameter"
 
-#: gusnet/elements.py
 msgid "Minimum Volume"
 msgstr "Minimaal volume"
 
-#: gusnet/elements.py
 msgid "Volume Curve"
 msgstr "Volumecurve"
 
-#: gusnet/elements.py
 msgid "Overflow"
 msgstr "Overloop"
 
-#: gusnet/elements.py
 msgid "Base Head"
 msgstr "Basishoogte"
 
-#: gusnet/elements.py
 msgid "Head Pattern"
 msgstr "Hoogtepatroon"
 
-#: gusnet/elements.py
 msgid "Length"
 msgstr "Lengte"
 
-#: gusnet/elements.py
 msgid "Roughness"
 msgstr "Ruwheid"
 
-#: gusnet/elements.py
 msgid "Minor Loss Coefficient"
 msgstr "Kleine verliescoëfficiënt"
 
-#: gusnet/elements.py
 msgid "Check Valve"
 msgstr "Terugslagklep"
 
-#: gusnet/elements.py
 msgid "Pump Type"
 msgstr "Pomp type"
 
-#: gusnet/elements.py
 msgid "Pump Curve (for 'head' pumps)"
 msgstr "Pompcurve (voor 'hoogte' pompen)"
 
-#: gusnet/elements.py
 msgid "Power (for 'power' pumps)"
 msgstr "Vermogen (voor 'vermogen' pompen)"
 
-#: gusnet/elements.py
 msgid "Base Speed"
 msgstr "Basissnelheid"
 
-#: gusnet/elements.py
 msgid "Speed Pattern"
 msgstr "Snelheidspatroon"
 
-#: gusnet/elements.py
 msgid "Initial Status"
 msgstr "Initiële status"
 
-#: gusnet/elements.py
 msgid "Valve Status"
 msgstr "Status ventiel"
 
-#: gusnet/elements.py
 msgid "Initial Quality"
 msgstr "Initiële kwaliteit"
 
-#: gusnet/elements.py
 msgid "Mixing Fraction"
 msgstr "Mengfractie"
 
-#: gusnet/elements.py
 msgid "Mixing Model"
 msgstr "Mengmodel"
 
-#: gusnet/elements.py
 msgid "Bulk Reaction Rate Coefficient"
 msgstr "Bulkreactiesnelheidscoëfficiënt"
 
-#: gusnet/elements.py
 msgid "Wall Reaction Rate Coefficient"
 msgstr "Wandreactiesnelheidscoëfficiënt"
 
-#: gusnet/elements.py
 msgid "Efficiency Curve"
 msgstr "Efficiëntiecurve"
 
-#: gusnet/elements.py
 msgid "Energy Pattern"
 msgstr "Energiepatroon"
 
-#: gusnet/elements.py
 msgid "Energy Price"
 msgstr "Energieprijs"
 
-#: gusnet/elements.py
 msgid "Demand"
 msgstr "Vraag"
 
-#: gusnet/elements.py
 msgid "Pressure"
 msgstr "Druk"
 
-#: gusnet/elements.py
 msgid "Flowrate"
 msgstr "Stroomsnelheid"
 
-#: gusnet/elements.py
 msgid "Headloss"
 msgstr "Hoogteverlies"
 
-#: gusnet/elements.py
 msgid "Unit Headloss"
 msgstr "Eenheidshoogteverlies"
 
-#: gusnet/elements.py
 msgid "Velocity"
 msgstr "Snelheid"
 
-#: gusnet/elements.py
 msgid "Quality"
 msgstr "Kwaliteit"
 
-#: gusnet/elements.py
 msgid "Reaction Rate"
 msgstr "Reactiesnelheid"
 
-#: gusnet/elements.py
 msgid "Element identifier. If provided, it must be less than 32 characters and not contain any spaces."
 msgstr "Elementidentificatie. Indien opgegeven, moet het minder dan 32 tekens zijn en geen spaties bevatten."
 
-#: gusnet/elements.py
 msgid "Height above datum. This is in metres or feet."
 msgstr "Hoogte boven referentiepunt. Dit is in meters of voeten."
 
-#: gusnet/elements.py
 msgid "The demand for the element. Can be negative for inflows."
 msgstr "De vraag voor het element. Kan negatief zijn voor instromen."
 
-#: gusnet/elements.py
 msgid "Time-varying multiplier pattern for base demand"
 msgstr "Tijdafhankelijk vermenigvuldigingspatroon voor basisvraag"
 
-#: gusnet/elements.py
 msgid "Coefficient for flow through emitter at junction"
 msgstr "Coëfficiënt voor stroming door emitter bij knooppunt"
 
-#: gusnet/elements.py
 msgid "Initial water level in tank"
 msgstr "Initiële waterstand in tank"
 
-#: gusnet/elements.py
 msgid "Minimum allowable water level in tank"
 msgstr "Minimaal toegestane waterstand in tank"
 
-#: gusnet/elements.py
 msgid "Maximum allowable water level in tank"
 msgstr "Maximaal toegestane waterstand in tank"
 
-#: gusnet/elements.py
 msgid "Type of valve (PRV, PSV, PBV, FCV, TCV, GPV)"
 msgstr "Type ventiel (PRV, PSV, PBV, FCV, TCV, GPV)"
 
-#: gusnet/elements.py
 msgid "Pressure setting for PRV, PBV, and PSV"
 msgstr "Drukinstelling voor PRV, PBV en PSV"
 
-#: gusnet/elements.py
 msgid "Flow setting for FCV"
 msgstr "Stroominstelling voor FCV"
 
-#: gusnet/elements.py
 msgid "Throttle setting for TCV"
 msgstr "Gashendelinstelling voor TCV"
 
-#: gusnet/elements.py
 msgid "Internal diameter of pipe"
 msgstr "Inwendige diameter van leiding"
 
-#: gusnet/elements.py
 msgid "Diameter of tank"
 msgstr "Diameter van tank"
 
-#: gusnet/elements.py
 msgid "Minimum volume of water in tank"
 msgstr "Minimaal volume water in tank"
 
-#: gusnet/elements.py
 msgid "Volume curve relating tank level to volume"
 msgstr "Volumecurve die tankniveau aan volume koppelt"
 
-#: gusnet/elements.py
 msgid "Whether tank can overflow when full"
 msgstr "Of tank kan overlopen als deze vol is"
 
-#: gusnet/elements.py
 msgid "Hydraulic head at reservoir"
 msgstr "Hydraulische hoogte bij reservoir"
 
-#: gusnet/elements.py
 msgid "Time-varying pattern for reservoir head"
 msgstr "Tijdafhankelijk patroon voor reservoirhoogte"
 
-#: gusnet/elements.py
 msgid "Physical length of pipe. If left blank this will be calculated automatically"
 msgstr "Fysieke lengte van leiding. Indien leeg wordt dit automatisch berekend"
 
-#: gusnet/elements.py
 msgid "Pipe roughness coefficient for headloss calculation"
 msgstr "Leidingruwheidscoëfficiënt voor hoogteverliesberekening"
 
-#: gusnet/elements.py
 msgid "Minor loss coefficient for fittings and bends"
 msgstr "Kleine verliescoëfficiënt voor fittingen en bochten"
 
-#: gusnet/elements.py
 msgid "Whether pipe has check valve to prevent backflow"
 msgstr "Of leiding een terugslagklep heeft om terugstroming te voorkomen"
 
-#: gusnet/elements.py
 msgid "How is pump described (by power or by head curve)"
 msgstr "Hoe wordt pomp beschreven (door vermogen of door hoogtecurve)"
 
-#: gusnet/elements.py
 msgid "Flow vs head curve for pump"
 msgstr "Stroom versus hoogtecurve voor pomp"
 
-#: gusnet/elements.py
 msgid "Power rating of pump"
 msgstr "Vermogen van pomp"
 
-#: gusnet/elements.py
 msgid "Base rotational speed of pump"
 msgstr "Basis rotatiesnelheid van pomp"
 
-#: gusnet/elements.py
 msgid "Time-varying pattern for pump speed"
 msgstr "Tijdafhankelijk patroon voor pompsnelheid"
 
-#: gusnet/elements.py
 msgid "Initial operating status"
 msgstr "Initiële bedrijfsstatus"
 
-#: gusnet/elements.py
 msgid "Initial valve status (active, open, closed)"
 msgstr "Initiële ventielstatus (actief, open, gesloten)"
 
-#: gusnet/elements.py
 msgid "Head loss curve (flow vs head loss) for general purpose valve"
 msgstr "Hoogteverliescurve (stroom versus hoogteverlies) voor algemeen gebruik ventiel"
 
-#: gusnet/elements.py
 msgid "Initial water quality concentration for water quality analysis"
 msgstr "Initiële waterkwaliteitsconcentratie voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Fraction of tank volume for mixing model for two-compartment mixing model"
 msgstr "Fractie van tankvolume voor mengmodel met twee compartimenten"
 
-#: gusnet/elements.py
 msgid "Tank mixing model type for water quality analysis"
 msgstr "Tankmengmodeltype voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Bulk reaction rate coefficient for water quality analysis"
 msgstr "Bulkreactiesnelheidscoëfficiënt voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Wall reaction rate coefficient for water quality analysis"
 msgstr "Wandreactiesnelheidscoëfficiënt voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Pump efficiency curve (flow vs efficiency) for energy use analysis"
 msgstr "Pompefficiëntiecurve (stroom versus efficiëntie) voor energiegebruikanalyse"
 
-#: gusnet/elements.py
 msgid "Time-varying pattern for energy price"
 msgstr "Tijdafhankelijk patroon voor energieprijs"
 
-#: gusnet/elements.py
 msgid "Energy price per kW hour for energy use analysis"
 msgstr "Energieprijs per kWh voor energiegebruikanalyse"
 
-#: gusnet/elements.py
 msgid "Water demand at node"
 msgstr "Watervraag bij knooppunt"
 
-#: gusnet/elements.py
 msgid "Hydraulic head at node"
 msgstr "Hydraulische hoogte bij knooppunt"
 
-#: gusnet/elements.py
 msgid "Water pressure at node"
 msgstr "Waterdruk bij knooppunt"
 
-#: gusnet/elements.py
 msgid "Water flow rate through link"
 msgstr "Waterstroomsnelheid door verbinding"
 
-#: gusnet/elements.py
 msgid "Head loss across link"
 msgstr "Hoogteverlies over verbinding"
 
-#: gusnet/elements.py
 msgid "Head loss proportional to length of pipe"
 msgstr "Hoogteverlies evenredig aan lengte van leiding"
 
-#: gusnet/elements.py
 msgid "Water velocity in link"
 msgstr "Watersnelheid in verbinding"
 
-#: gusnet/elements.py
 msgid "Water quality concentration"
 msgstr "Waterkwaliteitsconcentratie"
 
-#: gusnet/elements.py
 msgid "Rate of water quality reaction"
 msgstr "Snelheid van waterkwaliteitsreactie"
 
-#: gusnet/elements.py
 msgid "Flow units for the model"
 msgstr "Debieteenheden voor het model"
 
-#: gusnet/elements.py
 msgid "Flow units will determine the units of other units used in the model as well.Selecting a metric-based unit set means everything will be metric, wheras selecting an imperial measure means everything will be imperial."
 msgstr "De debieteenheden bepalen ook de eenheden van andere grootheden die in het model worden gebruikt. Kies je een metrische eenhedenset, dan is alles metrisch; kies je een imperiale eenhedenset, dan is alles imperiaal."
 
-#: gusnet/elements.py
 msgid "Formula to use for headloss calculations"
 msgstr "Formule voor het berekenen van drukverlies"
 
-#: gusnet/elements.py
 msgid "Duration of the simulation in hours (or 0 for single period)"
 msgstr "Duur van de simulatie in uren (of 0 voor een enkele periode)"
 
-#: gusnet/elements.py
 msgid "Global multiplier for all demands in the model"
 msgstr "Globale vermenigvuldigingsfactor voor alle vraagwaarden in het model"
 
-#: gusnet/elements.py
 msgid "Default pattern to use for any pattern fields left blank"
 msgstr "Standaardpatroon voor patroonvelden die leeg blijven"
 
-#: gusnet/elements.py
 msgid "Exponent for emitter calculations"
 msgstr "Exponent voor emitterberekeningen"
 
-#: gusnet/elements.py
 msgid "Whether to model demands as fixed or pressure dependent"
 msgstr "Of vraagwaarden als vast of drukafhankelijk worden gemodelleerd"
 
-#: gusnet/elements.py
 msgid "Minimum pressure for pressure dependent demand calculations"
 msgstr "Minimale druk voor drukafhankelijke vraagberekeningen"
 
-#: gusnet/elements.py
 msgid "Required pressure for pressure dependent demand calculations"
 msgstr "Vereiste druk voor drukafhankelijke vraagberekeningen"
 
-#: gusnet/elements.py
 msgid "Exponent for pressure dependent demand calculations"
 msgstr "Drukafhankelijke vraag"
 
-#: gusnet/elements.py
 msgid "Price of energy per kW hour for energy calculations"
 msgstr "Energieprijs per kWh voor energiegebruikanalyse"
 
-#: gusnet/elements.py
 msgid "Pattern of price multiplier to use for energy calculations"
 msgstr "Patroon van de prijsfactor voor energieberekeningen"
 
-#: gusnet/elements.py
 msgid "Global efficiency of pumps for energy calculations - as a percentage"
 msgstr "Globaal pomp-rendement voor energieberekeningen - als percentage"
 
-#: gusnet/elements.py
 msgid "Demand charge for energy calculations"
 msgstr "Vermogenstarief voor energieberekeningen"
 
-#: gusnet/elements.py
 msgid "Type of water quality analysis to do"
 msgstr "Type waterkwaliteitsanalyse om uit te voeren"
 
-#: gusnet/elements.py
 msgid "Mass unit to use for water quality analysis"
 msgstr "Massa-eenheid voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Relative diffusivity for water quality analysis"
 msgstr "Relatieve diffusiviteit voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Node to track for trace analysis (if quality parameter is TRACE)"
 msgstr "Te volgen knooppunt voor traceranalyse (als kwaliteitsparameter TRACE is)"
 
-#: gusnet/elements.py
 msgid "Tolerance for water quality convergence in extended period simulations"
 msgstr "Tolerantie voor waterkwaliteitsconvergentie in uitgebreide periodesimulaties"
 
-#: gusnet/elements.py
 msgid "Order of the bulk reaction for water quality analysis"
 msgstr "Orde van de bulkreactie voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Order of the wall reaction for water quality analysis"
 msgstr "Orde van de wandreactie voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Global bulk coefficient for water quality analysis"
 msgstr "Globale bulkcoëfficiënt voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Global wall coefficient for water quality analysis"
 msgstr "Globale wandcoëfficiënt voor waterkwaliteitsanalyse"
 
-#: gusnet/elements.py
 msgid "Limiting concentration for water quality analysis (concentration below which reactions are assumed to stop)"
 msgstr "Grensconcentratie voor waterkwaliteitsanalyse (onder deze concentratie wordt aangenomen dat reacties stoppen)"
 
-#: gusnet/elements.py
 msgid "Correlation for calculating wall reaction coefficient based on pipe diameter (if 0, wall coefficient will be constant)"
 msgstr "Correlatie voor het berekenen van de wandreactiecoëfficiënt op basis van leidingdiameter (bij 0 is de wandcoëfficiënt constant)"
 
-#: gusnet/epanet_wrapper.py
 #, python-brace-format
 msgid "EPANET returned warning code {error_code}: {warning_text}"
 msgstr "EPANET gaf waarschuwingscode {error_code} terug: {warning_text}"
 
-#: gusnet/epanet_wrapper.py
 #, python-brace-format
 msgid "EPANET returned warning code {error_code} at simulation time {time}: {warning_text}"
 msgstr "EPANET gaf waarschuwingscode {error_code} terug op simulatietijd {time}: {warning_text}"
 
-#: gusnet/epanet_wrapper.py
 msgid "System hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials"
 msgstr "Systeem hydraulisch uit balans: convergentie naar een hydraulische oplossing is niet bereikt binnen het toegestane aantal pogingen"
 
-#: gusnet/epanet_wrapper.py
 msgid "System may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed"
 msgstr "Systeem kan hydraulisch instabiel zijn: hydraulische convergentie werd alleen bereikt nadat de status van alle verbindingen vast was gehouden"
 
-#: gusnet/epanet_wrapper.py
 msgid "System disconnected - one or more nodes with positive demands were disconnected for all supply sources"
 msgstr "Systeem losgekoppeld: een of meer knooppunten met positieve vraag waren losgekoppeld van alle aanvoerbronnen"
 
-#: gusnet/epanet_wrapper.py
 msgid "Pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow"
 msgstr "Pompen kunnen niet genoeg debiet of opvoerhoogte leveren: een of meer pompen werden gedwongen uit te schakelen (door onvoldoende opvoerhoogte) of boven het maximale nominale debiet te werken"
 
-#: gusnet/epanet_wrapper.py
 msgid "Valves cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open"
 msgstr "Kleppen kunnen niet genoeg debiet leveren: een of meer debietregelkleppen konden het vereiste debiet niet leveren, zelfs niet volledig geopend"
 
-#: gusnet/epanet_wrapper.py
 msgid "System has negative pressures - negative pressures occurred at one or more junctions with positive demand"
 msgstr "Systeem heeft negatieve drukken: negatieve drukken traden op bij een of meer knooppunten met positieve vraag"
 
-#: gusnet/epanet_wrapper.py
 msgid "insufficient memory available"
 msgstr "onvoldoende geheugen beschikbaar"
 
-#: gusnet/epanet_wrapper.py
 msgid "no network data available"
 msgstr "geen netwerkgegevens beschikbaar"
 
-#: gusnet/epanet_wrapper.py
 msgid "hydraulics not initialized"
 msgstr "hydraulica niet geinitialiseerd"
 
-#: gusnet/epanet_wrapper.py
 msgid "no hydraulics for water quality analysis"
 msgstr "geen hydraulische gegevens voor waterkwaliteitsanalyse"
 
-#: gusnet/epanet_wrapper.py
 msgid "water quality not initialized"
 msgstr "waterkwaliteit niet geinitialiseerd"
 
-#: gusnet/epanet_wrapper.py
 msgid "no results saved to report on"
 msgstr "geen resultaten opgeslagen om te rapporteren"
 
-#: gusnet/epanet_wrapper.py
 msgid "hydraulics supplied from external file"
 msgstr "hydraulica aangeleverd vanuit extern bestand"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot use external file while hydraulics solver is active"
 msgstr "kan extern bestand niet gebruiken terwijl hydraulische oplosser actief is"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot change time parameter when solver is active"
 msgstr "kan tijdparameter niet wijzigen terwijl oplosser actief is"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot solve network hydraulic equations"
 msgstr "kan hydraulische vergelijkingen van het netwerk niet oplossen"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot solve water quality transport equations"
 msgstr "kan transportvergelijkingen voor waterkwaliteit niet oplossen"
 
-#: gusnet/epanet_wrapper.py
 msgid "one or more errors in input file"
 msgstr "een of meer fouten in het invoerbestand"
 
-#: gusnet/epanet_wrapper.py
 msgid "syntax error"
 msgstr "syntaxisfout"
 
-#: gusnet/epanet_wrapper.py
 msgid "invalid section keyword"
 msgstr "ongeldig sectiesleutelwoord"
 
-#: gusnet/epanet_wrapper.py
 msgid "illegal numeric value"
 msgstr "ongeldige numerieke waarde"
 
-#: gusnet/epanet_wrapper.py
 msgid "undefined node"
 msgstr "niet-gedefinieerd knooppunt"
 
-#: gusnet/epanet_wrapper.py
 msgid "undefined link"
 msgstr "niet-gedefinieerde verbinding"
 
-#: gusnet/epanet_wrapper.py
 msgid "undefined time pattern"
 msgstr "niet-gedefinieerd tijdspatroon"
 
-#: gusnet/epanet_wrapper.py
 msgid "undefined curve"
 msgstr "niet-gedefinieerde curve"
 
-#: gusnet/epanet_wrapper.py
 msgid "attempt to control a CV/GPV link"
 msgstr "poging om een CV/GPV-verbinding te sturen"
 
-#: gusnet/epanet_wrapper.py
 msgid "illegal PDA pressure limits"
 msgstr "ongeldige PDA-druklimieten"
 
-#: gusnet/epanet_wrapper.py
 msgid "illegal node property value"
 msgstr "ongeldige eigenschapswaarde voor knooppunt"
 
-#: gusnet/epanet_wrapper.py
 msgid "illegal link property value"
 msgstr "ongeldige eigenschapswaarde voor verbinding"
 
-#: gusnet/epanet_wrapper.py
 msgid "undefined trace node"
 msgstr "niet-gedefinieerd trace-knooppunt"
 
-#: gusnet/epanet_wrapper.py
 msgid "invalid option value"
 msgstr "ongeldige optie-waarde"
 
-#: gusnet/epanet_wrapper.py
 msgid "too many characters in input line"
 msgstr "te veel tekens in invoerregel"
 
-#: gusnet/epanet_wrapper.py
 msgid "duplicate ID label"
 msgstr "dubbel ID-label"
 
-#: gusnet/epanet_wrapper.py
 msgid "reference to undefined pump"
 msgstr "verwijzing naar niet-gedefinieerde pomp"
 
-#: gusnet/epanet_wrapper.py
 msgid "invalid pump energy data"
 msgstr "ongeldige pomp-energiegegevens"
 
-#: gusnet/epanet_wrapper.py
 msgid "illegal valve connection to tank node"
 msgstr "ongeldige klepverbinding met tankknooppunt"
 
-#: gusnet/epanet_wrapper.py
 msgid "illegal valve connection to another valve"
 msgstr "ongeldige klepverbinding met andere klep"
 
-#: gusnet/epanet_wrapper.py
 msgid "misplaced rule clause in rule-based control"
 msgstr "misplaatste regelclausule in regelgebaseerde besturing"
 
-#: gusnet/epanet_wrapper.py
 msgid "link assigned same start and end nodes"
 msgstr "verbinding heeft hetzelfde begin- en eindknooppunt"
 
-#: gusnet/epanet_wrapper.py
 msgid "not enough nodes in network"
 msgstr "onvoldoende knooppunten in netwerk"
 
-#: gusnet/epanet_wrapper.py
 msgid "no tanks or reservoirs in network"
 msgstr "geen tanks of reservoirs in netwerk"
 
-#: gusnet/epanet_wrapper.py
 msgid "invalid lower/upper levels for tank"
 msgstr "ongeldig onder-/bovenniveau voor tank"
 
-#: gusnet/epanet_wrapper.py
 msgid "no head curve or power rating for pump"
 msgstr "geen opvoerhoogtecurve of vermogenswaarde voor pomp"
 
-#: gusnet/epanet_wrapper.py
 msgid "invalid head curve for pump"
 msgstr "ongeldige opvoerhoogtecurve voor pomp"
 
-#: gusnet/epanet_wrapper.py
 msgid "nonincreasing x-values for curve"
 msgstr "niet-stijgende x-waarden voor curve"
 
-#: gusnet/epanet_wrapper.py
 msgid "no data provided for curve"
 msgstr "geen gegevens opgegeven voor curve"
 
-#: gusnet/epanet_wrapper.py
 msgid "no data provided for pattern"
 msgstr "geen gegevens opgegeven voor patroon"
 
-#: gusnet/epanet_wrapper.py
 msgid "network has unconnected nodes"
 msgstr "netwerk heeft niet-verbonden knooppunten"
 
-#: gusnet/epanet_wrapper.py
 msgid "network has an unconnected node"
 msgstr "netwerk heeft een niet-verbonden knooppunt"
 
-#: gusnet/epanet_wrapper.py
 msgid "nonexistent water quality source"
 msgstr "niet-bestaande waterkwaliteitsbron"
 
-#: gusnet/epanet_wrapper.py
 msgid "nonexistent control"
 msgstr "niet-bestaande besturing"
 
-#: gusnet/epanet_wrapper.py
 msgid "invalid format (e.g. too long an ID name)"
 msgstr "ongeldig formaat (bijv. te lange ID-naam)"
 
-#: gusnet/epanet_wrapper.py
 msgid "invalid parameter code"
 msgstr "ongeldige parametercode"
 
-#: gusnet/epanet_wrapper.py
 msgid "invalid ID name"
 msgstr "ongeldige ID-naam"
 
-#: gusnet/epanet_wrapper.py
 msgid "nonexistent demand category"
 msgstr "niet-bestaande vraagcategorie"
 
-#: gusnet/epanet_wrapper.py
 msgid "node with no coordinates"
 msgstr "knooppunt zonder coordinaten"
 
-#: gusnet/epanet_wrapper.py
 msgid "invalid link vertex"
 msgstr "ongeldig verbindingsvertex"
 
-#: gusnet/epanet_wrapper.py
 msgid "nonexistent rule"
 msgstr "niet-bestaande regel"
 
-#: gusnet/epanet_wrapper.py
 msgid "nonexistent rule clause"
 msgstr "niet-bestaande regelclausule"
 
-#: gusnet/epanet_wrapper.py
 msgid "attempt to delete a node that still has links connected to it"
 msgstr "poging om een knooppunt te verwijderen dat nog verbonden is met links"
 
-#: gusnet/epanet_wrapper.py
 msgid "attempt to delete node assigned as a Trace Node"
 msgstr "poging om een knooppunt te verwijderen dat als trace-knooppunt is ingesteld"
 
-#: gusnet/epanet_wrapper.py
 msgid "attempt to delete a node or link contained in a control"
 msgstr "poging om een knooppunt of link te verwijderen die in een besturing wordt gebruikt"
 
-#: gusnet/epanet_wrapper.py
 msgid "attempt to modify network structure while a solver is open"
 msgstr "poging om netwerkstructuur te wijzigen terwijl een oplosser actief is"
 
-#: gusnet/epanet_wrapper.py
 msgid "node is not a tank"
 msgstr "knooppunt is geen tank"
 
-#: gusnet/epanet_wrapper.py
 msgid "link is not a valve"
 msgstr "verbinding is geen klep"
 
-#: gusnet/epanet_wrapper.py
 msgid "identical file names used for different types of files"
 msgstr "identieke bestandsnamen gebruikt voor verschillende bestandstypen"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot open input file"
 msgstr "kan invoerbestand niet openen"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot open report file"
 msgstr "kan rapportbestand niet openen"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot open binary output file"
 msgstr "kan binair uitvoerbestand niet openen"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot open hydraulics file"
 msgstr "kan hydraulisch bestand niet openen"
 
-#: gusnet/epanet_wrapper.py
 msgid "hydraulics file does not match network data"
 msgstr "hydraulisch bestand komt niet overeen met netwerkgegevens"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot read hydraulics file"
 msgstr "kan hydraulisch bestand niet lezen"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot save results to binary file"
 msgstr "kan resultaten niet opslaan naar binair bestand"
 
-#: gusnet/epanet_wrapper.py
 msgid "cannot save results to report file"
 msgstr "kan resultaten niet opslaan naar rapportbestand"
 
-#: gusnet/epanet_wrapper.py
 #, python-brace-format
 msgid "Unknown EPANET error code: {code}"
 msgstr "Onbekende EPANET-foutcode: {code}"
 
-#: gusnet/epanet_wrapper.py
 #, python-brace-format
 msgid "EPANET returned error {errcode} at simulation time {time} - {error_text} at time {time}"
 msgstr "EPANET gaf fout {errcode} terug op simulatietijd {time} - {error_text} op tijd {time}"
 
-#: gusnet/epanet_wrapper.py
 #, python-brace-format
 msgid "EPANET returned error {errcode} - {error_text}"
 msgstr "EPANET gaf fout {errcode} terug - {error_text}"
 
-#: gusnet/epanet_wrapper.py
 msgid "Cannot load EPANET library."
 msgstr "Kan EPANET-bibliotheek niet laden."
 
-#: gusnet/expressions.py
 msgid "Expression context is not set."
 msgstr "Expressiecontext is niet ingesteld."
 
-#: gusnet/expressions.py
 msgid "Animation start time is not set."
 msgstr "Starttijd van animatie is niet ingesteld."
 
-#: gusnet/expressions.py
 #, python-brace-format
 msgid "Requested time ({timestep}) is outside of the range of results."
 msgstr "Aangevraagde tijd ({timestep}) ligt buiten het bereik van de resultaten."
 
-#: gusnet/feature_reader.py
 msgid "Getting features from QGIS"
 msgstr "Objecten ophalen uit QGIS"
 
-#: gusnet/feature_reader.py
 #, python-brace-format
 msgid "{layer} expects a point layer. Received: {received_type}"
 msgstr "{layer} verwacht een puntlaag. Ontvangen: {received_type}"
 
-#: gusnet/feature_reader.py
 #, python-brace-format
 msgid "{layer} expects a line layer. Received: {received_type}"
 msgstr "{layer} verwacht een lijnlaag. Ontvangen: {received_type}"
 
-#: gusnet/feature_reader.py
 msgid "Fixing names"
 msgstr "Namen corrigeren"
 
-#: gusnet/feature_reader.py
 msgid "Handling geometries"
 msgstr "Geometrieen verwerken"
 
-#: gusnet/feature_reader.py
 msgid "Measuring Pipes"
 msgstr "Leidingen meten"
 
-#: gusnet/feature_reader.py
 msgid "Cannot calculate pipe lengths without a valid coordinate reference system."
 msgstr "Kan leidinglengtes niet berekenen zonder een geldig coordinatenreferentiesysteem."
 
-#: gusnet/feature_reader.py
 msgid "The length of one or more pipes could not be calculated."
 msgstr "De lengte van een of meer leidingen kon niet worden berekend."
 
-#: gusnet/feature_reader.py
 msgid "feet"
 msgstr "voet"
 
-#: gusnet/feature_reader.py
 msgid "metres"
 msgstr "meter"
 
-#: gusnet/feature_reader.py
 #, python-brace-format
 msgid "A pipe has a different attribute length vs measured length. This is pipe: {mismatches}"
 msgid_plural "{count} pipes have very different attribute length vs measured length. These are pipes: {mismatches}"
 msgstr[0] "Eén leiding heeft een groot verschil tussen attribuutlengte en gemeten lengte. Dit is de leiding: {mismatches}"
 msgstr[1] "{count} leidingen hebben grote verschillen tussen attribuutlengte en gemeten lengte. Dit zijn de leidingen: {mismatches}"
 
-#: gusnet/feature_reader.py
 #, python-brace-format
 msgid "cannot calculate length of 1 pipe (probably due to a problem with the selected coordinate reference system)"
 msgid_plural "cannot calculate length of {count} pipes (probably due to a problem with the selected coordinate reference system)"
 msgstr[0] "kan de lengte van 1 leiding niet berekenen (waarschijnlijk door een probleem met het geselecteerde coördinatenreferentiesysteem)"
 msgstr[1] "kan de lengte van {count} leidingen niet berekenen (waarschijnlijk door een probleem met het geselecteerde coördinatenreferentiesysteem)"
 
-#: gusnet/feature_reader.py
 msgid "Geometry errors were found."
 msgstr "Er zijn geometriefouten gevonden."
 
-#: gusnet/feature_reader.py
 #, python-brace-format
 msgid "In {layer} {number} features have invalid geometries: {names}"
 msgstr "In {layer} hebben {number} objecten ongeldige geometrieen: {names}"
 
-#: gusnet/inpfile_reader.py
 msgid "No valid sections found in input file."
 msgstr "Geen geldige secties gevonden in het invoerbestand."
 
-#: gusnet/inpfile_reader.py
 #, python-brace-format
 msgid "Invalid wall reaction order value: {value}"
 msgstr "Ongeldige waarde voor wandreactieorde: {value}"
 
-#: gusnet/inpfile_reader.py
 #, python-brace-format
 msgid "Error reading input file. {parent_error}"
 msgstr "Fout bij het lezen van het invoerbestand. {parent_error}"
 
-#: gusnet/inpfile_reader.py
 #, python-brace-format
 msgid ".inp file does not exist ({input_file})"
 msgstr ".inp-bestand bestaat niet ({input_file})"
 
-#: gusnet/plugin.py
 msgid "Gusnet"
 msgstr "Gusnet"
 
-#: gusnet/plugin.py
 msgid "Headloss Formula"
 msgstr "Hoogteverliesformule"
 
-#: gusnet/plugin.py
 msgid "Units"
 msgstr "Eenheden"
 
-#: gusnet/plugin.py
 msgid "Duration (hours)"
 msgstr "Duur (uren)"
 
-#: gusnet/plugin.py
 msgid "Demand Type"
 msgstr "Vraagtype"
 
-#: gusnet/plugin.py
 msgid "Failed to fetch EPANET. Please check your internet connection."
 msgstr "EPANET ophalen is mislukt. Controleer uw internetverbinding."
 
-#: gusnet/plugin.py
 msgid "Gusnet upgraded successfully"
 msgstr "Gusnet succesvol geupgraded"
 
-#: gusnet/plugin.py
 msgid "Gusnet installed successfully"
 msgstr "Gusnet succesvol geinstalleerd"
 
-#: gusnet/plugin.py
 msgid "Load an example to try me out"
 msgstr "Laad een voorbeeld om mij uit te proberen"
 
-#: gusnet/plugin.py
 msgid "Load Example"
 msgstr "Voorbeeld laden"
 
-#: gusnet/plugin.py
 msgid "Gusnet:\n"
 msgstr "Gusnet:"
 
-#: gusnet/plugin.py
 msgid "Error"
 msgstr "Fout"
 
-#: gusnet/plugin.py
 msgid "Analysed with Warnings"
 msgstr "Geanalyseerd met waarschuwingen"
 
-#: gusnet/plugin.py
 msgid "Success"
 msgstr "Succes"
 
-#: gusnet/plugin.py
 msgid "Run the simulation with the current settings."
 msgstr "Voer de simulatie uit met de huidige instellingen."
 
-#: gusnet/plugin.py
 #, python-brace-format
 msgid "Analysed using units '{units}' and headloss formula '{headloss_formula}'"
 msgstr "Geanalyseerd met eenheden '{units}' en hoogteverliesformule '{headloss_formula}'"
 
-#: gusnet/plugin.py
 msgid "Create Template Memory Layers"
 msgstr "Maak sjabloon geheugenlagen"
 
-#: gusnet/plugin.py
 msgid "Create Template Geopackage"
 msgstr "Maak sjabloon geopackage"
 
-#: gusnet/plugin.py
 msgid "Save Geopackage"
 msgstr "Geopackage opslaan"
 
-#: gusnet/plugin.py
 msgid "Geopackage"
 msgstr "Geopackage"
 
-#: gusnet/plugin.py
 #, python-brace-format
 msgid "Loaded '{file_name}'"
 msgstr "'{file_name}' geladen"
 
-#: gusnet/plugin.py
 msgid "Choose Input File"
 msgstr "Kies invoerbestand"
 
-#: gusnet/plugin.py
 msgid "EPANET INP File"
 msgstr "EPANET INP bestand"
 
-#: gusnet/plugin.py
 msgid "Load an example network"
 msgstr "Laad een voorbeeldnetwerk"
 
-#: gusnet/plugin.py
 msgid "OpenStreetMap"
 msgstr "OpenStreetMap"
 
-#: gusnet/plugin.py
 msgid "Example loaded with Open Street Map background. Now run it by pressing the lightning icon."
 msgstr "Voorbeeld geladen met Open Street Map achtergrond"
 
-#: gusnet/plugin.py
 msgid "Errors:"
 msgstr "Fouten:"
 
-#: gusnet/plugin.py
 msgid "Warnings:"
 msgstr "Waarschuwingen:"
 
-#: gusnet/plugin.py
 msgid "Change layers..."
 msgstr "Wijzig lagen..."
 
-#: gusnet/plugin.py
 msgid "Open the settings dialog to change the model layers."
 msgstr "Open the settings dialog to change the netwerk layers."
 
-#: gusnet/plugin.py
 msgid "Single period simulation"
 msgstr "Simulatie van één periode"
 
-#: gusnet/plugin.py
 #, python-brace-format
 msgid "1 hour"
 msgid_plural "{count} hours"
 msgstr[0] "1 uur"
 msgstr[1] "{count} uur"
 
-#: gusnet/profiler.py
 msgid "Execution of script cancelled by user"
 msgstr "Uitvoering van script geannuleerd door gebruiker"
 
-#: gusnet/spatial_index.py
 #, python-brace-format
 msgid "For the link '{link_name}', the closest node ({node_name}) is too far away to snap to."
 msgstr "For the link '{link_name}', the closest node ({node_name}) is too far away to snap to."
 
-#: gusnet/statistics.py
 msgid "Model Description:"
 msgstr "Modelbeschrijving:"
 
-#: gusnet/statistics.py
 msgid "Total Pipe Length"
 msgstr "Totale leidinglengte"
 
-#: gusnet/statistics.py
 msgid "Unique Pipe Diameters"
 msgstr "Unieke leidingdiameters"
 
-#: gusnet/style.py
 #, python-brace-format
 msgid "{field} ({unit})"
 msgstr "{field} ({unit})"
 
-#: gusnet/style.py
 msgid "Name must either be blank for automatic naming, or a string of up to 31 characters with no spaces"
 msgstr "Naam moet leeg zijn voor automatische naamgeving, of een reeks van maximaal 31 tekens zonder spaties"
 
-#: gusnet/style.py
 msgid "Diameter must be greater than 0"
 msgstr "Diameter moet groter zijn dan 0"
 
-#: gusnet/style.py
 msgid "Roughness must be greater than 0"
 msgstr "Ruwheid moet groter zijn dan 0"
 
-#: gusnet/style.py
 msgid "Length must be empty/NULL (will be calculated) or greater than 0"
 msgstr "Lengte moet leeg/NULL zijn (wordt berekend) of groter dan 0"
 
-#: gusnet/style.py
 msgid "Minor loss must be greater than or equal to 0"
 msgstr "Klein verlies moet groter zijn dan of gelijk aan 0"
 
-#: gusnet/style.py
 msgid "Base speed must be greater than 0"
 msgstr "Basissnelheid moet groter zijn dan 0"
 
-#: gusnet/style.py
 msgid "Power pumps must have a power greater than 0"
 msgstr "Vermogenspompen moeten een vermogen groter dan 0 hebben"
 
-#: gusnet/style.py
 msgid "Patterns must be a string of numbers separated by spaces"
 msgstr "Patronen moeten een reeks getallen zijn, gescheiden door spaties"
 
-#: gusnet/style.py
 msgid "Curves must be a list of tuples, e.g. (1,2), (3,4)"
 msgstr "Curven moeten een lijst van tuples zijn, bv. (1,2), (3,4)"
 
-#: gusnet/style.py
 #, python-brace-format
 msgid "Head pumps must have a pump curve. {curve_description}"
 msgstr "Opvoerhoogtepompen moeten een pompkromme hebben. {curve_description}"
 
-#: gusnet/style.py
 #, python-brace-format
 msgid "General Purpose Valves must have a headloss curve. {curve_description}"
 msgstr "Algemene kleppen moeten een opvoerhoogteverlieskromme hebben. {curve_description}"
 
-#: gusnet/units.py
 msgid "*flow*"
 msgstr "*debiet*"
 
-#: gusnet/units.py
 msgid "*mass*"
 msgstr "*massa*"
 
-#: gusnet/units.py
 #, python-brace-format
 msgid "{flow_unit} / √m or {flow_unit} / √psi"
 msgstr "{flow_unit} / √m of {flow_unit} / √psi"
 
-#: gusnet/units.py
 msgid "mm or inches"
 msgstr "mm of inches"
 
-#: gusnet/units.py
 msgid "unitless, mm, or 10⁻³ ft"
 msgstr "eenheidsloos, mm of 10⁻³ ft"
 
-#: gusnet/units.py
 msgid "m or ft"
 msgstr "m of ft"
 
-#: gusnet/units.py
 msgid "m/1000 m or ft/1000 ft"
 msgstr "m/1000 m of ft/1000 ft"
 
-#: gusnet/units.py
 msgid "m/s or ft/s"
 msgstr "m/s of ft/s"
 
-#: gusnet/units.py
 msgid "kWh"
 msgstr "kWh"
 
-#: gusnet/units.py
 msgid "kW or hp"
 msgstr "kW of hp"
 
-#: gusnet/units.py
 msgid "m or psi"
 msgstr "m of psi"
 
-#: gusnet/units.py
 msgid "m³ or ft³"
 msgstr "m³ of ft³"
 
-#: gusnet/units.py
 msgid "mg/L"
 msgstr "mg/L"
 
-#: gusnet/units.py
 msgid "mg/L/day"
 msgstr "mg/L/day"
 
-#: gusnet/units.py
 msgid "mg/min"
 msgstr "mg/min"
 
-#: gusnet/units.py
 msgid " "
 msgstr " "
 
-#: gusnet/units.py
 msgid "mg/m²/day,  mg/ft²/day, m/day, or ft/day"
 msgstr "mg/m²/day, mg/ft²/day, m/day of ft/day"
 
-#: gusnet/units.py
 msgid "hours"
 msgstr "uren"
 
-#: gusnet/units.py
 msgid "unitless"
 msgstr "eenheidsloos"
 
-#: gusnet/units.py
 msgid "fraction"
 msgstr "fractie"
 
-#: gusnet/units.py
 msgid "currency"
 msgstr "valuta"
 
-#: gusnet/units.py
 msgid "L/s"
 msgstr "L/s"
 
-#: gusnet/units.py
 msgid "L/min"
 msgstr "L/min"
 
-#: gusnet/units.py
 msgid "ML/day"
 msgstr "ML/day"
 
-#: gusnet/units.py
 msgid "m³/hour"
 msgstr "m³/hour"
 
-#: gusnet/units.py
 msgid "m³/day"
 msgstr "m³/day"
 
-#: gusnet/units.py
 msgid "ft³/s"
 msgstr "ft³/s"
 
-#: gusnet/units.py
 msgid "gal/min"
 msgstr "gal/min"
 
-#: gusnet/units.py
 msgid "MG/day"
 msgstr "MG/day"
 
-#: gusnet/units.py
 msgid "imp gal/day"
 msgstr "imp gal/day"
 
-#: gusnet/units.py
 msgid "Acre-ft/day"
 msgstr "Acre-ft/day"
 
-#: gusnet/units.py
 msgid "ug"
 msgstr "ug"
 
-#: gusnet/units.py
 #, python-brace-format
 msgid "{flow_unit}/√psi"
 msgstr "{flow_unit}/√psi"
 
-#: gusnet/units.py
 #, python-brace-format
 msgid "{flow_unit}/√m"
 msgstr "{flow_unit}/√m"
 
-#: gusnet/units.py
 msgid "in"
 msgstr "in"
 
-#: gusnet/units.py
 msgid "mm"
 msgstr "mm"
 
-#: gusnet/units.py
 msgid "10⁻³ ft"
 msgstr "10⁻³ ft"
 
-#: gusnet/units.py
 msgid "ft"
 msgstr "ft"
 
-#: gusnet/units.py
 msgid "m"
 msgstr "m"
 
-#: gusnet/units.py
 msgid "ft/1000 ft  "
 msgstr "ft/1000 ft"
 
-#: gusnet/units.py
 msgid "m/1000 m"
 msgstr "m/1000 m"
 
-#: gusnet/units.py
 msgid "ft/s"
 msgstr "ft/s"
 
-#: gusnet/units.py
 msgid "m/s"
 msgstr "m/s"
 
-#: gusnet/units.py
 msgid "kWhr"
 msgstr "kWhr"
 
-#: gusnet/units.py
 msgid "hp"
 msgstr "hp"
 
-#: gusnet/units.py
 msgid "kW"
 msgstr "kW"
 
-#: gusnet/units.py
 msgid "psi"
 msgstr "psi"
 
-#: gusnet/units.py
 msgid "ft³"
 msgstr "ft³"
 
-#: gusnet/units.py
 msgid "m³"
 msgstr "m³"
 
-#: gusnet/units.py
 #, python-brace-format
 msgid "{mass_unit}/L"
 msgstr "{mass_unit}/L"
 
-#: gusnet/units.py
 #, python-brace-format
 msgid "{mass_unit}/L/day"
 msgstr "{mass_unit}/L/day"
 
-#: gusnet/units.py
 #, python-brace-format
 msgid "{mass_unit}/min"
 msgstr "{mass_unit}/min"
 
-#: gusnet/units.py
 #, python-brace-format
 msgid "{mass_unit}/ft²/day"
 msgstr "{mass_unit}/ft²/day"
 
-#: gusnet/units.py
 #, python-brace-format
 msgid "{mass_unit}/m²/day"
 msgstr "{mass_unit}/m²/day"
 
-#: gusnet/units.py
 msgid "ft/day"
 msgstr "ft/day"
 
-#: gusnet/units.py
 msgid "m/day"
 msgstr "m/day"
 
-#: gusnet/verify_model.py
 msgid "Multiple verification errors were found:\n"
 msgstr "Er zijn meerdere verificatiefouten gevonden:\n"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "The following links do not connect to a node at each end: {links}"
 msgstr "De volgende verbindingen zijn niet aan beide uiteinden met een knooppunt verbonden: {links}"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "{num_features} links have the same start and end nodes: {links}"
 msgstr "{num_features} verbindingen hebben dezelfde begin- en eindknooppunten: {links}"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "The following junctions are not connected to any links: {nodes}"
 msgstr "De volgende knooppunten zijn niet verbonden met enige verbinding: {nodes}"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "The following nodes have overlapping coordinates - it will not be possible to know which node each link connects to: {nodes}"
 msgstr "De volgende knooppunten hebben overlappende coordinaten; daardoor is niet te bepalen met welk knooppunt elke verbinding verbonden is: {nodes}"
 
-#: gusnet/verify_model.py
 msgid "The model is empty."
 msgstr "Het model is leeg."
 
-#: gusnet/verify_model.py
 msgid "The model must contain at least one junction."
 msgstr "Het model moet ten minste een knooppunt bevatten."
 
-#: gusnet/verify_model.py
 msgid "The model must contain at least one link (pipe, pump, or valve)."
 msgstr "Het model moet ten minste een verbinding bevatten (leiding, pomp of ventiel)."
 
-#: gusnet/verify_model.py
 msgid "The model must contain at least one reservoir or tank."
 msgstr "Het model moet ten minste een reservoir of tank bevatten."
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "In {layer_type}, all elements must have {field_name} '{field_id}'"
 msgstr "In {layer_type} moeten alle elementen {field_name} '{field_id}' hebben"
 
-#: gusnet/verify_model.py
 msgid "In Pipes, lengths could not be calculated and length field is missing or contains blanks."
 msgstr "In Pipes konden lengtes niet worden berekend en ontbreekt het veld length, of bevat het lege waarden."
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "In {layer_type}, {field_name} ({field_id}) must be numeric"
 msgstr "In {layer_type} moet {field_name} ({field_id}) numeriek zijn"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "In {layer_type}, {field_name} ({field_id}) must be boolean"
 msgstr "In {layer_type} moet {field_name} ({field_id}) booleaans zijn"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "Valve type ({valve_type}) must be set for all valves and must be one of the following values: {possible_values}"
 msgstr "Ventieltype ({valve_type}) moet voor alle ventielen worden ingesteld en moet een van de volgende waarden zijn: {possible_values}"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "{initial_setting_name} ({initial_setting}) must be set for all {valve_name}"
 msgstr "{initial_setting_name} ({initial_setting}) moet voor alle {valve_name} worden ingesteld"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "Pump type ({pump_type}) must be set for all pumps and must be one of the following values: {possible_values}"
 msgstr "Pomp type ({pump_type}) moet voor alle pompen worden ingesteld en moet een van de volgende waarden zijn: {possible_values}"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "{pump_curve_name} ({pump_curve}) must be set for all pumps of type HEAD"
 msgstr "{pump_curve_name} ({pump_curve}) moet voor alle pompen van type HEAD worden ingesteld"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "{pump_power_name} ({pump_power}) must be set for all pumps of type POWER"
 msgstr "{pump_power_name} ({pump_power}) moet voor alle pompen van type POWER worden ingesteld"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "In {layer} problem reading {pattern_type}: {pattern_string} Patterns should be a string of numeric values separated by a space, or a list of numeric values."
 msgstr "In {layer} is een probleem opgetreden bij het lezen van {pattern_type}: {pattern_string}. Patronen moeten een tekenreeks met numerieke waarden zijn, gescheiden door spaties, of een lijst met numerieke waarden."
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "In {layer}, problem reading {field_name}  \"{curve_string}\". {error_detail} Curves should be of the form: (1, 2), (3.6, 4.7)"
 msgstr "In {layer} is een probleem opgetreden bij het lezen van {field_name} \"{curve_string}\". {error_detail} Curven moeten de vorm hebben: (1, 2), (3.6, 4.7)"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "Duplicate node names found: {dupes}"
 msgstr "Dubbele knooppuntnamen gevonden: {dupes}"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "Duplicate link names found: {dupes}"
 msgstr "Dubbele verbindingsnamen gevonden: {dupes}"
 
-#: gusnet/verify_model.py
 #, python-brace-format
 msgid "In {layer_name}, the {field_name} values must be strings without spaces and under 32 characters. Problem values: {names}"
 msgstr "In {layer_name} moeten de waarden van {field_name} tekenreeksen zonder spaties zijn en korter dan 32 tekens. Probleemwaarden: {names}"
 
-#: gusnet/wntr_wrapper.py
 msgid "No simulation results are available. Set results first."
 msgstr "Er zijn geen simulatieresultaten beschikbaar. Stel eerst resultaten in."
 
-#: gusnet/wntr_wrapper.py
 msgid "Network Summary"
 msgstr "Netwerkoverzicht"
 
-#: gusnet/wntr_wrapper.py
 msgid "Pumps defined by power"
 msgstr "Pompen gedefinieerd door vermogen"
 
-#: gusnet/wntr_wrapper.py
 msgid "Pumps defined by head curve"
 msgstr "Pompen gedefinieerd door hoogtecurve"
 
-#: gusnet/wntr_wrapper.py
 msgid "Element"
 msgstr "Element"
 
-#: gusnet/wntr_wrapper.py
 msgid "Count"
 msgstr "Aantal"
 
-#: gusnet/wntr_wrapper.py
 msgid "All Pipes"
 msgstr "Alle leidingen"
 
-#: gusnet/wntr_wrapper.py
 msgid "Total"
 msgstr "Totaal"
 
-#: gusnet/wntr_wrapper.py
 msgid "Min"
 msgstr "Min"
 
-#: gusnet/wntr_wrapper.py
 msgid "Max"
 msgstr "Max"
 
-#: gusnet/wntr_wrapper.py
 #, python-brace-format
 msgid "Total pipe length: {pipe_length} {unit}"
 msgstr "Totale leidinglengte: {pipe_length} {unit}"
 
-#: gusnet/wntr_wrapper.py
 #, python-brace-format
 msgid "Error from WNTR. {exception_name}: {exception}"
 msgstr "Fout van WNTR. {exception_name}: {exception}"
 
-#: gusnet/wntr_wrapper.py
 #, python-brace-format
 msgid "Error from EPANET: {exception}"
 msgstr "Fout van EPANET: {exception}"
 
-#: gusnet/gusnet_processing/common.py
 msgid "WNTR model created. Model contains:"
 msgstr "WNTR model gemaakt. Model bevat:"
 
-#: gusnet/gusnet_processing/empty_model.py
 msgid "Create Template Layers"
 msgstr "Maak sjabloonlagen"
 
-#: gusnet/gusnet_processing/empty_model.py
 msgid "This will create a set of 'template' layers, which you can use for building your model. You do not need to create or use all layers if not required for your model."
 msgstr "Dit maakt een set sjabloonlagen die je kunt gebruiken om je model op te bouwen. Je hoeft niet alle lagen te maken of te gebruiken als ze niet nodig zijn voor je model."
 
-#: gusnet/gusnet_processing/empty_model.py
-#: gusnet/gusnet_processing/import_inp.py
 msgid "Coordinate Reference System (CRS)"
 msgstr "Coördinatenreferentiesysteem (CRS)"
 
-#: gusnet/gusnet_processing/empty_model.py
 msgid "Create Fields for Water Quality Analysis"
 msgstr "Maak velden voor waterkwaliteitsanalyse"
 
-#: gusnet/gusnet_processing/empty_model.py
 msgid "Create Fields for Energy Analysis"
 msgstr "Maak velden voor energieanalyse"
 
-#: gusnet/gusnet_processing/empty_model.py
 msgid "Model Layers"
 msgstr "Modellagen"
 
-#: gusnet/gusnet_processing/import_inp.py
 msgid "Import from Epanet INP file"
 msgstr "Importeren vanuit Epanet INP bestand"
 
-#: gusnet/gusnet_processing/import_inp.py
 msgid "Import all junctions, tanks, reservoirs, pipes, pumps and valves from an EPANET inp file. This will also save selected options from the .inp file. "
 msgstr "Importeert alle knooppunten, tanks, reservoirs, leidingen, pompen en kleppen uit een EPANET-inp-bestand. Dit slaat ook de geselecteerde opties uit het .inp-bestand op. Alle eenheden worden omgezet naar de gekozen eenhedenset. Als er niets is geselecteerd, wordt standaard de eenhedenset uit het .inp-bestand gebruikt."
 
-#: gusnet/gusnet_processing/import_inp.py
 msgid "Epanet Input File (.inp)"
 msgstr "Epanet invoerbestand (.inp)"
 
-#: gusnet/gusnet_processing/import_inp.py
 msgid "Loading INP File"
 msgstr "INP-bestand laden"
 
-#: gusnet/gusnet_processing/import_inp.py
 #, python-brace-format
 msgid "Model verification failed: {message}"
 msgstr "Modelverificatie mislukt: {message}"
 
-#: gusnet/gusnet_processing/import_inp.py
 #, python-brace-format
 msgid "Will output with the following units: {flow_unit}"
 msgstr "Zal uitvoeren met de volgende eenheden: {flow_unit}"
 
-#: gusnet/gusnet_processing/import_inp.py
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Creating Outputs"
 msgstr "Uitvoer maken"
 
-#: gusnet/gusnet_processing/import_inp.py
 #, python-brace-format
 msgid "Model Layers ({filename})"
 msgstr "Modellagen ({filename})"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Simulation Results - Nodes"
 msgstr "Simulatieresultaten - Knooppunten"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Simulation Results - Links"
 msgstr "Simulatieresultaten - Verbindingen"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Reading features"
 msgstr "Objecten lezen"
 
-#: gusnet/gusnet_processing/run_simulation.py
 #, python-brace-format
 msgid "Error reading features: {exception}"
 msgstr "Fout bij het lezen van objecten: {exception}"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Verifying model"
 msgstr "Model verifiëren"
 
-#: gusnet/gusnet_processing/run_simulation.py
 #, python-brace-format
 msgid "Error verifying model: {exception}"
 msgstr "Fout bij het verifieren van model: {exception}"
 
-#: gusnet/gusnet_processing/run_simulation.py
 #, python-brace-format
 msgid "Simulation Results ({finish_time})"
 msgstr "Simulatieresultaten ({finish_time})"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Run Simulation"
 msgstr "Simulatie uitvoeren"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid ""
 "\n"
 "This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps), combine them with the chosen options, and run a simulation using EPANET. The results will be loaded as new layers in QGIS, and a summary of the model The output files are a layer of 'nodes' (junctions, tanks, reservoirs) and 'links' (pipes, valves, pumps).\n"
 "            "
 msgstr "Dit neemt alle modellagen (knooppunten, tanks, reservoirs, leidingen, kleppen en pompen), combineert ze met de gekozen opties en voert een simulatie uit met EPANET. De resultaten worden als nieuwe lagen in QGIS geladen, samen met een samenvatting van het model. De uitvoerbestanden zijn een laag met 'nodes' (knooppunten, tanks, reservoirs) en een laag met 'links' (leidingen, kleppen, pompen)."
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Preparing Model"
 msgstr "Model voorbereiden"
 
-#: gusnet/gusnet_processing/run_simulation.py
 #, python-brace-format
 msgid "Using temporary folder: {folder}"
 msgstr "Tijdelijke map wordt gebruikt: {folder}"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Writing EPANET input file"
 msgstr "EPANET-invoerbestand schrijven"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Run EPANET simulation"
 msgstr "EPANET-simulatie uitvoeren"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Process results output file"
 msgstr "Uitvoerbestand met resultaten verwerken"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Creating output layers"
 msgstr "Uitvoerlagen maken"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Export to Epanet INP file"
 msgstr "Exporteren naar Epanet INP-bestand"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps),combine them with the chosen options, and produce an EPANET '.inp' file which can be run / viewed in other software."
 msgstr "Dit neemt alle modellagen (knooppunten, tanks, reservoirs, leidingen, kleppen en pompen), combineert ze met de gekozen opties en maakt een EPANET-'.inp'-bestand dat in andere software kan worden uitgevoerd of bekeken."
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Output .inp file"
 msgstr "Uitvoer .inp bestand"
 
-#: gusnet/gusnet_processing/run_simulation.py
 msgid "Export Inp File"
 msgstr "Inp-bestand exporteren"
 
