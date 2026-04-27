@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-DOMAIN = "gusnet"
+DOMAIN = "messages"
 BABEL_CONFIG = ROOT / "babel.cfg"
 SOURCE_DIR = ROOT / "gusnet"
 I18N_ROOT = SOURCE_DIR / "resources" / "i18n"
@@ -36,6 +36,8 @@ def extract() -> None:
         [
             BABEL_CMD,
             "extract",
+            "--add-location=file",
+            "--omit-header",
             "--mapping-file",
             str(BABEL_CONFIG),
             "--output-file",
@@ -45,14 +47,14 @@ def extract() -> None:
     )
 
 
-def init(locales: list[str]) -> None:
+def init() -> None:
     """Initialize missing locale catalogs from the POT template."""
-    for locale in locales:
+    for locale in DEFAULT_LOCALES:
         po_path = LOCALES_DIR / locale / "LC_MESSAGES" / f"{DOMAIN}.po"
         if po_path.exists():
-            print(f"  -> Skipping existing locale: {locale}")
+            print(f"  -> Skipping init of existing locale: {locale}")
             continue
-
+        print(f"  -> Initializing locale: {locale}")
         run(
             [
                 BABEL_CMD,
@@ -69,11 +71,8 @@ def init(locales: list[str]) -> None:
         )
 
 
-def update(locales: list[str], *, previous: bool = True, ignore_obsolete: bool = False) -> None:
+def update(*, previous: bool = True, ignore_obsolete: bool = False) -> None:
     """Update existing locale catalogs from the POT template."""
-    locale_args: list[str] = []
-    for locale in locales:
-        locale_args.extend(["--locale", locale])
 
     options: list[str] = []
     if previous:
@@ -92,7 +91,6 @@ def update(locales: list[str], *, previous: bool = True, ignore_obsolete: bool =
             "--output-dir",
             str(LOCALES_DIR),
             *options,
-            *locale_args,
         ]
     )
 
@@ -198,9 +196,10 @@ def _snapshot_stats(locales: list[str]) -> dict[str, CatalogStats]:
     return {locale: _read_catalog_stats(_catalog_path(locale)) for locale in locales}
 
 
-def safe_update(locales: list[str], *, allow_translation_drop: bool = False) -> None:
+def safe_update(*, allow_translation_drop: bool = False) -> None:
+    locales = DEFAULT_LOCALES
     before = _snapshot_stats(locales)
-    update(locales, previous=True, ignore_obsolete=False)
+    update(previous=True, ignore_obsolete=False)
     after = _snapshot_stats(locales)
 
     regressions: list[str] = []
@@ -264,20 +263,20 @@ def main() -> int:
             extract()
         elif args.command == "init":
             extract()
-            init(args.locales)
+            init()
         elif args.command == "update":
             extract()
-            safe_update(args.locales, allow_translation_drop=args.allow_translation_drop)
+            safe_update(allow_translation_drop=args.allow_translation_drop)
         elif args.command == "prune-obsolete":
             extract()
             print("  -> Pruning obsolete entries (this can drop old fallback translations).")
-            update(args.locales, previous=True, ignore_obsolete=True)
+            update(previous=True, ignore_obsolete=True)
         elif args.command == "compile":
             compile_catalogs()
         elif args.command == "all":
             extract()
-            init(args.locales)
-            safe_update(args.locales, allow_translation_drop=args.allow_translation_drop)
+            init()
+            safe_update(allow_translation_drop=args.allow_translation_drop)
             compile_catalogs()
 
     except FileNotFoundError:
