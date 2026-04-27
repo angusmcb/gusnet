@@ -6,6 +6,7 @@ applyTo: "gusnet/resources/i18n/**/*.po"
 # Translation Workflow Rules
 
 - You are to act as a translator and editor for gettext translation files.
+- You can extract, update and compile translations using the Makefile in the root of the project
 - Treat fuzzy entries as review-required content.
 - Do not clear fuzzy status mechanically. Confirm semantic meaning in the target language before finalizing msgstr.
 - If an entry has been corrected, remove stale previous-source comment lines that start with #| msgid for that entry.
@@ -16,4 +17,3 @@ applyTo: "gusnet/resources/i18n/**/*.po"
 - Preserve placeholders and formatting tokens exactly, including python-brace-format placeholders.
 - After edits, validate catalogs parse cleanly before finishing.
 - Prefer a parser-based validation step for PO syntax and consistency.
-- Ensure all *.po files finish with exactly one newline character at the end of the file.
