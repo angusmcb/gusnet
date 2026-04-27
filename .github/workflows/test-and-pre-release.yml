@@ -3,7 +3,10 @@ name: Tests
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the wanted branches
-on: push
+on:
+  push:
+  workflow_dispatch:
+
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -196,3 +199,60 @@ jobs:
         run: |
           $env:PATH="C:\Program Files\QGIS ${{ matrix.qgis_version }}\bin;$env:PATH"
           python-qgis.bat -m pytest -v
+
+
+
+
+
+  macos_dmg_tests:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        qgis_version: [ '3_44_8', '4_0_1']
+      fail-fast: false
+    env:
+      QGIS_PLUGIN_IN_CI: 1
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Download and Install QGIS
+        run: |
+          # Download the DMG
+          curl -fL -o qgis.dmg "https://www.qgis.org/downloads/macos/pr/qgis_pr_final-${{ matrix.qgis_version }}.dmg"
+
+          # Mount the DMG; grep for the tab-delimited /Volumes/ line to handle spaces in volume name
+          QGIS_VOLUME=$(hdiutil attach -nobrowse qgis.dmg | grep $'\t/Volumes/' | cut -f3-)
+          echo "Mounted volume: $QGIS_VOLUME"
+
+          # Find and copy the .app bundle, renaming it to QGIS.app
+          QGIS_APP=$(find "$QGIS_VOLUME" -maxdepth 1 -name "*.app" | head -n 1)
+          echo "Found app: $QGIS_APP"
+          sudo cp -R "$QGIS_APP" /Applications/QGIS.app
+
+          # Unmount the DMG
+          hdiutil detach "$QGIS_VOLUME"
+
+          # Clean up
+          rm qgis.dmg
+
+      - name: Verify QGIS Installation
+        run: |
+          ls -la /Applications/QGIS.app/Contents/MacOS/
+          /Applications/QGIS.app/Contents/MacOS/qgis_process --version
+
+      - name: Setup Python Path for QGIS
+        run: |
+          # Add QGIS Python to PATH
+          echo "/Applications/QGIS.app/Contents/MacOS" >> $GITHUB_PATH
+
+          # Set PYTHONPATH to include QGIS Python libraries
+          echo "PYTHONPATH=/Applications/QGIS.app/Contents/Resources/python" >> $GITHUB_ENV
+
+      - name: Setup Pytest-QGIS
+        run: |
+          /Applications/QGIS.app/Contents/MacOS/python -m pip install pytest-qgis
+
+      - name: Run Tests Without Wntr
+        run: |
+          /Applications/QGIS.app/Contents/MacOS/python -m pytest -v -m "not needs_wntr and not needs_pandas"
