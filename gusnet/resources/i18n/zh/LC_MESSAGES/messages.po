@@ -916,9 +916,6 @@ msgstr "加载一个示例进行体验"
 msgid "Load Example"
 msgstr "加载示例"
 
-msgid "Gusnet:\n"
-msgstr "Gusnet:\n"
-
 msgid "Error"
 msgstr "错误"
 
@@ -1081,12 +1078,11 @@ msgstr "m³ 或 ft³"
 msgid "mg/L"
 msgstr "mg/L"
 
-msgid "mg/L/day"
-msgstr "mg/L/day"
+msgid "m/day"
+msgstr "m/day"
 
-msgid "mg/min"
-msgstr "mg/min"
-
+msgid "Multiple verification errors were found:"
+msgstr "发现多个校验错误："
 msgid " "
 msgstr " "
 
@@ -1217,8 +1213,8 @@ msgstr "ft/day"
 msgid "m/day"
 msgstr "m/day"
 
-msgid "Multiple verification errors were found:\n"
-msgstr "发现多个校验错误：\n"
+msgid "Multiple verification errors were found:"
+msgstr "发现多个校验错误："
 
 #, python-brace-format
 msgid "The following links do not connect to a node at each end: {links}"
@@ -1459,4 +1455,7 @@ msgstr "输出 .inp 文件"
 
 msgid "Export Inp File"
 msgstr "导出 Inp 文件"
+
+#~ msgid "Gusnet:\n"
+#~ msgstr "Gusnet:\n"
 

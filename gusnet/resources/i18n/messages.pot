@@ -942,9 +942,6 @@ msgstr ""
 msgid "Load Example"
 msgstr ""
 
-msgid "Gusnet:\n"
-msgstr ""
-
 msgid "Error"
 msgstr ""
 
@@ -1250,7 +1247,7 @@ msgstr ""
 msgid "m/day"
 msgstr ""
 
-msgid "Multiple verification errors were found:\n"
+msgid "Multiple verification errors were found:"
 msgstr ""
 
 #, python-brace-format

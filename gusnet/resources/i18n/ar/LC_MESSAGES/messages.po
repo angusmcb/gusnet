@@ -926,9 +926,6 @@ msgstr "تحميل مثال لتجربتي"
 msgid "Load Example"
 msgstr "تحميل المثال"
 
-msgid "Gusnet:\n"
-msgstr "Gusnet:"
-
 msgid "Error"
 msgstr "خطأ"
 
@@ -1096,12 +1093,11 @@ msgstr "م³ أو قدم³"
 msgid "mg/L"
 msgstr "ملغ/لتر"
 
-msgid "mg/L/day"
-msgstr "ملغ/لتر/يوم"
+msgid "m/day"
+msgstr "م/يوم"
 
-msgid "mg/min"
-msgstr "ملغ/دقيقة"
-
+msgid "Multiple verification errors were found:"
+msgstr "تم العثور على عدة اخطاء في التحقق:"
 msgid " "
 msgstr " "
 
@@ -1232,8 +1228,8 @@ msgstr "قدم/يوم"
 msgid "m/day"
 msgstr "م/يوم"
 
-msgid "Multiple verification errors were found:\n"
-msgstr "تم العثور على عدة اخطاء في التحقق:\n"
+msgid "Multiple verification errors were found:"
+msgstr "تم العثور على عدة اخطاء في التحقق:"
 
 #, python-brace-format
 msgid "The following links do not connect to a node at each end: {links}"
@@ -1615,4 +1611,7 @@ msgstr "تصدير ملف Inp"
 
 #~ msgid "Verifying Dependencies"
 #~ msgstr "التحقق من التبعيات"
+
+#~ msgid "Gusnet:\n"
+#~ msgstr "Gusnet:"
 
