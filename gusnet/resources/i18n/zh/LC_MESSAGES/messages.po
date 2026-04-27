@@ -24,9 +24,7 @@ msgid "No units specified. Will use the value from wn: {units_friendly_name}"
 msgstr "未指定单位。将使用 wn 中的值：{units_friendly_name}"
 
 #: gusnet/api.py
-msgid ""
-"Cannot set headloss formula when wn is set. Set the headloss in the "
-"wn.options.hydraulic.headloss instead"
+msgid "Cannot set headloss formula when wn is set. Set the headloss in the wn.options.hydraulic.headloss instead"
 msgstr "设置了 wn 时无法设置水头损失公式。请改为在 wn.options.hydraulic.headloss 中设置水头损失"
 
 #: gusnet/api.py
@@ -38,9 +36,7 @@ msgid "No valid CRS found on input layers. Pipe lengths will not be calculated."
 msgstr "输入图层中未找到有效 CRS。将不会计算管道长度。"
 
 #: gusnet/api.py
-msgid ""
-"Some input layers do not have a valid CRS. Pipe lengths may not be "
-"calculated correctly."
+msgid "Some input layers do not have a valid CRS. Pipe lengths may not be calculated correctly."
 msgstr "部分输入图层没有有效 CRS。管道长度可能无法被正确计算。"
 
 #: gusnet/api.py
@@ -59,9 +55,7 @@ msgstr "{exception} 不是已知的单位集合。可选单位为："
 
 #: gusnet/api.py
 #, python-brace-format
-msgid ""
-"{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS',"
-" 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
+msgid "{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS', 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
 msgstr "{value_error}。仅接受以下图层类型：'JUNCTIONS'、'RESERVOIRS'、'TANKS'、'PIPES'、'VALVES'、'PUMPS'。"
 
 #: gusnet/dependencies.py
@@ -83,9 +77,7 @@ msgstr "无法获取并安装 gusnet_epanet。{exception}"
 
 #: gusnet/dependencies.py
 #, python-brace-format
-msgid ""
-"Missing necessary python packages {missing_deps}. Please see help for how"
-" to fix this"
+msgid "Missing necessary python packages {missing_deps}. Please see help for how to fix this"
 msgstr "缺少必要的 Python 包 {missing_deps}。请查看帮助了解如何修复。"
 
 #: gusnet/dependencies.py
@@ -461,9 +453,7 @@ msgid "Reaction Rate"
 msgstr "反应速率"
 
 #: gusnet/elements.py
-msgid ""
-"Element identifier. If provided, it must be less than 32 characters and "
-"not contain any spaces."
+msgid "Element identifier. If provided, it must be less than 32 characters and not contain any spaces."
 msgstr "元素标识符。如果提供，其长度必须少于 32 个字符，且不能包含任何空格。"
 
 #: gusnet/elements.py
@@ -539,9 +529,7 @@ msgid "Time-varying pattern for reservoir head"
 msgstr "水库水头的随时间变化模式"
 
 #: gusnet/elements.py
-msgid ""
-"Physical length of pipe. If left blank this will be calculated "
-"automatically"
+msgid "Physical length of pipe. If left blank this will be calculated automatically"
 msgstr "管道物理长度。若留空将自动计算。"
 
 #: gusnet/elements.py
@@ -661,10 +649,7 @@ msgid "Flow units for the model"
 msgstr "模型流量单位"
 
 #: gusnet/elements.py
-msgid ""
-"Flow units will determine the units of other units used in the model as "
-"well.Selecting a metric-based unit set means everything will be metric, "
-"wheras selecting an imperial measure means everything will be imperial."
+msgid "Flow units will determine the units of other units used in the model as well.Selecting a metric-based unit set means everything will be metric, wheras selecting an imperial measure means everything will be imperial."
 msgstr "流量单位也会决定模型中其他量所使用的单位。选择公制单位集时，所有单位均为公制；选择英制单位集时，所有单位均为英制。"
 
 #: gusnet/elements.py
@@ -756,15 +741,11 @@ msgid "Global wall coefficient for water quality analysis"
 msgstr "水质分析中的全局壁面系数"
 
 #: gusnet/elements.py
-msgid ""
-"Limiting concentration for water quality analysis (concentration below "
-"which reactions are assumed to stop)"
+msgid "Limiting concentration for water quality analysis (concentration below which reactions are assumed to stop)"
 msgstr "用于水质分析的限制浓度（低于该浓度时假定反应停止）"
 
 #: gusnet/elements.py
-msgid ""
-"Correlation for calculating wall reaction coefficient based on pipe "
-"diameter (if 0, wall coefficient will be constant)"
+msgid "Correlation for calculating wall reaction coefficient based on pipe diameter (if 0, wall coefficient will be constant)"
 msgstr "用于根据管径计算壁面反应系数的相关参数（若为 0，则壁面系数保持常数）"
 
 #: gusnet/epanet_wrapper.py
@@ -774,46 +755,31 @@ msgstr "EPANET 返回警告代码 {error_code}：{warning_text}"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
-msgid ""
-"EPANET returned warning code {error_code} at simulation time {time}: "
-"{warning_text}"
+msgid "EPANET returned warning code {error_code} at simulation time {time}: {warning_text}"
 msgstr "EPANET 在模拟时间 {time} 返回警告代码 {error_code}：{warning_text}"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System hydraulically unbalanced - convergence to a hydraulic solution was"
-" not achieved in the allowed number of trials"
+msgid "System hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials"
 msgstr "系统水力不平衡 - 在允许的迭代次数内未能收敛到水力解"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System may be hydraulically unstable - hydraulic convergence was only "
-"achieved after the status of all links was held fixed"
+msgid "System may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed"
 msgstr "系统可能存在水力不稳定 - 仅在固定所有连线状态后才实现水力收敛"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System disconnected - one or more nodes with positive demands were "
-"disconnected for all supply sources"
+msgid "System disconnected - one or more nodes with positive demands were disconnected for all supply sources"
 msgstr "系统不连通 - 一个或多个具有正需水量的节点与所有供水源断开"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"Pumps cannot deliver enough flow or head - one or more pumps were forced "
-"to either shut down (due to insufficient head) or operate beyond the "
-"maximum rated flow"
+msgid "Pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow"
 msgstr "水泵无法提供足够的流量或扬程 - 一个或多个水泵被迫停机（因扬程不足）或在超过额定最大流量下运行"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"Valves cannot deliver enough flow - one or more flow control valves could"
-" not deliver the required flow even when fully open"
+msgid "Valves cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open"
 msgstr "阀门无法提供足够流量 - 一个或多个流量控制阀即使全开也无法满足要求流量"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System has negative pressures - negative pressures occurred at one or "
-"more junctions with positive demand"
+msgid "System has negative pressures - negative pressures occurred at one or more junctions with positive demand"
 msgstr "系统存在负压 - 一个或多个有正需水量的节点出现负压"
 
 #: gusnet/epanet_wrapper.py
@@ -1095,9 +1061,7 @@ msgstr "未知的 EPANET 错误代码：{code}"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
-msgid ""
-"EPANET returned error {errcode} at simulation time {time} - {error_text} "
-"at time {time}"
+msgid "EPANET returned error {errcode} at simulation time {time} - {error_text} at time {time}"
 msgstr "EPANET 在模拟时间 {time} 返回错误 {errcode} - {error_text}"
 
 #: gusnet/epanet_wrapper.py
@@ -1166,22 +1130,14 @@ msgstr "米"
 
 #: gusnet/feature_reader.py
 #, python-brace-format
-msgid ""
-"A pipe has a different attribute length vs measured length. This is pipe:"
-" {mismatches}"
-msgid_plural ""
-"{count} pipes have very different attribute length vs measured length. "
-"These are pipes: {mismatches}"
+msgid "A pipe has a different attribute length vs measured length. This is pipe: {mismatches}"
+msgid_plural "{count} pipes have very different attribute length vs measured length. These are pipes: {mismatches}"
 msgstr[0] "管道属性长度与实测长度差异较大。相关管道：{mismatches}"
 
 #: gusnet/feature_reader.py
 #, python-brace-format
-msgid ""
-"cannot calculate length of 1 pipe (probably due to a problem with the "
-"selected coordinate reference system)"
-msgid_plural ""
-"cannot calculate length of {count} pipes (probably due to a problem with "
-"the selected coordinate reference system)"
+msgid "cannot calculate length of 1 pipe (probably due to a problem with the selected coordinate reference system)"
+msgid_plural "cannot calculate length of {count} pipes (probably due to a problem with the selected coordinate reference system)"
 msgstr[0] "无法计算 {count} 条管道长度（可能与所选坐标参考系统有关）"
 
 #: gusnet/feature_reader.py
@@ -1315,9 +1271,7 @@ msgid "OpenStreetMap"
 msgstr "OpenStreetMap"
 
 #: gusnet/plugin.py
-msgid ""
-"Example loaded with Open Street Map background. Now run it by pressing "
-"the lightning icon."
+msgid "Example loaded with Open Street Map background. Now run it by pressing the lightning icon."
 msgstr "已加载带 OpenStreetMap 底图的示例。现在点击闪电图标运行。"
 
 #: gusnet/plugin.py
@@ -1352,9 +1306,7 @@ msgstr "脚本执行被用户取消"
 
 #: gusnet/spatial_index.py
 #, python-brace-format
-msgid ""
-"For the link '{link_name}', the closest node ({node_name}) is too far "
-"away to snap to."
+msgid "For the link '{link_name}', the closest node ({node_name}) is too far away to snap to."
 msgstr "对于连线 '{link_name}'，最近节点 ({node_name}) 距离过远，无法吸附。"
 
 #: gusnet/statistics.py
@@ -1375,9 +1327,7 @@ msgid "{field} ({unit})"
 msgstr "{field} ({unit})"
 
 #: gusnet/style.py
-msgid ""
-"Name must either be blank for automatic naming, or a string of up to 31 "
-"characters with no spaces"
+msgid "Name must either be blank for automatic naming, or a string of up to 31 characters with no spaces"
 msgstr "名称可留空以自动命名，或为不含空格且最多 31 个字符的字符串"
 
 #: gusnet/style.py
@@ -1675,9 +1625,7 @@ msgstr "以下节点未连接任何连线：{nodes}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"The following nodes have overlapping coordinates - it will not be "
-"possible to know which node each link connects to: {nodes}"
+msgid "The following nodes have overlapping coordinates - it will not be possible to know which node each link connects to: {nodes}"
 msgstr "以下节点坐标重叠 - 将无法判断每条连线连接到哪个节点：{nodes}"
 
 #: gusnet/verify_model.py
@@ -1702,9 +1650,7 @@ msgid "In {layer_type}, all elements must have {field_name} '{field_id}'"
 msgstr "在 {layer_type} 中，所有要素都必须包含 {field_name} '{field_id}'"
 
 #: gusnet/verify_model.py
-msgid ""
-"In Pipes, lengths could not be calculated and length field is missing or "
-"contains blanks."
+msgid "In Pipes, lengths could not be calculated and length field is missing or contains blanks."
 msgstr "在管道图层中，长度无法计算，且长度字段缺失或包含空值。"
 
 #: gusnet/verify_model.py
@@ -1719,23 +1665,17 @@ msgstr "在 {layer_type} 中，{field_name} ({field_id}) 必须为布尔值"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"Valve type ({valve_type}) must be set for all valves and must be one of "
-"the following values: {possible_values}"
+msgid "Valve type ({valve_type}) must be set for all valves and must be one of the following values: {possible_values}"
 msgstr "所有阀门都必须设置阀门类型 ({valve_type})，且其值必须为以下之一：{possible_values}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"{initial_setting_name} ({initial_setting}) must be set for all "
-"{valve_name}"
+msgid "{initial_setting_name} ({initial_setting}) must be set for all {valve_name}"
 msgstr "所有 {valve_name} 都必须设置 {initial_setting_name} ({initial_setting})"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"Pump type ({pump_type}) must be set for all pumps and must be one of the "
-"following values: {possible_values}"
+msgid "Pump type ({pump_type}) must be set for all pumps and must be one of the following values: {possible_values}"
 msgstr "所有水泵都必须设置水泵类型 ({pump_type})，且其值必须为以下之一：{possible_values}"
 
 #: gusnet/verify_model.py
@@ -1750,20 +1690,13 @@ msgstr "所有 POWER 类型水泵都必须设置 {pump_power_name} ({pump_power}
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"In {layer} problem reading {pattern_type}: {pattern_string} Patterns "
-"should be a string of numeric values separated by a space, or a list of "
-"numeric values."
+msgid "In {layer} problem reading {pattern_type}: {pattern_string} Patterns should be a string of numeric values separated by a space, or a list of numeric values."
 msgstr "在 {layer} 中读取 {pattern_type} 时出现问题：{pattern_string}。模式应为以空格分隔的数字字符串，或数字列表。"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"In {layer}, problem reading {field_name}  \"{curve_string}\". "
-"{error_detail} Curves should be of the form: (1, 2), (3.6, 4.7)"
-msgstr ""
-"在 {layer} 中读取 {field_name} \"{curve_string}\" "
-"时出现问题。{error_detail}曲线应为如下格式：(1, 2), (3.6, 4.7)"
+msgid "In {layer}, problem reading {field_name}  \"{curve_string}\". {error_detail} Curves should be of the form: (1, 2), (3.6, 4.7)"
+msgstr "在 {layer} 中读取 {field_name} \"{curve_string}\" 时出现问题。{error_detail}曲线应为如下格式：(1, 2), (3.6, 4.7)"
 
 #: gusnet/verify_model.py
 #, python-brace-format
@@ -1777,9 +1710,7 @@ msgstr "发现重复的连线名称：{dupes}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"In {layer_name}, the {field_name} values must be strings without spaces "
-"and under 32 characters. Problem values: {names}"
+msgid "In {layer_name}, the {field_name} values must be strings without spaces and under 32 characters. Problem values: {names}"
 msgstr "在 {layer_name} 中，{field_name} 的值必须是不含空格且少于 32 个字符的字符串。问题值：{names}"
 
 #: gusnet/wntr_wrapper.py
@@ -1846,10 +1777,7 @@ msgid "Create Template Layers"
 msgstr "创建模板图层"
 
 #: gusnet/gusnet_processing/empty_model.py
-msgid ""
-"This will create a set of 'template' layers, which you can use for "
-"building your model. You do not need to create or use all layers if not "
-"required for your model."
+msgid "This will create a set of 'template' layers, which you can use for building your model. You do not need to create or use all layers if not required for your model."
 msgstr "这将创建一组“模板”图层，可用于构建模型。若模型不需要，可不必创建或使用全部图层。"
 
 #: gusnet/gusnet_processing/empty_model.py
@@ -1874,10 +1802,7 @@ msgid "Import from Epanet INP file"
 msgstr "从 Epanet INP 文件导入"
 
 #: gusnet/gusnet_processing/import_inp.py
-msgid ""
-"Import all junctions, tanks, reservoirs, pipes, pumps and valves from an "
-"EPANET inp file. This will also save selected options from the .inp file."
-" "
+msgid "Import all junctions, tanks, reservoirs, pipes, pumps and valves from an EPANET inp file. This will also save selected options from the .inp file. "
 msgstr "从 EPANET inp 文件导入所有节点、水池、水库、管道、水泵和阀门。还会保存 .inp 文件中的所选选项。"
 
 #: gusnet/gusnet_processing/import_inp.py
@@ -1946,16 +1871,11 @@ msgstr "运行模拟"
 #: gusnet/gusnet_processing/run_simulation.py
 msgid ""
 "\n"
-"This will take all of the model layers (junctions, tanks, reservoirs, "
-"pipes, valves, pumps), combine them with the chosen options, and run a "
-"simulation using EPANET. The results will be loaded as new layers in "
-"QGIS, and a summary of the model The output files are a layer of 'nodes' "
-"(junctions, tanks, reservoirs) and 'links' (pipes, valves, pumps).\n"
+"This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps), combine them with the chosen options, and run a simulation using EPANET. The results will be loaded as new layers in QGIS, and a summary of the model The output files are a layer of 'nodes' (junctions, tanks, reservoirs) and 'links' (pipes, valves, pumps).\n"
 "            "
 msgstr ""
 "\n"
-"这将读取全部模型图层（节点、水池、水库、管道、阀门、水泵），结合所选选项后使用 EPANET 运行模拟。结果将作为新图层加载到 "
-"QGIS，同时生成模型摘要。输出文件包括 “nodes”（节点、水池、水库）图层和 “links”（管道、阀门、水泵）图层。\n"
+"这将读取全部模型图层（节点、水池、水库、管道、阀门、水泵），结合所选选项后使用 EPANET 运行模拟。结果将作为新图层加载到 QGIS，同时生成模型摘要。输出文件包括 “nodes”（节点、水池、水库）图层和 “links”（管道、阀门、水泵）图层。\n"
 "            "
 
 #: gusnet/gusnet_processing/run_simulation.py
@@ -1988,10 +1908,7 @@ msgid "Export to Epanet INP file"
 msgstr "导出为 Epanet INP 文件"
 
 #: gusnet/gusnet_processing/run_simulation.py
-msgid ""
-"This will take all of the model layers (junctions, tanks, reservoirs, "
-"pipes, valves, pumps),combine them with the chosen options, and produce "
-"an EPANET '.inp' file which can be run / viewed in other software."
+msgid "This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps),combine them with the chosen options, and produce an EPANET '.inp' file which can be run / viewed in other software."
 msgstr "这将读取全部模型图层（节点、水池、水库、管道、阀门、水泵），结合所选选项后生成 EPANET '.inp' 文件，可在其他软件中运行或查看。"
 
 #: gusnet/gusnet_processing/run_simulation.py

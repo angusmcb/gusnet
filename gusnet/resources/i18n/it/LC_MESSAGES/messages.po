@@ -21,38 +21,23 @@ msgstr ""
 #: gusnet/api.py
 #, python-brace-format
 msgid "No units specified. Will use the value from wn: {units_friendly_name}"
-msgstr ""
-"Nessuna unita specificata. Verra usato il valore da wn: "
-"{units_friendly_name}"
+msgstr "Nessuna unita specificata. Verra usato il valore da wn: {units_friendly_name}"
 
 #: gusnet/api.py
-msgid ""
-"Cannot set headloss formula when wn is set. Set the headloss in the "
-"wn.options.hydraulic.headloss instead"
-msgstr ""
-"Impossibile impostare la formula di perdita di carico quando wn e "
-"impostato. Imposta invece la perdita di carico in "
-"wn.options.hydraulic.headloss."
+msgid "Cannot set headloss formula when wn is set. Set the headloss in the wn.options.hydraulic.headloss instead"
+msgstr "Impossibile impostare la formula di perdita di carico quando wn e impostato. Imposta invece la perdita di carico in wn.options.hydraulic.headloss."
 
 #: gusnet/api.py
 msgid "headloss must be set if wn is not set: possible values are: H-W, D-W, C-M"
-msgstr ""
-"la perdita di altezza deve essere impostata se wn non è impostato: i "
-"valori possibili sono: H-W, D-W, C-M"
+msgstr "la perdita di altezza deve essere impostata se wn non è impostato: i valori possibili sono: H-W, D-W, C-M"
 
 #: gusnet/api.py
 msgid "No valid CRS found on input layers. Pipe lengths will not be calculated."
-msgstr ""
-"Nessun CRS valido trovato nei layer di input. Le lunghezze delle "
-"tubazioni non verranno calcolate."
+msgstr "Nessun CRS valido trovato nei layer di input. Le lunghezze delle tubazioni non verranno calcolate."
 
 #: gusnet/api.py
-msgid ""
-"Some input layers do not have a valid CRS. Pipe lengths may not be "
-"calculated correctly."
-msgstr ""
-"Alcuni layer di input non hanno un CRS valido. Le lunghezze delle "
-"tubazioni potrebbero non essere calcolate correttamente."
+msgid "Some input layers do not have a valid CRS. Pipe lengths may not be calculated correctly."
+msgstr "Alcuni layer di input non hanno un CRS valido. Le lunghezze delle tubazioni potrebbero non essere calcolate correttamente."
 
 #: gusnet/api.py
 msgid "Multiple different CRSs found on input layers."
@@ -70,12 +55,8 @@ msgstr "{exception} non e un insieme di unita noto. Le unita possibili sono:"
 
 #: gusnet/api.py
 #, python-brace-format
-msgid ""
-"{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS',"
-" 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
-msgstr ""
-"{value_error}. I soli tipi di layer accettati sono 'JUNCTIONS', "
-"'RESERVOIRS', 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
+msgid "{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS', 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
+msgstr "{value_error}. I soli tipi di layer accettati sono 'JUNCTIONS', 'RESERVOIRS', 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
 
 #: gusnet/dependencies.py
 msgid "Fetching EPANET"
@@ -96,12 +77,8 @@ msgstr "Impossibile scaricare e installare gusnet_epanet. {exception}"
 
 #: gusnet/dependencies.py
 #, python-brace-format
-msgid ""
-"Missing necessary python packages {missing_deps}. Please see help for how"
-" to fix this"
-msgstr ""
-"Mancano i pacchetti python necessari {missing_deps}. Consulta la guida "
-"per sapere come risolvere il problema"
+msgid "Missing necessary python packages {missing_deps}. Please see help for how to fix this"
+msgstr "Mancano i pacchetti python necessari {missing_deps}. Consulta la guida per sapere come risolvere il problema"
 
 #: gusnet/dependencies.py
 msgid "Fetching gusnet_epanet is already in progress. Please wait and try again."
@@ -476,12 +453,8 @@ msgid "Reaction Rate"
 msgstr "Tasso di reazione"
 
 #: gusnet/elements.py
-msgid ""
-"Element identifier. If provided, it must be less than 32 characters and "
-"not contain any spaces."
-msgstr ""
-"Identificatore dell'elemento. Se fornito, deve avere meno di 32 caratteri"
-" e non contenere spazi."
+msgid "Element identifier. If provided, it must be less than 32 characters and not contain any spaces."
+msgstr "Identificatore dell'elemento. Se fornito, deve avere meno di 32 caratteri e non contenere spazi."
 
 #: gusnet/elements.py
 msgid "Height above datum. This is in metres or feet."
@@ -556,18 +529,12 @@ msgid "Time-varying pattern for reservoir head"
 msgstr "Schema variabile nel tempo per il carico del serbatoio"
 
 #: gusnet/elements.py
-msgid ""
-"Physical length of pipe. If left blank this will be calculated "
-"automatically"
-msgstr ""
-"Lunghezza fisica della tubazione. Se lasciata vuota, verra calcolata "
-"automaticamente"
+msgid "Physical length of pipe. If left blank this will be calculated automatically"
+msgstr "Lunghezza fisica della tubazione. Se lasciata vuota, verra calcolata automaticamente"
 
 #: gusnet/elements.py
 msgid "Pipe roughness coefficient for headloss calculation"
-msgstr ""
-"Coefficiente di rugosita della tubazione per il calcolo delle perdite di "
-"carico"
+msgstr "Coefficiente di rugosita della tubazione per il calcolo delle perdite di carico"
 
 #: gusnet/elements.py
 msgid "Minor loss coefficient for fittings and bends"
@@ -607,45 +574,31 @@ msgstr "Stato iniziale della valvola (attiva, aperta, chiusa)"
 
 #: gusnet/elements.py
 msgid "Head loss curve (flow vs head loss) for general purpose valve"
-msgstr ""
-"Curva di perdita di carico (portata vs perdita) per valvola di uso "
-"generale"
+msgstr "Curva di perdita di carico (portata vs perdita) per valvola di uso generale"
 
 #: gusnet/elements.py
 msgid "Initial water quality concentration for water quality analysis"
-msgstr ""
-"Concentrazione iniziale della qualita dell'acqua per l'analisi della "
-"qualita"
+msgstr "Concentrazione iniziale della qualita dell'acqua per l'analisi della qualita"
 
 #: gusnet/elements.py
 msgid "Fraction of tank volume for mixing model for two-compartment mixing model"
-msgstr ""
-"Frazione del volume del serbatoio per il modello di miscelazione a due "
-"compartimenti"
+msgstr "Frazione del volume del serbatoio per il modello di miscelazione a due compartimenti"
 
 #: gusnet/elements.py
 msgid "Tank mixing model type for water quality analysis"
-msgstr ""
-"Tipo di modello di miscelazione del serbatoio per l'analisi della qualita"
-" dell'acqua"
+msgstr "Tipo di modello di miscelazione del serbatoio per l'analisi della qualita dell'acqua"
 
 #: gusnet/elements.py
 msgid "Bulk reaction rate coefficient for water quality analysis"
-msgstr ""
-"Coefficiente di velocita di reazione in massa per l'analisi della qualita"
-" dell'acqua"
+msgstr "Coefficiente di velocita di reazione in massa per l'analisi della qualita dell'acqua"
 
 #: gusnet/elements.py
 msgid "Wall reaction rate coefficient for water quality analysis"
-msgstr ""
-"Coefficiente di velocita di reazione a parete per l'analisi della qualita"
-" dell'acqua"
+msgstr "Coefficiente di velocita di reazione a parete per l'analisi della qualita dell'acqua"
 
 #: gusnet/elements.py
 msgid "Pump efficiency curve (flow vs efficiency) for energy use analysis"
-msgstr ""
-"Curva di efficienza della pompa (portata vs efficienza) per l'analisi "
-"energetica"
+msgstr "Curva di efficienza della pompa (portata vs efficienza) per l'analisi energetica"
 
 #: gusnet/elements.py
 msgid "Time-varying pattern for energy price"
@@ -696,14 +649,8 @@ msgid "Flow units for the model"
 msgstr "Unità di portata per il modello"
 
 #: gusnet/elements.py
-msgid ""
-"Flow units will determine the units of other units used in the model as "
-"well.Selecting a metric-based unit set means everything will be metric, "
-"wheras selecting an imperial measure means everything will be imperial."
-msgstr ""
-"Le unità di portata determinano anche le unità delle altre grandezze "
-"usate nel modello. Se si seleziona un sistema metrico, tutto sarà "
-"metrico; se si seleziona un sistema imperiale, tutto sarà imperiale."
+msgid "Flow units will determine the units of other units used in the model as well.Selecting a metric-based unit set means everything will be metric, wheras selecting an imperial measure means everything will be imperial."
+msgstr "Le unità di portata determinano anche le unità delle altre grandezze usate nel modello. Se si seleziona un sistema metrico, tutto sarà metrico; se si seleziona un sistema imperiale, tutto sarà imperiale."
 
 #: gusnet/elements.py
 msgid "Formula to use for headloss calculations"
@@ -771,15 +718,11 @@ msgstr "Diffusività relativa per l'analisi della qualità dell'acqua"
 
 #: gusnet/elements.py
 msgid "Node to track for trace analysis (if quality parameter is TRACE)"
-msgstr ""
-"Nodo da tracciare per l'analisi del tracciante (se il parametro di "
-"qualità è TRACE)"
+msgstr "Nodo da tracciare per l'analisi del tracciante (se il parametro di qualità è TRACE)"
 
 #: gusnet/elements.py
 msgid "Tolerance for water quality convergence in extended period simulations"
-msgstr ""
-"Tolleranza di convergenza della qualità dell'acqua nelle simulazioni a "
-"periodo esteso"
+msgstr "Tolleranza di convergenza della qualità dell'acqua nelle simulazioni a periodo esteso"
 
 #: gusnet/elements.py
 msgid "Order of the bulk reaction for water quality analysis"
@@ -791,32 +734,19 @@ msgstr "Ordine della reazione di parete per l'analisi della qualità dell'acqua"
 
 #: gusnet/elements.py
 msgid "Global bulk coefficient for water quality analysis"
-msgstr ""
-"Coefficiente globale della reazione in massa per l'analisi della qualità "
-"dell'acqua"
+msgstr "Coefficiente globale della reazione in massa per l'analisi della qualità dell'acqua"
 
 #: gusnet/elements.py
 msgid "Global wall coefficient for water quality analysis"
-msgstr ""
-"Coefficiente globale della reazione di parete per l'analisi della qualità"
-" dell'acqua"
+msgstr "Coefficiente globale della reazione di parete per l'analisi della qualità dell'acqua"
 
 #: gusnet/elements.py
-msgid ""
-"Limiting concentration for water quality analysis (concentration below "
-"which reactions are assumed to stop)"
-msgstr ""
-"Concentrazione limite per l'analisi della qualità dell'acqua (al di sotto"
-" di tale concentrazione si assume che le reazioni si arrestino)"
+msgid "Limiting concentration for water quality analysis (concentration below which reactions are assumed to stop)"
+msgstr "Concentrazione limite per l'analisi della qualità dell'acqua (al di sotto di tale concentrazione si assume che le reazioni si arrestino)"
 
 #: gusnet/elements.py
-msgid ""
-"Correlation for calculating wall reaction coefficient based on pipe "
-"diameter (if 0, wall coefficient will be constant)"
-msgstr ""
-"Correlazione per calcolare il coefficiente di reazione di parete in base "
-"al diametro della tubazione (se è 0, il coefficiente di parete sarà "
-"costante)"
+msgid "Correlation for calculating wall reaction coefficient based on pipe diameter (if 0, wall coefficient will be constant)"
+msgstr "Correlazione per calcolare il coefficiente di reazione di parete in base al diametro della tubazione (se è 0, il coefficiente di parete sarà costante)"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
@@ -825,64 +755,32 @@ msgstr "EPANET ha restituito il codice di avviso {error_code}: {warning_text}"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
-msgid ""
-"EPANET returned warning code {error_code} at simulation time {time}: "
-"{warning_text}"
-msgstr ""
-"EPANET ha restituito il codice di avviso {error_code} al tempo di "
-"simulazione {time}: {warning_text}"
+msgid "EPANET returned warning code {error_code} at simulation time {time}: {warning_text}"
+msgstr "EPANET ha restituito il codice di avviso {error_code} al tempo di simulazione {time}: {warning_text}"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System hydraulically unbalanced - convergence to a hydraulic solution was"
-" not achieved in the allowed number of trials"
-msgstr ""
-"Sistema idraulicamente sbilanciato: non e stata raggiunta la convergenza "
-"a una soluzione idraulica nel numero consentito di tentativi"
+msgid "System hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials"
+msgstr "Sistema idraulicamente sbilanciato: non e stata raggiunta la convergenza a una soluzione idraulica nel numero consentito di tentativi"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System may be hydraulically unstable - hydraulic convergence was only "
-"achieved after the status of all links was held fixed"
-msgstr ""
-"Il sistema potrebbe essere idraulicamente instabile: la convergenza "
-"idraulica e stata raggiunta solo mantenendo fisso lo stato di tutti i "
-"collegamenti"
+msgid "System may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed"
+msgstr "Il sistema potrebbe essere idraulicamente instabile: la convergenza idraulica e stata raggiunta solo mantenendo fisso lo stato di tutti i collegamenti"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System disconnected - one or more nodes with positive demands were "
-"disconnected for all supply sources"
-msgstr ""
-"Sistema disconnesso: uno o piu nodi con domanda positiva sono scollegati "
-"da tutte le sorgenti di alimentazione"
+msgid "System disconnected - one or more nodes with positive demands were disconnected for all supply sources"
+msgstr "Sistema disconnesso: uno o piu nodi con domanda positiva sono scollegati da tutte le sorgenti di alimentazione"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"Pumps cannot deliver enough flow or head - one or more pumps were forced "
-"to either shut down (due to insufficient head) or operate beyond the "
-"maximum rated flow"
-msgstr ""
-"Le pompe non possono fornire portata o prevalenza sufficienti: una o piu "
-"pompe sono state costrette a fermarsi (per prevalenza insufficiente) o a "
-"operare oltre la portata massima nominale"
+msgid "Pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow"
+msgstr "Le pompe non possono fornire portata o prevalenza sufficienti: una o piu pompe sono state costrette a fermarsi (per prevalenza insufficiente) o a operare oltre la portata massima nominale"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"Valves cannot deliver enough flow - one or more flow control valves could"
-" not deliver the required flow even when fully open"
-msgstr ""
-"Le valvole non possono fornire portata sufficiente: una o piu valvole di "
-"controllo della portata non hanno fornito la portata richiesta anche se "
-"completamente aperte"
+msgid "Valves cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open"
+msgstr "Le valvole non possono fornire portata sufficiente: una o piu valvole di controllo della portata non hanno fornito la portata richiesta anche se completamente aperte"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System has negative pressures - negative pressures occurred at one or "
-"more junctions with positive demand"
-msgstr ""
-"Il sistema presenta pressioni negative: si sono verificate pressioni "
-"negative in una o piu giunzioni con domanda positiva"
+msgid "System has negative pressures - negative pressures occurred at one or more junctions with positive demand"
+msgstr "Il sistema presenta pressioni negative: si sono verificate pressioni negative in una o piu giunzioni con domanda positiva"
 
 #: gusnet/epanet_wrapper.py
 msgid "insufficient memory available"
@@ -1110,9 +1008,7 @@ msgstr "tentativo di eliminare un nodo o collegamento contenuto in un controllo"
 
 #: gusnet/epanet_wrapper.py
 msgid "attempt to modify network structure while a solver is open"
-msgstr ""
-"tentativo di modificare la struttura della rete mentre un solutore e "
-"aperto"
+msgstr "tentativo di modificare la struttura della rete mentre un solutore e aperto"
 
 #: gusnet/epanet_wrapper.py
 msgid "node is not a tank"
@@ -1165,12 +1061,8 @@ msgstr "Codice errore EPANET sconosciuto: {code}"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
-msgid ""
-"EPANET returned error {errcode} at simulation time {time} - {error_text} "
-"at time {time}"
-msgstr ""
-"EPANET ha restituito l'errore {errcode} al tempo di simulazione {time} - "
-"{error_text} al tempo {time}"
+msgid "EPANET returned error {errcode} at simulation time {time} - {error_text} at time {time}"
+msgstr "EPANET ha restituito l'errore {errcode} al tempo di simulazione {time} - {error_text} al tempo {time}"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
@@ -1222,9 +1114,7 @@ msgstr "Misurazione delle tubazioni"
 
 #: gusnet/feature_reader.py
 msgid "Cannot calculate pipe lengths without a valid coordinate reference system."
-msgstr ""
-"Impossibile calcolare le lunghezze delle tubazioni senza un sistema di "
-"riferimento delle coordinate valido."
+msgstr "Impossibile calcolare le lunghezze delle tubazioni senza un sistema di riferimento delle coordinate valido."
 
 #: gusnet/feature_reader.py
 msgid "The length of one or more pipes could not be calculated."
@@ -1240,35 +1130,17 @@ msgstr "metri"
 
 #: gusnet/feature_reader.py
 #, python-brace-format
-msgid ""
-"A pipe has a different attribute length vs measured length. This is pipe:"
-" {mismatches}"
-msgid_plural ""
-"{count} pipes have very different attribute length vs measured length. "
-"These are pipes: {mismatches}"
-msgstr[0] ""
-"Una tubazione presenta una differenza significativa tra la lunghezza "
-"attributo e la lunghezza misurata. Questa è la tubazione: {mismatches}"
-msgstr[1] ""
-"{count} tubazioni presentano differenze significative tra la lunghezza "
-"attributo e la lunghezza misurata. Queste sono le tubazioni: {mismatches}"
+msgid "A pipe has a different attribute length vs measured length. This is pipe: {mismatches}"
+msgid_plural "{count} pipes have very different attribute length vs measured length. These are pipes: {mismatches}"
+msgstr[0] "Una tubazione presenta una differenza significativa tra la lunghezza attributo e la lunghezza misurata. Questa è la tubazione: {mismatches}"
+msgstr[1] "{count} tubazioni presentano differenze significative tra la lunghezza attributo e la lunghezza misurata. Queste sono le tubazioni: {mismatches}"
 
 #: gusnet/feature_reader.py
 #, python-brace-format
-msgid ""
-"cannot calculate length of 1 pipe (probably due to a problem with the "
-"selected coordinate reference system)"
-msgid_plural ""
-"cannot calculate length of {count} pipes (probably due to a problem with "
-"the selected coordinate reference system)"
-msgstr[0] ""
-"Impossibile calcolare la lunghezza di 1 tubazione (probabilmente a causa "
-"di un problema con il sistema di riferimento delle coordinate "
-"selezionato)"
-msgstr[1] ""
-"Impossibile calcolare la lunghezza di {count} tubazioni (probabilmente a "
-"causa di un problema con il sistema di riferimento delle coordinate "
-"selezionato)"
+msgid "cannot calculate length of 1 pipe (probably due to a problem with the selected coordinate reference system)"
+msgid_plural "cannot calculate length of {count} pipes (probably due to a problem with the selected coordinate reference system)"
+msgstr[0] "Impossibile calcolare la lunghezza di 1 tubazione (probabilmente a causa di un problema con il sistema di riferimento delle coordinate selezionato)"
+msgstr[1] "Impossibile calcolare la lunghezza di {count} tubazioni (probabilmente a causa di un problema con il sistema di riferimento delle coordinate selezionato)"
 
 #: gusnet/feature_reader.py
 msgid "Geometry errors were found."
@@ -1361,9 +1233,7 @@ msgstr "Esegui la simulazione con le impostazioni correnti."
 #: gusnet/plugin.py
 #, python-brace-format
 msgid "Analysed using units '{units}' and headloss formula '{headloss_formula}'"
-msgstr ""
-"Analizzato utilizzando unità '{units}' e formula di perdita di altezza "
-"'{headloss_formula}'"
+msgstr "Analizzato utilizzando unità '{units}' e formula di perdita di altezza '{headloss_formula}'"
 
 #: gusnet/plugin.py
 msgid "Create Template Memory Layers"
@@ -1403,9 +1273,7 @@ msgid "OpenStreetMap"
 msgstr "OpenStreetMap"
 
 #: gusnet/plugin.py
-msgid ""
-"Example loaded with Open Street Map background. Now run it by pressing "
-"the lightning icon."
+msgid "Example loaded with Open Street Map background. Now run it by pressing the lightning icon."
 msgstr "Esempio caricato con sfondo Open Street Map"
 
 #: gusnet/plugin.py
@@ -1441,12 +1309,8 @@ msgstr "Esecuzione dello script annullata dall'utente"
 
 #: gusnet/spatial_index.py
 #, python-brace-format
-msgid ""
-"For the link '{link_name}', the closest node ({node_name}) is too far "
-"away to snap to."
-msgstr ""
-"Per il collegamento '{link_name}', il nodo più vicino ({node_name}) è "
-"troppo distante per essere agganciato."
+msgid "For the link '{link_name}', the closest node ({node_name}) is too far away to snap to."
+msgstr "Per il collegamento '{link_name}', il nodo più vicino ({node_name}) è troppo distante per essere agganciato."
 
 #: gusnet/statistics.py
 msgid "Model Description:"
@@ -1466,12 +1330,8 @@ msgid "{field} ({unit})"
 msgstr "{field} ({unit})"
 
 #: gusnet/style.py
-msgid ""
-"Name must either be blank for automatic naming, or a string of up to 31 "
-"characters with no spaces"
-msgstr ""
-"Il nome deve essere vuoto per la denominazione automatica, oppure una "
-"stringa fino a 31 caratteri senza spazi"
+msgid "Name must either be blank for automatic naming, or a string of up to 31 characters with no spaces"
+msgstr "Il nome deve essere vuoto per la denominazione automatica, oppure una stringa fino a 31 caratteri senza spazi"
 
 #: gusnet/style.py
 msgid "Diameter must be greater than 0"
@@ -1513,9 +1373,7 @@ msgstr "Le pompe di altezza devono avere una curva di pompa. {curve_description}
 #: gusnet/style.py
 #, python-brace-format
 msgid "General Purpose Valves must have a headloss curve. {curve_description}"
-msgstr ""
-"Le valvole multiuso devono avere una curva di perdita di altezza. "
-"{curve_description}"
+msgstr "Le valvole multiuso devono avere una curva di perdita di altezza. {curve_description}"
 
 #: gusnet/units.py
 msgid "*flow*"
@@ -1756,16 +1614,12 @@ msgstr "Sono stati trovati piu errori di verifica:\n"
 #: gusnet/verify_model.py
 #, python-brace-format
 msgid "The following links do not connect to a node at each end: {links}"
-msgstr ""
-"I collegamenti seguenti non si connettono a un nodo a ciascuna estremita:"
-" {links}"
+msgstr "I collegamenti seguenti non si connettono a un nodo a ciascuna estremita: {links}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
 msgid "{num_features} links have the same start and end nodes: {links}"
-msgstr ""
-"{num_features} collegamenti hanno gli stessi nodi di inizio e fine: "
-"{links}"
+msgstr "{num_features} collegamenti hanno gli stessi nodi di inizio e fine: {links}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
@@ -1774,12 +1628,8 @@ msgstr "Le seguenti giunzioni non sono collegate ad alcun collegamento: {nodes}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"The following nodes have overlapping coordinates - it will not be "
-"possible to know which node each link connects to: {nodes}"
-msgstr ""
-"I seguenti nodi hanno coordinate sovrapposte: non sara possibile sapere a"
-" quale nodo si collega ciascun collegamento: {nodes}"
+msgid "The following nodes have overlapping coordinates - it will not be possible to know which node each link connects to: {nodes}"
+msgstr "I seguenti nodi hanno coordinate sovrapposte: non sara possibile sapere a quale nodo si collega ciascun collegamento: {nodes}"
 
 #: gusnet/verify_model.py
 msgid "The model is empty."
@@ -1803,12 +1653,8 @@ msgid "In {layer_type}, all elements must have {field_name} '{field_id}'"
 msgstr "In {layer_type}, tutti gli elementi devono avere {field_name} '{field_id}'"
 
 #: gusnet/verify_model.py
-msgid ""
-"In Pipes, lengths could not be calculated and length field is missing or "
-"contains blanks."
-msgstr ""
-"In Pipes, non e stato possibile calcolare le lunghezze e il campo length "
-"e mancante o contiene valori vuoti."
+msgid "In Pipes, lengths could not be calculated and length field is missing or contains blanks."
+msgstr "In Pipes, non e stato possibile calcolare le lunghezze e il campo length e mancante o contiene valori vuoti."
 
 #: gusnet/verify_model.py
 #, python-brace-format
@@ -1822,65 +1668,38 @@ msgstr "In {layer_type}, {field_name} ({field_id}) deve essere booleano"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"Valve type ({valve_type}) must be set for all valves and must be one of "
-"the following values: {possible_values}"
-msgstr ""
-"Il tipo di valvola ({valve_type}) deve essere impostato per tutte le "
-"valvole e deve essere uno dei seguenti valori: {possible_values}"
+msgid "Valve type ({valve_type}) must be set for all valves and must be one of the following values: {possible_values}"
+msgstr "Il tipo di valvola ({valve_type}) deve essere impostato per tutte le valvole e deve essere uno dei seguenti valori: {possible_values}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"{initial_setting_name} ({initial_setting}) must be set for all "
-"{valve_name}"
-msgstr ""
-"{initial_setting_name} ({initial_setting}) deve essere impostato per "
-"tutte le {valve_name}"
+msgid "{initial_setting_name} ({initial_setting}) must be set for all {valve_name}"
+msgstr "{initial_setting_name} ({initial_setting}) deve essere impostato per tutte le {valve_name}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"Pump type ({pump_type}) must be set for all pumps and must be one of the "
-"following values: {possible_values}"
-msgstr ""
-"Il tipo di pompa ({pump_type}) deve essere impostato per tutte le pompe e"
-" deve essere uno dei seguenti valori: {possible_values}"
+msgid "Pump type ({pump_type}) must be set for all pumps and must be one of the following values: {possible_values}"
+msgstr "Il tipo di pompa ({pump_type}) deve essere impostato per tutte le pompe e deve essere uno dei seguenti valori: {possible_values}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
 msgid "{pump_curve_name} ({pump_curve}) must be set for all pumps of type HEAD"
-msgstr ""
-"{pump_curve_name} ({pump_curve}) deve essere impostato per tutte le pompe"
-" di tipo HEAD"
+msgstr "{pump_curve_name} ({pump_curve}) deve essere impostato per tutte le pompe di tipo HEAD"
 
 #: gusnet/verify_model.py
 #, python-brace-format
 msgid "{pump_power_name} ({pump_power}) must be set for all pumps of type POWER"
-msgstr ""
-"{pump_power_name} ({pump_power}) deve essere impostato per tutte le pompe"
-" di tipo POWER"
+msgstr "{pump_power_name} ({pump_power}) deve essere impostato per tutte le pompe di tipo POWER"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"In {layer} problem reading {pattern_type}: {pattern_string} Patterns "
-"should be a string of numeric values separated by a space, or a list of "
-"numeric values."
-msgstr ""
-"In {layer}, problema durante la lettura di {pattern_type}: "
-"{pattern_string}. I pattern devono essere una stringa di valori numerici "
-"separati da spazi, oppure una lista di valori numerici."
+msgid "In {layer} problem reading {pattern_type}: {pattern_string} Patterns should be a string of numeric values separated by a space, or a list of numeric values."
+msgstr "In {layer}, problema durante la lettura di {pattern_type}: {pattern_string}. I pattern devono essere una stringa di valori numerici separati da spazi, oppure una lista di valori numerici."
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"In {layer}, problem reading {field_name}  \"{curve_string}\". "
-"{error_detail} Curves should be of the form: (1, 2), (3.6, 4.7)"
-msgstr ""
-"In {layer}, problema durante la lettura di {field_name} "
-"\"{curve_string}\". {error_detail} Le curve devono essere nel formato: "
-"(1, 2), (3.6, 4.7)"
+msgid "In {layer}, problem reading {field_name}  \"{curve_string}\". {error_detail} Curves should be of the form: (1, 2), (3.6, 4.7)"
+msgstr "In {layer}, problema durante la lettura di {field_name} \"{curve_string}\". {error_detail} Le curve devono essere nel formato: (1, 2), (3.6, 4.7)"
 
 #: gusnet/verify_model.py
 #, python-brace-format
@@ -1894,12 +1713,8 @@ msgstr "Trovati nomi di collegamenti duplicati: {dupes}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"In {layer_name}, the {field_name} values must be strings without spaces "
-"and under 32 characters. Problem values: {names}"
-msgstr ""
-"In {layer_name}, i valori di {field_name} devono essere stringhe senza "
-"spazi e con meno di 32 caratteri. Valori problematici: {names}"
+msgid "In {layer_name}, the {field_name} values must be strings without spaces and under 32 characters. Problem values: {names}"
+msgstr "In {layer_name}, i valori di {field_name} devono essere stringhe senza spazi e con meno di 32 caratteri. Valori problematici: {names}"
 
 #: gusnet/wntr_wrapper.py
 msgid "No simulation results are available. Set results first."
@@ -1965,14 +1780,8 @@ msgid "Create Template Layers"
 msgstr "Crea livelli modello"
 
 #: gusnet/gusnet_processing/empty_model.py
-msgid ""
-"This will create a set of 'template' layers, which you can use for "
-"building your model. You do not need to create or use all layers if not "
-"required for your model."
-msgstr ""
-"Questo creerà un insieme di layer modello che puoi usare per costruire il"
-" tuo modello. Non è necessario creare o usare tutti i layer se non sono "
-"richiesti per il tuo modello."
+msgid "This will create a set of 'template' layers, which you can use for building your model. You do not need to create or use all layers if not required for your model."
+msgstr "Questo creerà un insieme di layer modello che puoi usare per costruire il tuo modello. Non è necessario creare o usare tutti i layer se non sono richiesti per il tuo modello."
 
 #: gusnet/gusnet_processing/empty_model.py
 #: gusnet/gusnet_processing/import_inp.py
@@ -1996,16 +1805,8 @@ msgid "Import from Epanet INP file"
 msgstr "Importa da file INP di Epanet"
 
 #: gusnet/gusnet_processing/import_inp.py
-msgid ""
-"Import all junctions, tanks, reservoirs, pipes, pumps and valves from an "
-"EPANET inp file. This will also save selected options from the .inp file."
-" "
-msgstr ""
-"Importa tutte le giunzioni, i serbatoi, i reservoir, le tubazioni, le "
-"pompe e le valvole da un file INP di EPANET. Questo salverà anche le "
-"opzioni selezionate dal file .inp. Tutte le unità saranno convertite nel "
-"sistema di unità selezionato. Se non viene selezionato nulla, sarà usato "
-"per default il sistema di unità del file .inp."
+msgid "Import all junctions, tanks, reservoirs, pipes, pumps and valves from an EPANET inp file. This will also save selected options from the .inp file. "
+msgstr "Importa tutte le giunzioni, i serbatoi, i reservoir, le tubazioni, le pompe e le valvole da un file INP di EPANET. Questo salverà anche le opzioni selezionate dal file .inp. Tutte le unità saranno convertite nel sistema di unità selezionato. Se non viene selezionato nulla, sarà usato per default il sistema di unità del file .inp."
 
 #: gusnet/gusnet_processing/import_inp.py
 msgid "Epanet Input File (.inp)"
@@ -2073,19 +1874,9 @@ msgstr "Esegui simulazione"
 #: gusnet/gusnet_processing/run_simulation.py
 msgid ""
 "\n"
-"This will take all of the model layers (junctions, tanks, reservoirs, "
-"pipes, valves, pumps), combine them with the chosen options, and run a "
-"simulation using EPANET. The results will be loaded as new layers in "
-"QGIS, and a summary of the model The output files are a layer of 'nodes' "
-"(junctions, tanks, reservoirs) and 'links' (pipes, valves, pumps).\n"
+"This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps), combine them with the chosen options, and run a simulation using EPANET. The results will be loaded as new layers in QGIS, and a summary of the model The output files are a layer of 'nodes' (junctions, tanks, reservoirs) and 'links' (pipes, valves, pumps).\n"
 "            "
-msgstr ""
-"Questo prenderà tutti i layer del modello (giunzioni, serbatoi, "
-"reservoir, tubazioni, valvole e pompe), li combinerà con le opzioni "
-"scelte ed eseguirà una simulazione usando EPANET. I risultati saranno "
-"caricati come nuovi layer in QGIS, insieme a un riepilogo del modello. I "
-"file di output sono un layer di 'nodi' (giunzioni, serbatoi, reservoir) e"
-" un layer di 'collegamenti' (tubazioni, valvole, pompe)."
+msgstr "Questo prenderà tutti i layer del modello (giunzioni, serbatoi, reservoir, tubazioni, valvole e pompe), li combinerà con le opzioni scelte ed eseguirà una simulazione usando EPANET. I risultati saranno caricati come nuovi layer in QGIS, insieme a un riepilogo del modello. I file di output sono un layer di 'nodi' (giunzioni, serbatoi, reservoir) e un layer di 'collegamenti' (tubazioni, valvole, pompe)."
 
 #: gusnet/gusnet_processing/run_simulation.py
 msgid "Preparing Model"
@@ -2117,15 +1908,8 @@ msgid "Export to Epanet INP file"
 msgstr "Esporta in file INP di Epanet"
 
 #: gusnet/gusnet_processing/run_simulation.py
-msgid ""
-"This will take all of the model layers (junctions, tanks, reservoirs, "
-"pipes, valves, pumps),combine them with the chosen options, and produce "
-"an EPANET '.inp' file which can be run / viewed in other software."
-msgstr ""
-"Questo prenderà tutti i layer del modello (giunzioni, serbatoi, "
-"reservoir, tubazioni, valvole e pompe), li combinerà con le opzioni "
-"scelte e produrrà un file EPANET '.inp' che potrà essere eseguito o "
-"visualizzato in altro software."
+msgid "This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps),combine them with the chosen options, and produce an EPANET '.inp' file which can be run / viewed in other software."
+msgstr "Questo prenderà tutti i layer del modello (giunzioni, serbatoi, reservoir, tubazioni, valvole e pompe), li combinerà con le opzioni scelte e produrrà un file EPANET '.inp' che potrà essere eseguito o visualizzato in altro software."
 
 #: gusnet/gusnet_processing/run_simulation.py
 msgid "Output .inp file"
@@ -2138,21 +1922,8 @@ msgstr "Esporta file Inp"
 #~ msgid "Flow units for the model"
 #~ msgstr "Unità di portata del modello"
 
-#~ msgid ""
-#~ "Flow units will determine the units "
-#~ "of other units used in the model"
-#~ " as well. Selecting a metric-based"
-#~ " unit set means everything will be"
-#~ " metric, wheras selecting an imperial "
-#~ "measure means everything will be "
-#~ "imperial."
-#~ msgstr ""
-#~ "Le unita di portata determineranno anche"
-#~ " le unita delle altre grandezze usate"
-#~ " nel modello. Selezionando un sistema "
-#~ "metrico, tutto sara in unita metriche;"
-#~ " selezionando un sistema imperiale, tutto"
-#~ " sara in unita imperiali."
+#~ msgid "Flow units will determine the units of other units used in the model as well. Selecting a metric-based unit set means everything will be metric, wheras selecting an imperial measure means everything will be imperial."
+#~ msgstr "Le unita di portata determineranno anche le unita delle altre grandezze usate nel modello. Selezionando un sistema metrico, tutto sara in unita metriche; selezionando un sistema imperiale, tutto sara in unita imperiali."
 
 #~ msgid "Formula to use for headloss calculations"
 #~ msgstr "Formula da usare per i calcoli di perdita di carico"
@@ -2173,9 +1944,7 @@ msgstr "Esporta file Inp"
 #~ msgstr "Pressione minima per i calcoli della domanda dipendente dalla pressione"
 
 #~ msgid "Required pressure for pressure dependent demand calculations"
-#~ msgstr ""
-#~ "Pressione richiesta per i calcoli della"
-#~ " domanda dipendente dalla pressione"
+#~ msgstr "Pressione richiesta per i calcoli della domanda dipendente dalla pressione"
 
 #~ msgid "Exponent for pressure dependent demand calculations"
 #~ msgstr "Esponente per i calcoli della domanda dipendente dalla pressione"
@@ -2187,9 +1956,7 @@ msgstr "Esporta file Inp"
 #~ msgstr "Pattern del moltiplicatore di prezzo da usare per i calcoli energetici"
 
 #~ msgid "Global efficiency of pumps for energy calculations - as a percentage"
-#~ msgstr ""
-#~ "Efficienza globale delle pompe per i "
-#~ "calcoli energetici - in percentuale"
+#~ msgstr "Efficienza globale delle pompe per i calcoli energetici - in percentuale"
 
 #~ msgid "Demand charge for energy calculations"
 #~ msgstr "Costo di domanda per i calcoli energetici"
@@ -2204,10 +1971,7 @@ msgstr "Esporta file Inp"
 #~ msgstr "Nodo da tracciare per analisi traccia (se il parametro qualita e TRACE)"
 
 #~ msgid "Tolerance for water quality convergence in extended period simulations"
-#~ msgstr ""
-#~ "Tolleranza per la convergenza della "
-#~ "qualita dell'acqua nelle simulazioni a "
-#~ "periodo esteso"
+#~ msgstr "Tolleranza per la convergenza della qualita dell'acqua nelle simulazioni a periodo esteso"
 
 #~ msgid "Order of the bulk reaction for water quality analysis"
 #~ msgstr "Ordine della reazione di massa per l'analisi della qualita dell'acqua"
@@ -2215,26 +1979,11 @@ msgstr "Esporta file Inp"
 #~ msgid "Order of the wall reaction for water quality analysis"
 #~ msgstr "Ordine della reazione di parete per l'analisi della qualita dell'acqua"
 
-#~ msgid ""
-#~ "Limiting concentration for water quality "
-#~ "analysis (concentration below which reactions"
-#~ " are assumed to stop)"
-#~ msgstr ""
-#~ "Concentrazione limite per l'analisi della "
-#~ "qualita dell'acqua (concentrazione al di "
-#~ "sotto della quale si presume che "
-#~ "le reazioni si arrestino)"
+#~ msgid "Limiting concentration for water quality analysis (concentration below which reactions are assumed to stop)"
+#~ msgstr "Concentrazione limite per l'analisi della qualita dell'acqua (concentrazione al di sotto della quale si presume che le reazioni si arrestino)"
 
-#~ msgid ""
-#~ "Correlation for calculating wall reaction "
-#~ "coefficient based on pipe diameter (if"
-#~ " 0, wall coefficient will be "
-#~ "constant)"
-#~ msgstr ""
-#~ "Correlazione per calcolare il coefficiente "
-#~ "di reazione di parete in base al"
-#~ " diametro della tubazione (se 0, il"
-#~ " coefficiente di parete sara costante)"
+#~ msgid "Correlation for calculating wall reaction coefficient based on pipe diameter (if 0, wall coefficient will be constant)"
+#~ msgstr "Correlazione per calcolare il coefficiente di reazione di parete in base al diametro della tubazione (se 0, il coefficiente di parete sara costante)"
 
 #~ msgid "%n hour(s)"
 #~ msgstr "%n ora(e)"
@@ -2242,15 +1991,8 @@ msgstr "Esporta file Inp"
 #~ msgid "Info:\n"
 #~ msgstr "Informazioni:\n"
 
-#~ msgid ""
-#~ "EPANET cannot be loaded. Please wait "
-#~ "a minute then try again, restart "
-#~ "QGIS, or consult our help site."
-#~ msgstr ""
-#~ "Impossibile caricare EPANET. Attendi un "
-#~ "minuto e riprova, riavvia QGIS oppure"
-#~ " consulta il nostro sito di "
-#~ "assistenza."
+#~ msgid "EPANET cannot be loaded. Please wait a minute then try again, restart QGIS, or consult our help site."
+#~ msgstr "Impossibile caricare EPANET. Attendi un minuto e riprova, riavvia QGIS oppure consulta il nostro sito di assistenza."
 
 #~ msgid "Demand type"
 #~ msgstr "Tipo di domanda"

@@ -21,37 +21,23 @@ msgstr ""
 #: gusnet/api.py
 #, python-brace-format
 msgid "No units specified. Will use the value from wn: {units_friendly_name}"
-msgstr ""
-"Geen eenheden opgegeven. De waarde uit wn wordt gebruikt: "
-"{units_friendly_name}"
+msgstr "Geen eenheden opgegeven. De waarde uit wn wordt gebruikt: {units_friendly_name}"
 
 #: gusnet/api.py
-msgid ""
-"Cannot set headloss formula when wn is set. Set the headloss in the "
-"wn.options.hydraulic.headloss instead"
-msgstr ""
-"Kan de drukverliesformule niet instellen wanneer wn is ingesteld. Stel de"
-" drukverlieswaarde in via wn.options.hydraulic.headloss."
+msgid "Cannot set headloss formula when wn is set. Set the headloss in the wn.options.hydraulic.headloss instead"
+msgstr "Kan de drukverliesformule niet instellen wanneer wn is ingesteld. Stel de drukverlieswaarde in via wn.options.hydraulic.headloss."
 
 #: gusnet/api.py
 msgid "headloss must be set if wn is not set: possible values are: H-W, D-W, C-M"
-msgstr ""
-"hoogteverlies moet worden ingesteld als wn niet is ingesteld: mogelijke "
-"waarden zijn: H-W, D-W, C-M"
+msgstr "hoogteverlies moet worden ingesteld als wn niet is ingesteld: mogelijke waarden zijn: H-W, D-W, C-M"
 
 #: gusnet/api.py
 msgid "No valid CRS found on input layers. Pipe lengths will not be calculated."
-msgstr ""
-"Geen geldig CRS gevonden in invoerlagen. Leidinglengtes worden niet "
-"berekend."
+msgstr "Geen geldig CRS gevonden in invoerlagen. Leidinglengtes worden niet berekend."
 
 #: gusnet/api.py
-msgid ""
-"Some input layers do not have a valid CRS. Pipe lengths may not be "
-"calculated correctly."
-msgstr ""
-"Sommige invoerlagen hebben geen geldig CRS. Leidinglengtes worden "
-"mogelijk niet correct berekend."
+msgid "Some input layers do not have a valid CRS. Pipe lengths may not be calculated correctly."
+msgstr "Sommige invoerlagen hebben geen geldig CRS. Leidinglengtes worden mogelijk niet correct berekend."
 
 #: gusnet/api.py
 msgid "Multiple different CRSs found on input layers."
@@ -69,12 +55,8 @@ msgstr "{exception} is not a known set of units. Possible units are:"
 
 #: gusnet/api.py
 #, python-brace-format
-msgid ""
-"{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS',"
-" 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
-msgstr ""
-"{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS',"
-" 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
+msgid "{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS', 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
+msgstr "{value_error}. Only acceptable layer types are 'JUNCTIONS', 'RESERVOIRS', 'TANKS', 'PIPES', 'VALVES', 'PUMPS'."
 
 #: gusnet/dependencies.py
 msgid "Fetching EPANET"
@@ -95,12 +77,8 @@ msgstr "Kon gusnet_epanet niet ophalen en installeren. {exception}"
 
 #: gusnet/dependencies.py
 #, python-brace-format
-msgid ""
-"Missing necessary python packages {missing_deps}. Please see help for how"
-" to fix this"
-msgstr ""
-"Noodzakelijke Python-pakketten ontbreken {missing_deps}. Raadpleeg de "
-"help om te zien hoe u dit kunt oplossen"
+msgid "Missing necessary python packages {missing_deps}. Please see help for how to fix this"
+msgstr "Noodzakelijke Python-pakketten ontbreken {missing_deps}. Raadpleeg de help om te zien hoe u dit kunt oplossen"
 
 #: gusnet/dependencies.py
 msgid "Fetching gusnet_epanet is already in progress. Please wait and try again."
@@ -475,12 +453,8 @@ msgid "Reaction Rate"
 msgstr "Reactiesnelheid"
 
 #: gusnet/elements.py
-msgid ""
-"Element identifier. If provided, it must be less than 32 characters and "
-"not contain any spaces."
-msgstr ""
-"Elementidentificatie. Indien opgegeven, moet het minder dan 32 tekens "
-"zijn en geen spaties bevatten."
+msgid "Element identifier. If provided, it must be less than 32 characters and not contain any spaces."
+msgstr "Elementidentificatie. Indien opgegeven, moet het minder dan 32 tekens zijn en geen spaties bevatten."
 
 #: gusnet/elements.py
 msgid "Height above datum. This is in metres or feet."
@@ -555,9 +529,7 @@ msgid "Time-varying pattern for reservoir head"
 msgstr "Tijdafhankelijk patroon voor reservoirhoogte"
 
 #: gusnet/elements.py
-msgid ""
-"Physical length of pipe. If left blank this will be calculated "
-"automatically"
+msgid "Physical length of pipe. If left blank this will be calculated automatically"
 msgstr "Fysieke lengte van leiding. Indien leeg wordt dit automatisch berekend"
 
 #: gusnet/elements.py
@@ -602,9 +574,7 @@ msgstr "Initiële ventielstatus (actief, open, gesloten)"
 
 #: gusnet/elements.py
 msgid "Head loss curve (flow vs head loss) for general purpose valve"
-msgstr ""
-"Hoogteverliescurve (stroom versus hoogteverlies) voor algemeen gebruik "
-"ventiel"
+msgstr "Hoogteverliescurve (stroom versus hoogteverlies) voor algemeen gebruik ventiel"
 
 #: gusnet/elements.py
 msgid "Initial water quality concentration for water quality analysis"
@@ -628,9 +598,7 @@ msgstr "Wandreactiesnelheidscoëfficiënt voor waterkwaliteitsanalyse"
 
 #: gusnet/elements.py
 msgid "Pump efficiency curve (flow vs efficiency) for energy use analysis"
-msgstr ""
-"Pompefficiëntiecurve (stroom versus efficiëntie) voor "
-"energiegebruikanalyse"
+msgstr "Pompefficiëntiecurve (stroom versus efficiëntie) voor energiegebruikanalyse"
 
 #: gusnet/elements.py
 msgid "Time-varying pattern for energy price"
@@ -681,15 +649,8 @@ msgid "Flow units for the model"
 msgstr "Debieteenheden voor het model"
 
 #: gusnet/elements.py
-msgid ""
-"Flow units will determine the units of other units used in the model as "
-"well.Selecting a metric-based unit set means everything will be metric, "
-"wheras selecting an imperial measure means everything will be imperial."
-msgstr ""
-"De debieteenheden bepalen ook de eenheden van andere grootheden die in "
-"het model worden gebruikt. Kies je een metrische eenhedenset, dan is "
-"alles metrisch; kies je een imperiale eenhedenset, dan is alles "
-"imperiaal."
+msgid "Flow units will determine the units of other units used in the model as well.Selecting a metric-based unit set means everything will be metric, wheras selecting an imperial measure means everything will be imperial."
+msgstr "De debieteenheden bepalen ook de eenheden van andere grootheden die in het model worden gebruikt. Kies je een metrische eenhedenset, dan is alles metrisch; kies je een imperiale eenhedenset, dan is alles imperiaal."
 
 #: gusnet/elements.py
 msgid "Formula to use for headloss calculations"
@@ -761,9 +722,7 @@ msgstr "Te volgen knooppunt voor traceranalyse (als kwaliteitsparameter TRACE is
 
 #: gusnet/elements.py
 msgid "Tolerance for water quality convergence in extended period simulations"
-msgstr ""
-"Tolerantie voor waterkwaliteitsconvergentie in uitgebreide "
-"periodesimulaties"
+msgstr "Tolerantie voor waterkwaliteitsconvergentie in uitgebreide periodesimulaties"
 
 #: gusnet/elements.py
 msgid "Order of the bulk reaction for water quality analysis"
@@ -782,20 +741,12 @@ msgid "Global wall coefficient for water quality analysis"
 msgstr "Globale wandcoëfficiënt voor waterkwaliteitsanalyse"
 
 #: gusnet/elements.py
-msgid ""
-"Limiting concentration for water quality analysis (concentration below "
-"which reactions are assumed to stop)"
-msgstr ""
-"Grensconcentratie voor waterkwaliteitsanalyse (onder deze concentratie "
-"wordt aangenomen dat reacties stoppen)"
+msgid "Limiting concentration for water quality analysis (concentration below which reactions are assumed to stop)"
+msgstr "Grensconcentratie voor waterkwaliteitsanalyse (onder deze concentratie wordt aangenomen dat reacties stoppen)"
 
 #: gusnet/elements.py
-msgid ""
-"Correlation for calculating wall reaction coefficient based on pipe "
-"diameter (if 0, wall coefficient will be constant)"
-msgstr ""
-"Correlatie voor het berekenen van de wandreactiecoëfficiënt op basis van "
-"leidingdiameter (bij 0 is de wandcoëfficiënt constant)"
+msgid "Correlation for calculating wall reaction coefficient based on pipe diameter (if 0, wall coefficient will be constant)"
+msgstr "Correlatie voor het berekenen van de wandreactiecoëfficiënt op basis van leidingdiameter (bij 0 is de wandcoëfficiënt constant)"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
@@ -804,62 +755,32 @@ msgstr "EPANET gaf waarschuwingscode {error_code} terug: {warning_text}"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
-msgid ""
-"EPANET returned warning code {error_code} at simulation time {time}: "
-"{warning_text}"
-msgstr ""
-"EPANET gaf waarschuwingscode {error_code} terug op simulatietijd {time}: "
-"{warning_text}"
+msgid "EPANET returned warning code {error_code} at simulation time {time}: {warning_text}"
+msgstr "EPANET gaf waarschuwingscode {error_code} terug op simulatietijd {time}: {warning_text}"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System hydraulically unbalanced - convergence to a hydraulic solution was"
-" not achieved in the allowed number of trials"
-msgstr ""
-"Systeem hydraulisch uit balans: convergentie naar een hydraulische "
-"oplossing is niet bereikt binnen het toegestane aantal pogingen"
+msgid "System hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials"
+msgstr "Systeem hydraulisch uit balans: convergentie naar een hydraulische oplossing is niet bereikt binnen het toegestane aantal pogingen"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System may be hydraulically unstable - hydraulic convergence was only "
-"achieved after the status of all links was held fixed"
-msgstr ""
-"Systeem kan hydraulisch instabiel zijn: hydraulische convergentie werd "
-"alleen bereikt nadat de status van alle verbindingen vast was gehouden"
+msgid "System may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed"
+msgstr "Systeem kan hydraulisch instabiel zijn: hydraulische convergentie werd alleen bereikt nadat de status van alle verbindingen vast was gehouden"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System disconnected - one or more nodes with positive demands were "
-"disconnected for all supply sources"
-msgstr ""
-"Systeem losgekoppeld: een of meer knooppunten met positieve vraag waren "
-"losgekoppeld van alle aanvoerbronnen"
+msgid "System disconnected - one or more nodes with positive demands were disconnected for all supply sources"
+msgstr "Systeem losgekoppeld: een of meer knooppunten met positieve vraag waren losgekoppeld van alle aanvoerbronnen"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"Pumps cannot deliver enough flow or head - one or more pumps were forced "
-"to either shut down (due to insufficient head) or operate beyond the "
-"maximum rated flow"
-msgstr ""
-"Pompen kunnen niet genoeg debiet of opvoerhoogte leveren: een of meer "
-"pompen werden gedwongen uit te schakelen (door onvoldoende opvoerhoogte) "
-"of boven het maximale nominale debiet te werken"
+msgid "Pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow"
+msgstr "Pompen kunnen niet genoeg debiet of opvoerhoogte leveren: een of meer pompen werden gedwongen uit te schakelen (door onvoldoende opvoerhoogte) of boven het maximale nominale debiet te werken"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"Valves cannot deliver enough flow - one or more flow control valves could"
-" not deliver the required flow even when fully open"
-msgstr ""
-"Kleppen kunnen niet genoeg debiet leveren: een of meer debietregelkleppen"
-" konden het vereiste debiet niet leveren, zelfs niet volledig geopend"
+msgid "Valves cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open"
+msgstr "Kleppen kunnen niet genoeg debiet leveren: een of meer debietregelkleppen konden het vereiste debiet niet leveren, zelfs niet volledig geopend"
 
 #: gusnet/epanet_wrapper.py
-msgid ""
-"System has negative pressures - negative pressures occurred at one or "
-"more junctions with positive demand"
-msgstr ""
-"Systeem heeft negatieve drukken: negatieve drukken traden op bij een of "
-"meer knooppunten met positieve vraag"
+msgid "System has negative pressures - negative pressures occurred at one or more junctions with positive demand"
+msgstr "Systeem heeft negatieve drukken: negatieve drukken traden op bij een of meer knooppunten met positieve vraag"
 
 #: gusnet/epanet_wrapper.py
 msgid "insufficient memory available"
@@ -1079,15 +1000,11 @@ msgstr "poging om een knooppunt te verwijderen dat nog verbonden is met links"
 
 #: gusnet/epanet_wrapper.py
 msgid "attempt to delete node assigned as a Trace Node"
-msgstr ""
-"poging om een knooppunt te verwijderen dat als trace-knooppunt is "
-"ingesteld"
+msgstr "poging om een knooppunt te verwijderen dat als trace-knooppunt is ingesteld"
 
 #: gusnet/epanet_wrapper.py
 msgid "attempt to delete a node or link contained in a control"
-msgstr ""
-"poging om een knooppunt of link te verwijderen die in een besturing wordt"
-" gebruikt"
+msgstr "poging om een knooppunt of link te verwijderen die in een besturing wordt gebruikt"
 
 #: gusnet/epanet_wrapper.py
 msgid "attempt to modify network structure while a solver is open"
@@ -1144,12 +1061,8 @@ msgstr "Onbekende EPANET-foutcode: {code}"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
-msgid ""
-"EPANET returned error {errcode} at simulation time {time} - {error_text} "
-"at time {time}"
-msgstr ""
-"EPANET gaf fout {errcode} terug op simulatietijd {time} - {error_text} op"
-" tijd {time}"
+msgid "EPANET returned error {errcode} at simulation time {time} - {error_text} at time {time}"
+msgstr "EPANET gaf fout {errcode} terug op simulatietijd {time} - {error_text} op tijd {time}"
 
 #: gusnet/epanet_wrapper.py
 #, python-brace-format
@@ -1201,9 +1114,7 @@ msgstr "Leidingen meten"
 
 #: gusnet/feature_reader.py
 msgid "Cannot calculate pipe lengths without a valid coordinate reference system."
-msgstr ""
-"Kan leidinglengtes niet berekenen zonder een geldig "
-"coordinatenreferentiesysteem."
+msgstr "Kan leidinglengtes niet berekenen zonder een geldig coordinatenreferentiesysteem."
 
 #: gusnet/feature_reader.py
 msgid "The length of one or more pipes could not be calculated."
@@ -1219,33 +1130,17 @@ msgstr "meter"
 
 #: gusnet/feature_reader.py
 #, python-brace-format
-msgid ""
-"A pipe has a different attribute length vs measured length. This is pipe:"
-" {mismatches}"
-msgid_plural ""
-"{count} pipes have very different attribute length vs measured length. "
-"These are pipes: {mismatches}"
-msgstr[0] ""
-"Eén leiding heeft een groot verschil tussen attribuutlengte en gemeten "
-"lengte. Dit is de leiding: {mismatches}"
-msgstr[1] ""
-"{count} leidingen hebben grote verschillen tussen attribuutlengte en "
-"gemeten lengte. Dit zijn de leidingen: {mismatches}"
+msgid "A pipe has a different attribute length vs measured length. This is pipe: {mismatches}"
+msgid_plural "{count} pipes have very different attribute length vs measured length. These are pipes: {mismatches}"
+msgstr[0] "Eén leiding heeft een groot verschil tussen attribuutlengte en gemeten lengte. Dit is de leiding: {mismatches}"
+msgstr[1] "{count} leidingen hebben grote verschillen tussen attribuutlengte en gemeten lengte. Dit zijn de leidingen: {mismatches}"
 
 #: gusnet/feature_reader.py
 #, python-brace-format
-msgid ""
-"cannot calculate length of 1 pipe (probably due to a problem with the "
-"selected coordinate reference system)"
-msgid_plural ""
-"cannot calculate length of {count} pipes (probably due to a problem with "
-"the selected coordinate reference system)"
-msgstr[0] ""
-"kan de lengte van 1 leiding niet berekenen (waarschijnlijk door een "
-"probleem met het geselecteerde coördinatenreferentiesysteem)"
-msgstr[1] ""
-"kan de lengte van {count} leidingen niet berekenen (waarschijnlijk door "
-"een probleem met het geselecteerde coördinatenreferentiesysteem)"
+msgid "cannot calculate length of 1 pipe (probably due to a problem with the selected coordinate reference system)"
+msgid_plural "cannot calculate length of {count} pipes (probably due to a problem with the selected coordinate reference system)"
+msgstr[0] "kan de lengte van 1 leiding niet berekenen (waarschijnlijk door een probleem met het geselecteerde coördinatenreferentiesysteem)"
+msgstr[1] "kan de lengte van {count} leidingen niet berekenen (waarschijnlijk door een probleem met het geselecteerde coördinatenreferentiesysteem)"
 
 #: gusnet/feature_reader.py
 msgid "Geometry errors were found."
@@ -1338,9 +1233,7 @@ msgstr "Voer de simulatie uit met de huidige instellingen."
 #: gusnet/plugin.py
 #, python-brace-format
 msgid "Analysed using units '{units}' and headloss formula '{headloss_formula}'"
-msgstr ""
-"Geanalyseerd met eenheden '{units}' en hoogteverliesformule "
-"'{headloss_formula}'"
+msgstr "Geanalyseerd met eenheden '{units}' en hoogteverliesformule '{headloss_formula}'"
 
 #: gusnet/plugin.py
 msgid "Create Template Memory Layers"
@@ -1380,9 +1273,7 @@ msgid "OpenStreetMap"
 msgstr "OpenStreetMap"
 
 #: gusnet/plugin.py
-msgid ""
-"Example loaded with Open Street Map background. Now run it by pressing "
-"the lightning icon."
+msgid "Example loaded with Open Street Map background. Now run it by pressing the lightning icon."
 msgstr "Voorbeeld geladen met Open Street Map achtergrond"
 
 #: gusnet/plugin.py
@@ -1418,12 +1309,8 @@ msgstr "Uitvoering van script geannuleerd door gebruiker"
 
 #: gusnet/spatial_index.py
 #, python-brace-format
-msgid ""
-"For the link '{link_name}', the closest node ({node_name}) is too far "
-"away to snap to."
-msgstr ""
-"For the link '{link_name}', the closest node ({node_name}) is too far "
-"away to snap to."
+msgid "For the link '{link_name}', the closest node ({node_name}) is too far away to snap to."
+msgstr "For the link '{link_name}', the closest node ({node_name}) is too far away to snap to."
 
 #: gusnet/statistics.py
 msgid "Model Description:"
@@ -1443,12 +1330,8 @@ msgid "{field} ({unit})"
 msgstr "{field} ({unit})"
 
 #: gusnet/style.py
-msgid ""
-"Name must either be blank for automatic naming, or a string of up to 31 "
-"characters with no spaces"
-msgstr ""
-"Naam moet leeg zijn voor automatische naamgeving, of een reeks van "
-"maximaal 31 tekens zonder spaties"
+msgid "Name must either be blank for automatic naming, or a string of up to 31 characters with no spaces"
+msgstr "Naam moet leeg zijn voor automatische naamgeving, of een reeks van maximaal 31 tekens zonder spaties"
 
 #: gusnet/style.py
 msgid "Diameter must be greater than 0"
@@ -1490,9 +1373,7 @@ msgstr "Opvoerhoogtepompen moeten een pompkromme hebben. {curve_description}"
 #: gusnet/style.py
 #, python-brace-format
 msgid "General Purpose Valves must have a headloss curve. {curve_description}"
-msgstr ""
-"Algemene kleppen moeten een opvoerhoogteverlieskromme hebben. "
-"{curve_description}"
+msgstr "Algemene kleppen moeten een opvoerhoogteverlieskromme hebben. {curve_description}"
 
 #: gusnet/units.py
 msgid "*flow*"
@@ -1733,16 +1614,12 @@ msgstr "Er zijn meerdere verificatiefouten gevonden:\n"
 #: gusnet/verify_model.py
 #, python-brace-format
 msgid "The following links do not connect to a node at each end: {links}"
-msgstr ""
-"De volgende verbindingen zijn niet aan beide uiteinden met een knooppunt "
-"verbonden: {links}"
+msgstr "De volgende verbindingen zijn niet aan beide uiteinden met een knooppunt verbonden: {links}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
 msgid "{num_features} links have the same start and end nodes: {links}"
-msgstr ""
-"{num_features} verbindingen hebben dezelfde begin- en eindknooppunten: "
-"{links}"
+msgstr "{num_features} verbindingen hebben dezelfde begin- en eindknooppunten: {links}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
@@ -1751,12 +1628,8 @@ msgstr "De volgende knooppunten zijn niet verbonden met enige verbinding: {nodes
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"The following nodes have overlapping coordinates - it will not be "
-"possible to know which node each link connects to: {nodes}"
-msgstr ""
-"De volgende knooppunten hebben overlappende coordinaten; daardoor is niet"
-" te bepalen met welk knooppunt elke verbinding verbonden is: {nodes}"
+msgid "The following nodes have overlapping coordinates - it will not be possible to know which node each link connects to: {nodes}"
+msgstr "De volgende knooppunten hebben overlappende coordinaten; daardoor is niet te bepalen met welk knooppunt elke verbinding verbonden is: {nodes}"
 
 #: gusnet/verify_model.py
 msgid "The model is empty."
@@ -1768,9 +1641,7 @@ msgstr "Het model moet ten minste een knooppunt bevatten."
 
 #: gusnet/verify_model.py
 msgid "The model must contain at least one link (pipe, pump, or valve)."
-msgstr ""
-"Het model moet ten minste een verbinding bevatten (leiding, pomp of "
-"ventiel)."
+msgstr "Het model moet ten minste een verbinding bevatten (leiding, pomp of ventiel)."
 
 #: gusnet/verify_model.py
 msgid "The model must contain at least one reservoir or tank."
@@ -1782,12 +1653,8 @@ msgid "In {layer_type}, all elements must have {field_name} '{field_id}'"
 msgstr "In {layer_type} moeten alle elementen {field_name} '{field_id}' hebben"
 
 #: gusnet/verify_model.py
-msgid ""
-"In Pipes, lengths could not be calculated and length field is missing or "
-"contains blanks."
-msgstr ""
-"In Pipes konden lengtes niet worden berekend en ontbreekt het veld "
-"length, of bevat het lege waarden."
+msgid "In Pipes, lengths could not be calculated and length field is missing or contains blanks."
+msgstr "In Pipes konden lengtes niet worden berekend en ontbreekt het veld length, of bevat het lege waarden."
 
 #: gusnet/verify_model.py
 #, python-brace-format
@@ -1801,65 +1668,38 @@ msgstr "In {layer_type} moet {field_name} ({field_id}) booleaans zijn"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"Valve type ({valve_type}) must be set for all valves and must be one of "
-"the following values: {possible_values}"
-msgstr ""
-"Ventieltype ({valve_type}) moet voor alle ventielen worden ingesteld en "
-"moet een van de volgende waarden zijn: {possible_values}"
+msgid "Valve type ({valve_type}) must be set for all valves and must be one of the following values: {possible_values}"
+msgstr "Ventieltype ({valve_type}) moet voor alle ventielen worden ingesteld en moet een van de volgende waarden zijn: {possible_values}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"{initial_setting_name} ({initial_setting}) must be set for all "
-"{valve_name}"
-msgstr ""
-"{initial_setting_name} ({initial_setting}) moet voor alle {valve_name} "
-"worden ingesteld"
+msgid "{initial_setting_name} ({initial_setting}) must be set for all {valve_name}"
+msgstr "{initial_setting_name} ({initial_setting}) moet voor alle {valve_name} worden ingesteld"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"Pump type ({pump_type}) must be set for all pumps and must be one of the "
-"following values: {possible_values}"
-msgstr ""
-"Pomp type ({pump_type}) moet voor alle pompen worden ingesteld en moet "
-"een van de volgende waarden zijn: {possible_values}"
+msgid "Pump type ({pump_type}) must be set for all pumps and must be one of the following values: {possible_values}"
+msgstr "Pomp type ({pump_type}) moet voor alle pompen worden ingesteld en moet een van de volgende waarden zijn: {possible_values}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
 msgid "{pump_curve_name} ({pump_curve}) must be set for all pumps of type HEAD"
-msgstr ""
-"{pump_curve_name} ({pump_curve}) moet voor alle pompen van type HEAD "
-"worden ingesteld"
+msgstr "{pump_curve_name} ({pump_curve}) moet voor alle pompen van type HEAD worden ingesteld"
 
 #: gusnet/verify_model.py
 #, python-brace-format
 msgid "{pump_power_name} ({pump_power}) must be set for all pumps of type POWER"
-msgstr ""
-"{pump_power_name} ({pump_power}) moet voor alle pompen van type POWER "
-"worden ingesteld"
+msgstr "{pump_power_name} ({pump_power}) moet voor alle pompen van type POWER worden ingesteld"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"In {layer} problem reading {pattern_type}: {pattern_string} Patterns "
-"should be a string of numeric values separated by a space, or a list of "
-"numeric values."
-msgstr ""
-"In {layer} is een probleem opgetreden bij het lezen van {pattern_type}: "
-"{pattern_string}. Patronen moeten een tekenreeks met numerieke waarden "
-"zijn, gescheiden door spaties, of een lijst met numerieke waarden."
+msgid "In {layer} problem reading {pattern_type}: {pattern_string} Patterns should be a string of numeric values separated by a space, or a list of numeric values."
+msgstr "In {layer} is een probleem opgetreden bij het lezen van {pattern_type}: {pattern_string}. Patronen moeten een tekenreeks met numerieke waarden zijn, gescheiden door spaties, of een lijst met numerieke waarden."
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"In {layer}, problem reading {field_name}  \"{curve_string}\". "
-"{error_detail} Curves should be of the form: (1, 2), (3.6, 4.7)"
-msgstr ""
-"In {layer} is een probleem opgetreden bij het lezen van {field_name} "
-"\"{curve_string}\". {error_detail} Curven moeten de vorm hebben: (1, 2), "
-"(3.6, 4.7)"
+msgid "In {layer}, problem reading {field_name}  \"{curve_string}\". {error_detail} Curves should be of the form: (1, 2), (3.6, 4.7)"
+msgstr "In {layer} is een probleem opgetreden bij het lezen van {field_name} \"{curve_string}\". {error_detail} Curven moeten de vorm hebben: (1, 2), (3.6, 4.7)"
 
 #: gusnet/verify_model.py
 #, python-brace-format
@@ -1873,12 +1713,8 @@ msgstr "Dubbele verbindingsnamen gevonden: {dupes}"
 
 #: gusnet/verify_model.py
 #, python-brace-format
-msgid ""
-"In {layer_name}, the {field_name} values must be strings without spaces "
-"and under 32 characters. Problem values: {names}"
-msgstr ""
-"In {layer_name} moeten de waarden van {field_name} tekenreeksen zonder "
-"spaties zijn en korter dan 32 tekens. Probleemwaarden: {names}"
+msgid "In {layer_name}, the {field_name} values must be strings without spaces and under 32 characters. Problem values: {names}"
+msgstr "In {layer_name} moeten de waarden van {field_name} tekenreeksen zonder spaties zijn en korter dan 32 tekens. Probleemwaarden: {names}"
 
 #: gusnet/wntr_wrapper.py
 msgid "No simulation results are available. Set results first."
@@ -1944,14 +1780,8 @@ msgid "Create Template Layers"
 msgstr "Maak sjabloonlagen"
 
 #: gusnet/gusnet_processing/empty_model.py
-msgid ""
-"This will create a set of 'template' layers, which you can use for "
-"building your model. You do not need to create or use all layers if not "
-"required for your model."
-msgstr ""
-"Dit maakt een set sjabloonlagen die je kunt gebruiken om je model op te "
-"bouwen. Je hoeft niet alle lagen te maken of te gebruiken als ze niet "
-"nodig zijn voor je model."
+msgid "This will create a set of 'template' layers, which you can use for building your model. You do not need to create or use all layers if not required for your model."
+msgstr "Dit maakt een set sjabloonlagen die je kunt gebruiken om je model op te bouwen. Je hoeft niet alle lagen te maken of te gebruiken als ze niet nodig zijn voor je model."
 
 #: gusnet/gusnet_processing/empty_model.py
 #: gusnet/gusnet_processing/import_inp.py
@@ -1975,16 +1805,8 @@ msgid "Import from Epanet INP file"
 msgstr "Importeren vanuit Epanet INP bestand"
 
 #: gusnet/gusnet_processing/import_inp.py
-msgid ""
-"Import all junctions, tanks, reservoirs, pipes, pumps and valves from an "
-"EPANET inp file. This will also save selected options from the .inp file."
-" "
-msgstr ""
-"Importeert alle knooppunten, tanks, reservoirs, leidingen, pompen en "
-"kleppen uit een EPANET-inp-bestand. Dit slaat ook de geselecteerde opties"
-" uit het .inp-bestand op. Alle eenheden worden omgezet naar de gekozen "
-"eenhedenset. Als er niets is geselecteerd, wordt standaard de eenhedenset"
-" uit het .inp-bestand gebruikt."
+msgid "Import all junctions, tanks, reservoirs, pipes, pumps and valves from an EPANET inp file. This will also save selected options from the .inp file. "
+msgstr "Importeert alle knooppunten, tanks, reservoirs, leidingen, pompen en kleppen uit een EPANET-inp-bestand. Dit slaat ook de geselecteerde opties uit het .inp-bestand op. Alle eenheden worden omgezet naar de gekozen eenhedenset. Als er niets is geselecteerd, wordt standaard de eenhedenset uit het .inp-bestand gebruikt."
 
 #: gusnet/gusnet_processing/import_inp.py
 msgid "Epanet Input File (.inp)"
@@ -2052,19 +1874,9 @@ msgstr "Simulatie uitvoeren"
 #: gusnet/gusnet_processing/run_simulation.py
 msgid ""
 "\n"
-"This will take all of the model layers (junctions, tanks, reservoirs, "
-"pipes, valves, pumps), combine them with the chosen options, and run a "
-"simulation using EPANET. The results will be loaded as new layers in "
-"QGIS, and a summary of the model The output files are a layer of 'nodes' "
-"(junctions, tanks, reservoirs) and 'links' (pipes, valves, pumps).\n"
+"This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps), combine them with the chosen options, and run a simulation using EPANET. The results will be loaded as new layers in QGIS, and a summary of the model The output files are a layer of 'nodes' (junctions, tanks, reservoirs) and 'links' (pipes, valves, pumps).\n"
 "            "
-msgstr ""
-"Dit neemt alle modellagen (knooppunten, tanks, reservoirs, leidingen, "
-"kleppen en pompen), combineert ze met de gekozen opties en voert een "
-"simulatie uit met EPANET. De resultaten worden als nieuwe lagen in QGIS "
-"geladen, samen met een samenvatting van het model. De uitvoerbestanden "
-"zijn een laag met 'nodes' (knooppunten, tanks, reservoirs) en een laag "
-"met 'links' (leidingen, kleppen, pompen)."
+msgstr "Dit neemt alle modellagen (knooppunten, tanks, reservoirs, leidingen, kleppen en pompen), combineert ze met de gekozen opties en voert een simulatie uit met EPANET. De resultaten worden als nieuwe lagen in QGIS geladen, samen met een samenvatting van het model. De uitvoerbestanden zijn een laag met 'nodes' (knooppunten, tanks, reservoirs) en een laag met 'links' (leidingen, kleppen, pompen)."
 
 #: gusnet/gusnet_processing/run_simulation.py
 msgid "Preparing Model"
@@ -2096,15 +1908,8 @@ msgid "Export to Epanet INP file"
 msgstr "Exporteren naar Epanet INP-bestand"
 
 #: gusnet/gusnet_processing/run_simulation.py
-msgid ""
-"This will take all of the model layers (junctions, tanks, reservoirs, "
-"pipes, valves, pumps),combine them with the chosen options, and produce "
-"an EPANET '.inp' file which can be run / viewed in other software."
-msgstr ""
-"Dit neemt alle modellagen (knooppunten, tanks, reservoirs, leidingen, "
-"kleppen en pompen), combineert ze met de gekozen opties en maakt een "
-"EPANET-'.inp'-bestand dat in andere software kan worden uitgevoerd of "
-"bekeken."
+msgid "This will take all of the model layers (junctions, tanks, reservoirs, pipes, valves, pumps),combine them with the chosen options, and produce an EPANET '.inp' file which can be run / viewed in other software."
+msgstr "Dit neemt alle modellagen (knooppunten, tanks, reservoirs, leidingen, kleppen en pompen), combineert ze met de gekozen opties en maakt een EPANET-'.inp'-bestand dat in andere software kan worden uitgevoerd of bekeken."
 
 #: gusnet/gusnet_processing/run_simulation.py
 msgid "Output .inp file"
@@ -2117,21 +1922,8 @@ msgstr "Inp-bestand exporteren"
 #~ msgid "Flow units for the model"
 #~ msgstr "Stroomeenheden voor het model"
 
-#~ msgid ""
-#~ "Flow units will determine the units "
-#~ "of other units used in the model"
-#~ " as well. Selecting a metric-based"
-#~ " unit set means everything will be"
-#~ " metric, wheras selecting an imperial "
-#~ "measure means everything will be "
-#~ "imperial."
-#~ msgstr ""
-#~ "Stroomeenheden bepalen ook de eenheden "
-#~ "van andere grootheden in het model. "
-#~ "Kiest u een metrisch stelsel, dan "
-#~ "wordt alles metrisch; kiest u een "
-#~ "imperiaal stelsel, dan wordt alles "
-#~ "imperiaal."
+#~ msgid "Flow units will determine the units of other units used in the model as well. Selecting a metric-based unit set means everything will be metric, wheras selecting an imperial measure means everything will be imperial."
+#~ msgstr "Stroomeenheden bepalen ook de eenheden van andere grootheden in het model. Kiest u een metrisch stelsel, dan wordt alles metrisch; kiest u een imperiaal stelsel, dan wordt alles imperiaal."
 
 #~ msgid "Formula to use for headloss calculations"
 #~ msgstr "Formule voor drukverliesberekeningen"
@@ -2176,15 +1968,10 @@ msgstr "Inp-bestand exporteren"
 #~ msgstr "Relatieve diffusiviteit voor waterkwaliteitsanalyse"
 
 #~ msgid "Node to track for trace analysis (if quality parameter is TRACE)"
-#~ msgstr ""
-#~ "Knooppunt om te volgen voor "
-#~ "traceranalyse (als kwaliteitsparameter TRACE "
-#~ "is)"
+#~ msgstr "Knooppunt om te volgen voor traceranalyse (als kwaliteitsparameter TRACE is)"
 
 #~ msgid "Tolerance for water quality convergence in extended period simulations"
-#~ msgstr ""
-#~ "Tolerantie voor waterkwaliteitsconvergentie in "
-#~ "simulaties over langere perioden"
+#~ msgstr "Tolerantie voor waterkwaliteitsconvergentie in simulaties over langere perioden"
 
 #~ msgid "Order of the bulk reaction for water quality analysis"
 #~ msgstr "Orde van de bulkreactie voor waterkwaliteitsanalyse"
@@ -2192,25 +1979,11 @@ msgstr "Inp-bestand exporteren"
 #~ msgid "Order of the wall reaction for water quality analysis"
 #~ msgstr "Orde van de wandreactie voor waterkwaliteitsanalyse"
 
-#~ msgid ""
-#~ "Limiting concentration for water quality "
-#~ "analysis (concentration below which reactions"
-#~ " are assumed to stop)"
-#~ msgstr ""
-#~ "Begrenzende concentratie voor waterkwaliteitsanalyse"
-#~ " (concentratie waaronder wordt aangenomen "
-#~ "dat reacties stoppen)"
+#~ msgid "Limiting concentration for water quality analysis (concentration below which reactions are assumed to stop)"
+#~ msgstr "Begrenzende concentratie voor waterkwaliteitsanalyse (concentratie waaronder wordt aangenomen dat reacties stoppen)"
 
-#~ msgid ""
-#~ "Correlation for calculating wall reaction "
-#~ "coefficient based on pipe diameter (if"
-#~ " 0, wall coefficient will be "
-#~ "constant)"
-#~ msgstr ""
-#~ "Correlatie voor het berekenen van de "
-#~ "wandreactiecoëfficiënt op basis van de "
-#~ "leidingdiameter (bij 0 is de "
-#~ "wandcoëfficiënt constant)"
+#~ msgid "Correlation for calculating wall reaction coefficient based on pipe diameter (if 0, wall coefficient will be constant)"
+#~ msgstr "Correlatie voor het berekenen van de wandreactiecoëfficiënt op basis van de leidingdiameter (bij 0 is de wandcoëfficiënt constant)"
 
 #~ msgid "%n hour(s)"
 #~ msgstr "%n uur"
@@ -2218,15 +1991,8 @@ msgstr "Inp-bestand exporteren"
 #~ msgid "Info:\n"
 #~ msgstr "Informatie:\n"
 
-#~ msgid ""
-#~ "EPANET cannot be loaded. Please wait "
-#~ "a minute then try again, restart "
-#~ "QGIS, or consult our help site."
-#~ msgstr ""
-#~ "EPANET kan niet worden geladen. Wacht"
-#~ " een minuut en probeer het opnieuw,"
-#~ " herstart QGIS of raadpleeg onze "
-#~ "hulpsite."
+#~ msgid "EPANET cannot be loaded. Please wait a minute then try again, restart QGIS, or consult our help site."
+#~ msgstr "EPANET kan niet worden geladen. Wacht een minuut en probeer het opnieuw, herstart QGIS of raadpleeg onze hulpsite."
 
 #~ msgid "Demand type"
 #~ msgstr "Vraagtype"
