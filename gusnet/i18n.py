@@ -3,7 +3,7 @@ from __future__ import annotations
 import gettext
 from pathlib import Path
 
-DOMAIN = "gusnet"
+DOMAIN = "messages"
 LOCALE_DIR = Path(__file__).resolve().parent / "resources" / "i18n"
 
 _translation: gettext.NullTranslations = gettext.NullTranslations()
