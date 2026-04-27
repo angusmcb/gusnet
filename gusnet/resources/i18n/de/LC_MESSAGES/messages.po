@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-27 17:44+0200\n"
+"POT-Creation-Date: 2026-04-27 18:15+0200\n"
 "PO-Revision-Date: 2026-04-03 16:08+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -2294,3 +2294,4 @@ msgstr "Inp-Datei exportieren"
 
 #~ msgid "Verifying Dependencies"
 #~ msgstr "Abhängigkeiten werden überprüft"
+
