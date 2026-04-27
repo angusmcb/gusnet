@@ -1,4 +1,0 @@
-pytest-cov
-pytest-qgis
-
-qgis-plugin-ci
