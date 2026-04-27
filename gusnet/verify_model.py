@@ -152,8 +152,8 @@ class MultipleVerificationError(VerificationError):
     """Raised when multiple verification errors are found."""
 
     def __init__(self, errors: list[VerificationError]) -> None:
-        intro = tr("Multiple verification errors were found:\n")
-        combined_message = intro + "\n".join(str(e) for e in errors)
+        intro = tr("Multiple verification errors were found:")
+        combined_message = intro + "\n" + "\n".join(str(e) for e in errors)
         super().__init__(combined_message)
 
 

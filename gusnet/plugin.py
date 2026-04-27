@@ -263,7 +263,7 @@ class ProcessingRunnerAction(QAction):
         else:
             self.on_executed_with_error()
 
-        QgsApplication.messageLog().logMessage(tr("Gusnet:\n" + self.feedback.textLog()), level=Qgis.MessageLevel.Info)
+        QgsApplication.messageLog().logMessage("Gusnet:\n" + self.feedback.textLog(), level=Qgis.MessageLevel.Info)
 
         self.setEnabled(True)
 
