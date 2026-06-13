@@ -17,24 +17,10 @@ def write_inp_file(
     file_path: os.PathLike | str,
     temp_hydraulics_file: os.PathLike | str | None = None,
 ) -> None:
-    patterns = find_patterns(elements, options)
-    curves = find_curves(elements)
-
-    inp_file_dict = get_line_dict(elements, options, patterns, curves, network, temp_hydraulics_file)
-
-    inp_file_writer(file_path, inp_file_dict)
-
-
-def get_line_dict(
-    elements: Mapping[ModelLayer, Mapping],
-    options: ModelOptions,
-    patterns: Mapping[Pattern, str],
-    curves: Mapping[CurveType, Mapping[Curve, str]],
-    network: Network,
-    temp_hydraulics_file: os.PathLike | str | None,
-) -> dict:
     inp_file_dict: dict[str, Iterable[str] | None] = {}
 
+    patterns = find_patterns(elements, options)
+    curves = find_curves(elements)
     junctions = elements.get(ModelLayer.JUNCTIONS)
     reservoirs = elements.get(ModelLayer.RESERVOIRS)
     tanks = elements.get(ModelLayer.TANKS)
@@ -72,7 +58,14 @@ def get_line_dict(
     inp_file_dict["VERTICES"] = (
         f"{name} {coord[0]} {coord[1]}" for name, vertices in network.link_middle_vertices.items() for coord in vertices
     )
-    return inp_file_dict
+
+    with Path(file_path).open("w", newline="") as file:
+        for section, data in inp_file_dict.items():
+            if not data:
+                continue
+            file.write(f"[{section}]\n")
+            file.writelines(line + "\n" for line in data)
+            file.write("\n")
 
 
 def find_patterns(elements: Mapping[ModelLayer, Mapping], options: ModelOptions) -> dict[Pattern, str]:
@@ -486,16 +479,6 @@ def inp_file_times(options: ModelOptions) -> Iterable[str]:
     return [
         f"DURATION {options.simulation_duration.total_seconds() / 3600}",
     ]
-
-
-def inp_file_writer(file_path: os.PathLike | str, inp_file_dict: dict[str, Iterable[str] | None]) -> None:
-    with Path(file_path).open("w", newline="") as file:
-        for section, data in inp_file_dict.items():
-            if not data:
-                continue
-            file.write(f"[{section}]\n")
-            file.writelines(line + "\n" for line in data)
-            file.write("\n")
 
 
 if __name__ == "__main__":
