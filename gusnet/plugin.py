@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import math
 import typing
 from pathlib import Path
@@ -40,13 +41,13 @@ from qgis.PyQt.QtWidgets import (
 import gusnet
 import gusnet.expressions
 from gusnet.dependencies import CheckAndFetchEpanetTask
-from gusnet.elements import FlowUnit, HeadlossFormula, ModelLayer, ResultLayer
+from gusnet.elements import FlowUnit, HeadlossFormula, ModelLayer, ModelOptions, ResultLayer
 from gusnet.gusnet_processing.empty_model import TemplateLayers
 from gusnet.gusnet_processing.import_inp import ImportInp
 from gusnet.gusnet_processing.provider import Provider
 from gusnet.gusnet_processing.run_simulation import RunSimulation
 from gusnet.i18n import tr, trn
-from gusnet.settings import ProjectSettings, SettingKey
+from gusnet.settings import save_options, saved_layers, saved_options
 
 MESSAGE_CATEGORY = "Gusnet"
 
@@ -148,10 +149,10 @@ class Plugin:
         run_menu = QMenu(self.object)
         run_menu.addAction(self.run_action)
         run_menu.addAction(self.open_settings_action)
-        run_menu.addMenu(SettingMenu(tr("Headloss Formula"), run_menu, SettingKey.HEADLOSS_FORMULA))
-        run_menu.addMenu(SettingMenu(tr("Units"), run_menu, SettingKey.FLOW_UNITS))
+        run_menu.addMenu(SettingMenu(tr("Headloss Formula"), run_menu, "headloss_formula"))
+        run_menu.addMenu(SettingMenu(tr("Units"), run_menu, "flow_units"))
         run_menu.addMenu(DurationSettingMenu(tr("Duration (hours)"), run_menu))
-        run_menu.addMenu(SettingMenu(tr("Demand Type"), run_menu, SettingKey.DEMAND_TYPE))
+        run_menu.addMenu(SettingMenu(tr("Demand Type"), run_menu, "demand_model"))
 
         run_button = QToolButton(self.object)
         run_button.setMenu(run_menu)
@@ -323,8 +324,8 @@ class RunAction(ProcessingRunnerAction):
         self.setToolTip(tr("Run the simulation with the current settings."))
 
     def get_parameters(self) -> dict:
-        saved_options = ProjectSettings().load_options()
-        saved_params = RunSimulation().options_to_param_values(saved_options)
+        options = saved_options()
+        saved_params = RunSimulation().options_to_param_values(options)
 
         input_layers = RunSimulation().get_default_input_layers()
 
@@ -334,7 +335,7 @@ class RunAction(ProcessingRunnerAction):
 
         result_layers = {layer.results_name: TemporaryOutputLayerDefinition() for layer in ResultLayer}
 
-        self.set_success_message(saved_options.flow_units, saved_options.headloss_formula)
+        self.set_success_message(options.flow_units, options.headloss_formula)
 
         return {**saved_params, **result_layers, **input_layers}
 
@@ -595,7 +596,7 @@ class IndicatorRegistry(QObject):
     def update_layer_ids(self) -> None:
         """Update the layer ids in the registry based on project settings."""
         new_layer_ids: dict[ModelLayer, str] = {}
-        for layer, layer_id in ProjectSettings().get(SettingKey.MODEL_LAYERS, {}).items():
+        for layer, layer_id in saved_layers().items():
             try:
                 new_layer_ids[ModelLayer[layer]] = layer_id
             except KeyError:
@@ -636,20 +637,20 @@ class ModelLayerIndicator(QgsLayerTreeViewIndicator):
 
 
 class SettingMenu(QMenu):
-    def __init__(self, title: str | None = None, parent: QWidget | None = None, setting: SettingKey | None = None):
+    def __init__(self, title: str | None = None, parent: QWidget | None = None, setting: str | None = None):
         super().__init__(title, parent)
 
         self.action_group = QActionGroup(self)
-        self.action_group.triggered.connect(lambda action: ProjectSettings().set(setting, action.data()))  # type: ignore
+        self.action_group.triggered.connect(self.save_new_selection)
         self.actions_registry: dict = {}
-        self.setting_key = setting
+        self.setting_key = str(setting)
 
         self.setup_actions()
 
         self.aboutToShow.connect(self.update_checked)
 
     def setup_actions(self):
-        for option in self.setting_key.expected_type:
+        for option in typing.get_type_hints(ModelOptions)[self.setting_key]:
             self.setup_action(option, option.friendly_name)
 
     def setup_action(self, option, option_name: str):
@@ -659,13 +660,18 @@ class SettingMenu(QMenu):
         self.addAction(action)
 
     def update_checked(self):
-        current_setting = ProjectSettings().get(self.setting_key, next(iter(self.setting_key.expected_type)))
+        current_setting = saved_options().__getattribute__(self.setting_key)
         self.actions_registry[current_setting].setChecked(True)
+
+    def save_new_selection(self, action: QAction) -> None:
+        existing_options = saved_options()
+        new_options = dataclasses.replace(existing_options, **{self.setting_key: action.data()})
+        save_options(new_options)
 
 
 class DurationSettingMenu(SettingMenu):
     def __init__(self, title=None, parent=None):
-        super().__init__(title, parent, SettingKey.SIMULATION_DURATION)
+        super().__init__(title, parent, "simulation_duration")
 
     def setup_actions(self):
         self.setup_action(0, tr("Single period simulation"))
@@ -674,7 +680,7 @@ class DurationSettingMenu(SettingMenu):
             self.setup_action(hour, trn("1 hour", "{count} hours", count=hour))
 
     def update_checked(self):
-        current_duration = math.floor(ProjectSettings().get(SettingKey.SIMULATION_DURATION, 0))
+        current_duration = math.floor(saved_options().simulation_duration.total_seconds() / 3600)
 
         if current_duration not in self.actions_registry:
             self.setup_action(current_duration, trn("1 hour", "{count} hours", count=current_duration))

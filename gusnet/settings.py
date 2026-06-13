@@ -6,11 +6,10 @@ import datetime
 import logging
 import typing
 from enum import Enum
-from typing import Any
 
 from qgis.core import QgsExpressionContextUtils, QgsProject
 
-from gusnet.elements import DEFAULT_OPTIONS, DemandType, FlowUnit, HeadlossFormula, ModelOptions
+from gusnet.elements import DEFAULT_OPTIONS, ModelOptions
 from gusnet.pattern_curve import Pattern
 
 logger = logging.getLogger(__name__)
@@ -21,156 +20,87 @@ LEGACY_OPTION_NAMES = {
     "energy_pattern": "energy_price_pattern",
     "mass_unit": "mass_units",
 }
+_SETTING_PREFIX = "gusnet_"
+_LAYERS_KEY = "model_layers"
 
 
-class SettingKey(str, Enum):
-    """Enum of values that can be stored in project settings"""
+def saved_layers(project: QgsProject | None = None) -> dict[str, str]:
+    project = project or QgsProject.instance()
 
-    FLOW_UNITS = "flow_unit", FlowUnit
-    MODEL_LAYERS = "model_layers", dict
-    HEADLOSS_FORMULA = "headloss_formula", HeadlossFormula
-    SIMULATION_DURATION = "simulation_duration", float
-    DEMAND_TYPE = "demand_type", DemandType
+    str_value = QgsExpressionContextUtils.projectScope(project).variable(_SETTING_PREFIX + _LAYERS_KEY)
 
-    def __new__(cls, *args):
-        obj = str.__new__(cls, [args[0]])
-        obj._value_ = args[0]
-        return obj
+    if not str_value:
+        return {}
 
-    def __init__(self, *args):
-        self.expected_type = args[1]
+    try:
+        output = ast.literal_eval(str_value)
+    except (ValueError, SyntaxError):
+        return {}
 
-    # @property
-    # def _setting_name(self):
-    #     return SETTING_PREFIX + self.name.lower()
-
-    # def set(self, value: Any):
-    #     if not isinstance(value, self.value[1]):
-    #         msg = f"{self.name} expects to save types {type(self.value[1])} but got {type(value)}"
-    #         raise TypeError(msg)
-    #     QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), self._setting_name, value)
-
-    # def get(self, default_value=None):
-    #     saved_value = QgsExpressionContextUtils.projectScope(QgsProject.instance()).variable(self._setting_name)
-    #     if isinstance(saved_value, self.value[1]):
-    #         return saved_value
-    #     return default_value
+    if isinstance(output, dict):
+        return output
+    else:
+        return {}
 
 
-class ProjectSettings:
-    """Gets and sets WNTR project settings"""
+def save_layers(layers: dict) -> None:
+    QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), _SETTING_PREFIX + _LAYERS_KEY, str(layers))
 
-    SETTING_PREFIX = "gusnet_"
 
-    def __init__(self, project: QgsProject | None = None):
-        if not project:
-            project = QgsProject.instance()
-        self._project = project
+def saved_options(project: QgsProject | None = None) -> ModelOptions:
+    """Get saved water network options"""
+    if not project:
+        project = QgsProject.instance()
 
-    def _setting_name(self, setting):
-        """Adds the setting prefix to the setting name"""
-        return self.SETTING_PREFIX + setting.value
+    data = {}
 
-    def get(self, setting: SettingKey, default: Any | None = None):
-        """Get a value from project settings, with optional default value"""
-        setting_name = self._setting_name(setting)
+    expression_context = QgsExpressionContextUtils.projectScope(project)
+    if not expression_context:
+        raise RuntimeError
 
-        value = QgsExpressionContextUtils.projectScope(self._project).variable(setting_name)
+    option_types = typing.get_type_hints(ModelOptions)
+
+    for field in dataclasses.fields(ModelOptions):
+        value = expression_context.variable(_SETTING_PREFIX + field.name)
 
         if value is None:
-            return default
+            if field.name in LEGACY_OPTION_NAMES:
+                legacy_name = LEGACY_OPTION_NAMES[field.name]
+                value = expression_context.variable(_SETTING_PREFIX + legacy_name)
 
-        if issubclass(setting.expected_type, Enum):
-            try:
-                value = setting.expected_type(value)
-            except ValueError:
-                return default
+            if value is None:
+                continue
 
-        if setting.expected_type is dict:
-            try:
-                value = ast.literal_eval(value)
-            except (ValueError, SyntaxError):
-                return default
+        required_type = option_types[field.name]
 
-        if setting.expected_type is float:
-            try:
+        try:
+            if issubclass(required_type, datetime.timedelta):
                 value = float(value)
-            except ValueError:
-                return default
+                value = datetime.timedelta(hours=value)
+            else:
+                value = required_type(value)
+        except (ValueError, TypeError):
+            value = DEFAULT_OPTIONS.__getattribute__(field.name)
+            logger.warning(f"Could not read setting for {field.name}, using default value {value}")
 
-        if not isinstance(value, setting.expected_type):
-            return default
+        data[field.name] = value
 
-        return value
+    return dataclasses.replace(DEFAULT_OPTIONS, **data)
 
-    def set(self, setting: SettingKey, value: Any):
-        """Save a value to project settings"""
-        setting_name = self._setting_name(setting)
-        # if not issubclass(type(value), setting.expected_type):
-        expected_type = setting.expected_type if setting.expected_type is not float else (int, float)
-        if not isinstance(value, expected_type):
-            msg = f"{setting} expects to save types {setting.expected_type} but got {type(value)}"
-            raise TypeError(msg)
+
+def save_options(options: ModelOptions) -> None:
+    """Save water network model options"""
+
+    for field in dataclasses.fields(ModelOptions):
+        value = getattr(options, field.name)
 
         if isinstance(value, Enum):
             value = value.value
 
-        if setting.expected_type is dict:
+        if isinstance(value, Pattern):
             value = str(value)
 
-        QgsExpressionContextUtils.setProjectVariable(self._project, setting_name, value)
+        if isinstance(value, datetime.timedelta):
+            value = value.total_seconds() / 3600.0  # store as hours
 
-    def load_options(self) -> ModelOptions:
-        """Get saved water network options"""
-
-        data = {}
-
-        expression_context = QgsExpressionContextUtils.projectScope(self._project)
-        if not expression_context:
-            raise RuntimeError
-
-        option_types = typing.get_type_hints(ModelOptions)
-
-        for field in dataclasses.fields(ModelOptions):
-            value = expression_context.variable(self.SETTING_PREFIX + field.name)
-
-            if value is None:
-                if field.name in LEGACY_OPTION_NAMES:
-                    legacy_name = LEGACY_OPTION_NAMES[field.name]
-                    value = expression_context.variable(self.SETTING_PREFIX + legacy_name)
-
-                if value is None:
-                    continue
-
-            required_type = option_types[field.name]
-
-            try:
-                if issubclass(required_type, datetime.timedelta):
-                    value = float(value)
-                    value = datetime.timedelta(hours=value)
-                else:
-                    value = required_type(value)
-            except (ValueError, TypeError):
-                value = DEFAULT_OPTIONS.__getattribute__(field.name)
-                logger.warning(f"Could not read setting for {field.name}, using default value {value}")
-
-            data[field.name] = value
-
-        return dataclasses.replace(DEFAULT_OPTIONS, **data)
-
-    def save_options(self, options: ModelOptions) -> None:
-        """Save water network model options"""
-
-        for field in dataclasses.fields(ModelOptions):
-            value = getattr(options, field.name)
-
-            if isinstance(value, Enum):
-                value = value.value
-
-            if isinstance(value, Pattern):
-                value = str(value)
-
-            if isinstance(value, datetime.timedelta):
-                value = value.total_seconds() / 3600.0  # store as hours
-
-            QgsExpressionContextUtils.setProjectVariable(self._project, self.SETTING_PREFIX + field.name, value)
+        QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), _SETTING_PREFIX + field.name, value)

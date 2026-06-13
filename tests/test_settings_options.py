@@ -13,12 +13,10 @@ from gusnet.elements import (
     WallReactionOrder,
 )
 from gusnet.pattern_curve import Pattern
-from gusnet.settings import ProjectSettings
+from gusnet.settings import save_options, saved_options
 
 
 def test_save_options_and_load_roundtrip(qgis_new_project):
-    settings = ProjectSettings(project=QgsProject.instance())
-
     options = ModelOptions(
         flow_units=FlowUnit.CFS,
         headloss_formula=HeadlossFormula.DARCY_WEISBACH,
@@ -47,9 +45,9 @@ def test_save_options_and_load_roundtrip(qgis_new_project):
         wall_coefficient_correlation=0.1,
     )
 
-    settings.save_options(options)
+    save_options(options)
 
-    loaded = settings.load_options()
+    loaded = saved_options()
 
     # dataclass equality should hold after roundtrip
     assert isinstance(loaded, ModelOptions)
@@ -61,8 +59,7 @@ def test_load_options_partial_values_use_defaults(qgis_new_project):
     # save the enum as save_options would (enum.value)
     QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), "gusnet_flow_units", FlowUnit.GPM.value)
 
-    settings = ProjectSettings()
-    loaded = settings.load_options()
+    loaded = saved_options()
 
     assert loaded.flow_units == FlowUnit.GPM
     # other fields should be defaults from ModelOptions

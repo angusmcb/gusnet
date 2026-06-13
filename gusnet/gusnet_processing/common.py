@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from qgis.core import (
     QgsProcessingAlgorithm,
@@ -14,7 +14,7 @@ from qgis.PyQt.QtCore import QCoreApplication, QThread
 
 from gusnet.elements import ModelLayer, ModelOptions, ResultLayer
 from gusnet.i18n import tr
-from gusnet.settings import ProjectSettings, SettingKey
+from gusnet.settings import save_layers, save_options, saved_layers
 from gusnet.style import style
 from gusnet.units import SpecificUnitNames
 
@@ -28,21 +28,18 @@ SHOW_TIMING = False
 class CommonProcessingBase(QgsProcessingAlgorithm):
     post_processors: ClassVar[dict[str, QgsProcessingLayerPostProcessorInterface]] = {}
     _options_to_save: ModelOptions | None = None
-    _settings: dict[SettingKey, Any] | None = None
+    _layers_to_save: dict | None = None
 
     def helpUrl(self) -> str:  # noqa: N802
         return "https://www.gusnet.org"
 
     def postProcessAlgorithm(self, context, feedback):  # noqa: N802
         if QThread.currentThread() == QCoreApplication.instance().thread():
-            project_settings = ProjectSettings()
-
             if self._options_to_save:
-                project_settings.save_options(self._options_to_save)
+                save_options(self._options_to_save)
 
-            if self._settings:
-                for setting_key, setting_value in self._settings.items():
-                    project_settings.set(setting_key, setting_value)
+            if self._layers_to_save is not None:
+                save_layers(self._layers_to_save)
 
         return super().postProcessAlgorithm(context, feedback)
 
@@ -104,10 +101,9 @@ class ModelLayerPostProcessor(QgsProcessingLayerPostProcessorInterface):
     def postProcessLayer(self, layer: QgsVectorLayer, context, feedback) -> None:  # noqa N802 ARG002
         style(layer, self.layer_type, None, self.unit_names)
 
-        project_settings = ProjectSettings()
-        wntr_layers = project_settings.get(SettingKey.MODEL_LAYERS, {})
+        wntr_layers = saved_layers()
         wntr_layers[self.layer_type.name] = layer.id()
-        project_settings.set(SettingKey.MODEL_LAYERS, wntr_layers)
+        save_layers(wntr_layers)
 
         if self.make_editable:
             layer.startEditing()

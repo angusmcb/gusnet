@@ -69,7 +69,7 @@ from gusnet.network import Network
 from gusnet.output_file_reader import BinFileError, read_output_file
 from gusnet.pattern_curve import Pattern
 from gusnet.profiler import profile
-from gusnet.settings import ProjectSettings, SettingKey
+from gusnet.settings import save_layers, save_options, saved_layers, saved_options
 from gusnet.statistics import ModelStatistics
 from gusnet.style import style
 from gusnet.units import SpecificUnitNames
@@ -166,18 +166,17 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
         if not project:
             return {}
 
-        saved_layers = ProjectSettings(project).get(SettingKey.MODEL_LAYERS, {})
+        saved_l = saved_layers()
         input_layers = {
-            str(layer_type): saved_layers.get(layer_type.name)
+            str(layer_type): str(saved_l.get(layer_type.name))
             for layer_type in ModelLayer
-            if project.mapLayer(saved_layers.get(layer_type))
+            if project.mapLayer(saved_l.get(layer_type))
         }
 
         return input_layers
 
     def init_model_layer_parameters(self) -> None:
-        project_settings = ProjectSettings(QgsProject.instance())
-        default_layers = project_settings.get(SettingKey.MODEL_LAYERS, {})
+        default_layers = saved_layers()
         for lyr in ModelLayer:
             param = QgsProcessingParameterFeatureSource(
                 lyr.name,
@@ -274,7 +273,7 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
     def init_settings_parameters(self) -> None:
         data_types = get_type_hints(ModelOptions)
         default_values = self.options_to_param_values(DEFAULT_OPTIONS)
-        saved_values = self.options_to_param_values(ProjectSettings(QgsProject.instance()).load_options())
+        saved_values = self.options_to_param_values(saved_options())
 
         for data_field in dataclasses.fields(ModelOptions):
             field_name = data_field.name.upper()
@@ -440,16 +439,14 @@ class _ModelCreatorAlgorithm(CommonProcessingBase):
     ) -> bool:
         app = QCoreApplication.instance()
         if app and QThread.currentThread() == app.thread():
-            project_settings = ProjectSettings()
-
             layers = {
                 str(lyr): input_layer.id()
                 for lyr in ModelLayer
                 if (input_layer := self.parameterAsVectorLayer(parameters, str(lyr), context))
             }
-            project_settings.set(SettingKey.MODEL_LAYERS, layers)
+            save_layers(layers)
 
-            project_settings.save_options(self._get_model_options(parameters, context))
+            save_options(self._get_model_options(parameters, context))
 
         return super().prepareAlgorithm(parameters, context, feedback)
 

@@ -31,7 +31,6 @@ from gusnet.gusnet_processing.common import CommonProcessingBase
 from gusnet.i18n import tr
 from gusnet.inpfile_reader import InpFileReadError, read_inp_file
 from gusnet.profiler import profile
-from gusnet.settings import SettingKey
 from gusnet.units import SpecificUnitNames, UnitNames
 from gusnet.verify_model import VerificationError, verify_model
 
@@ -127,7 +126,7 @@ class ImportInp(CommonProcessingBase):
             )
 
         self._options_to_save = model.options
-        self._settings = {SettingKey.MODEL_LAYERS: {}}
+        self._layers_to_save = {}
 
         with profile(tr("Creating Outputs"), 80, feedback):
             group_name = tr("Model Layers ({filename})").format(filename=Path(input_file).stem)

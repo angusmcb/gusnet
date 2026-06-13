@@ -1,4 +1,6 @@
 import contextlib
+import dataclasses
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -10,7 +12,7 @@ from qgis.core import (
 from qgis.PyQt import QtWidgets
 
 import gusnet
-from gusnet.elements import FlowUnit, HeadlossFormula
+from gusnet.elements import DEFAULT_OPTIONS, FlowUnit, HeadlossFormula
 from gusnet.plugin import (
     DurationSettingMenu,
     LoadExampleAction,
@@ -21,7 +23,7 @@ from gusnet.plugin import (
     RunAction,
     SettingMenu,
 )
-from gusnet.settings import ProjectSettings, SettingKey
+from gusnet.settings import save_options, saved_options
 
 
 @pytest.fixture
@@ -182,37 +184,29 @@ def test_setting_menu_headloss_formula_updates_setting(formula):
     menu = SettingMenu(
         title="Headloss Formula",
         parent=None,
-        setting=SettingKey.HEADLOSS_FORMULA,
+        setting="headloss_formula",
     )
 
     action = menu.actions_registry[formula]
     action.trigger()
-    assert ProjectSettings().get(SettingKey.HEADLOSS_FORMULA) == formula
+    assert saved_options().headloss_formula == formula
 
 
 @pytest.mark.parametrize("unit", list(FlowUnit))
 def test_setting_menu_flow_units_updates_setting(unit):
     """Test that selecting a flow unit in SettingMenu updates the project setting."""
-    menu = SettingMenu(
-        title="Units",
-        parent=None,
-        setting=SettingKey.FLOW_UNITS,
-    )
+    menu = SettingMenu(title="Units", parent=None, setting="flow_units")
     action = menu.actions_registry[unit]
     action.trigger()
-    assert ProjectSettings().get(SettingKey.FLOW_UNITS) == unit
+    assert saved_options().flow_units == unit
 
 
 def test_setting_menu_checkmarks_reflect_setting(qgis_iface):
     """Test that the checked action matches the current setting."""
-    menu = SettingMenu(
-        title="Headloss Formula",
-        parent=None,
-        setting=SettingKey.HEADLOSS_FORMULA,
-    )
+    menu = SettingMenu(title="Headloss Formula", parent=None, setting="headloss_formula")
     # Set to each value and check update_checked
     for formula in HeadlossFormula:
-        ProjectSettings().set(SettingKey.HEADLOSS_FORMULA, formula)
+        save_options(dataclasses.replace(DEFAULT_OPTIONS, headloss_formula=formula))
         menu.update_checked()
         for f, action in menu.actions_registry.items():
             if f == formula:
@@ -226,11 +220,11 @@ def test_duration_setting_menu_triggers_and_checkmarks(qgis_iface):
     menu = DurationSettingMenu(title="Duration")
     # Test single period
     menu.actions_registry[0].trigger()
-    assert ProjectSettings().get(SettingKey.SIMULATION_DURATION) == 0
+    assert saved_options().simulation_duration.total_seconds() == 0
     # Test several hours
     for hour in [1, 5, 10, 24]:
         menu.actions_registry[hour].trigger()
-        assert ProjectSettings().get(SettingKey.SIMULATION_DURATION) == hour
+        assert saved_options().simulation_duration.total_seconds() / 3600 == hour
         menu.update_checked()
         for h, action in menu.actions_registry.items():
             if h == hour:
@@ -238,6 +232,6 @@ def test_duration_setting_menu_triggers_and_checkmarks(qgis_iface):
             else:
                 assert not action.isChecked()
     # Test dynamic addition for a duration not in actions
-    ProjectSettings().set(SettingKey.SIMULATION_DURATION, 42)
+    save_options(dataclasses.replace(DEFAULT_OPTIONS, simulation_duration=timedelta(hours=42)))
     menu.update_checked()
     assert menu.actions_registry[42].isChecked()
