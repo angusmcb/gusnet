@@ -24,10 +24,10 @@ _SETTING_PREFIX = "gusnet_"
 _LAYERS_KEY = "model_layers"
 
 
-def saved_layers(project: QgsProject | None = None) -> dict[str, str]:
-    project = project or QgsProject.instance()
+def saved_layers() -> dict[str, str]:
+    """Get model layers from project settings"""
 
-    str_value = QgsExpressionContextUtils.projectScope(project).variable(_SETTING_PREFIX + _LAYERS_KEY)
+    str_value = QgsExpressionContextUtils.projectScope(QgsProject.instance()).variable(_SETTING_PREFIX + _LAYERS_KEY)
 
     if not str_value:
         return {}
@@ -44,17 +44,17 @@ def saved_layers(project: QgsProject | None = None) -> dict[str, str]:
 
 
 def save_layers(layers: dict) -> None:
+    """Save model layers to project settings"""
+
     QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(), _SETTING_PREFIX + _LAYERS_KEY, str(layers))
 
 
-def saved_options(project: QgsProject | None = None) -> ModelOptions:
-    """Get saved water network options"""
-    if not project:
-        project = QgsProject.instance()
+def saved_options() -> ModelOptions:
+    """Get saved water network options from project settings"""
 
     data = {}
 
-    expression_context = QgsExpressionContextUtils.projectScope(project)
+    expression_context = QgsExpressionContextUtils.projectScope(QgsProject.instance())
     if not expression_context:
         raise RuntimeError
 
@@ -89,7 +89,7 @@ def saved_options(project: QgsProject | None = None) -> ModelOptions:
 
 
 def save_options(options: ModelOptions) -> None:
-    """Save water network model options"""
+    """Save water network model options to project settings"""
 
     for field in dataclasses.fields(ModelOptions):
         value = getattr(options, field.name)
