@@ -53,7 +53,7 @@ MESSAGE_CATEGORY = "Gusnet"
 
 VERSION_SETTING = "gusnet/version"
 
-LOGO_ICON = QIcon("gusnet:logo.svg")
+LOGO_ICON = "gusnet:logo.svg"
 
 iface = typing.cast(QgisInterface, qgis.utils.iface)
 
@@ -125,7 +125,7 @@ class Plugin:
         iface.addPluginToMenu(self.menu, self.load_example_action)
         try:
             our_menu_action = next(action for action in iface.pluginMenu().actions() if action.text() == self.menu)
-            our_menu_action.setIcon(LOGO_ICON)
+            our_menu_action.setIcon(QIcon(LOGO_ICON))
         except StopIteration:
             pass
 
@@ -222,7 +222,7 @@ class ProcessingRunnerAction(QAction):
 
         self.algorithm = algorithm
         self.setText(algorithm.displayName())
-        self.setIcon(IconWithLogo(algorithm.icon()))
+        self.setIcon(superimpose_logo_on_icon(algorithm.icon()))
         self.triggered.connect(self.run)
 
     def run(self) -> None:
@@ -361,7 +361,7 @@ class LoadTemplateToGeopackageAction(ProcessingRunnerAction):
     def __init__(self):
         super().__init__(TemplateLayers())
         self.setText(tr("Create Template Geopackage"))
-        self.setIcon(IconWithLogo(QgsApplication.getThemeIcon("mGeoPackage.svg")))
+        self.setIcon(superimpose_logo_on_icon(QgsApplication.getThemeIcon("mGeoPackage.svg")))
 
     def get_parameters(self) -> dict:
         geopackage_path, _ = QFileDialog.getSaveFileName(
@@ -503,18 +503,15 @@ class OpenSettingsAction(QAction):
         processing.execAlgorithmDialog(RunSimulation())  # type: ignore
 
 
-class IconWithLogo(QIcon):
-    _logo_pixmap = LOGO_ICON.pixmap(128, 128)
+def superimpose_logo_on_icon(icon: QIcon) -> QIcon:
+    result_pixmap = icon.pixmap(256, 256)
+    painter = QPainter(result_pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-    def __init__(self, icon: QIcon):
-        result_pixmap = icon.pixmap(256, 256)
-        painter = QPainter(result_pixmap)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.drawPixmap(128, 128, 128, 128, QIcon(LOGO_ICON).pixmap(128, 128))
+    painter.end()
 
-        painter.drawPixmap(128, 128, 128, 128, self._logo_pixmap)
-        painter.end()
-
-        super().__init__(result_pixmap)
+    return QIcon(result_pixmap)
 
 
 class IndicatorRegistry(QObject):
@@ -632,7 +629,7 @@ class ModelLayerIndicator(QgsLayerTreeViewIndicator):
     def __init__(self, parent: QObject, layer_type: ModelLayer):
         super().__init__(parent)
 
-        self.setIcon(LOGO_ICON)
+        self.setIcon(QIcon(LOGO_ICON))
         self.setToolTip(layer_type.friendly_name)
 
 
